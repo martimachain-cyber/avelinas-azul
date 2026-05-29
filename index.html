@@ -916,7 +916,7 @@ td.ag-slot-free{background:transparent}
       <button class="cpill" id="cj-tab-comisiones" onclick="cjSetTab(&#39;comisiones&#39;,this)">👩 Comisiones</button>
       <button class="cpill" id="cj-tab-reportes" onclick="cjSetTab(&#39;reportes&#39;,this)">📋 Reportes</button>
       <button class="cpill on" id="cj-tab-cierre" onclick="cjSetTab(&#39;cierre&#39;,this)">🔒 Cierre</button>
-      <button class="cpill" id="cj-tab-proveedores" onclick="stAdm(&#39;a-prod&#39;,document.querySelector(&#39;[onclick*=a-prod]&#39;));setTimeout(function(){prodSetTab(&#39;proveedores&#39;,document.getElementById(&#39;prod-tab-proveedores&#39;))},50)">🏪 Proveedores</button>
+      <button class="cpill" id="cj-tab-proveedores" onclick="stAdm(&#39;a-prod&#39;,document.querySelector(&#39;.adm-tab:last-child&#39;));setTimeout(function(){var t=document.getElementById(&#39;prod-tab-proveedores&#39;);if(t){prodSetTab(&#39;proveedores&#39;,t);}},150)">🏪 Proveedores</button>
     </div>
 
     <!-- RESUMEN -->
