@@ -2345,25 +2345,83 @@ function renderJornadas(){
 }
 
 function agregarJornada(){
-  const inp=document.getElementById('nueva-jornada');
-  const ok=document.getElementById('ok-jornada');
-  const f=inp.value;
-  if(!f){ok.textContent='Seleccioná una fecha.';ok.style.background='rgba(220,80,60,.1)';ok.style.color='var(--rojo)';ok.style.borderColor='rgba(220,80,60,.3)';ok.classList.add('on');return}
+  var inp=document.getElementById('nueva-jornada');
+  var ok=document.getElementById('ok-jornada');
+  var er=document.getElementById('ok-jornada');
+  if(!inp){alert('Error: no se encontró el campo de fecha.');return;}
+  var f=inp.value;
+  if(!f){
+    if(ok){ok.textContent='Seleccioná una fecha primero.';ok.className='er on';}
+    return;
+  }
   if(!D.jornadasLaser)D.jornadasLaser=[];
-  if(D.jornadasLaser.includes(f)){ok.textContent='Esa fecha ya está cargada.';ok.style.background='rgba(220,80,60,.1)';ok.style.color='var(--rojo)';ok.style.borderColor='rgba(220,80,60,.3)';ok.classList.add('on');return}
+  if(D.jornadasLaser.includes(f)){
+    if(ok){ok.textContent='Esa fecha ya está cargada.';ok.className='er on';}
+    return;
+  }
   D.jornadasLaser.push(f);
-  // Auto-block Camila on that date
+  // Auto-block Camila on that date (todo el día)
   if(!agD.bloqueos)agD.bloqueos=[];
   var bloqId='blq_laser_'+f;
   if(!agD.bloqueos.find(function(b){return b.id===bloqId;})){
     agD.bloqueos.push({id:bloqId,prof:'camila',fecha:f,todo:true,motivo:'Jornada depilación definitiva'});
-    agSv();
   }
-  sv();inp.value='';
-  ok.textContent='Jornada agregada ✓';ok.style.background='rgba(139,143,107,.1)';ok.style.color='var(--oliva)';ok.style.borderColor='rgba(139,143,107,.3)';ok.classList.add('on');
+  agSv();
+  sv();
+  inp.value='';
+  if(ok){ok.textContent='✓ Jornada agregada';ok.className='ok on';}
   renderJornadas();
-  setTimeout(()=>ok.classList.remove('on'),2000);
+  setTimeout(function(){if(ok)ok.classList.remove('on');},2500);
 }
+
+function abrirModalAgregarJornadaLaser(){
+  var modal=document.getElementById('modal-agregar-jornada-laser');
+  if(modal){modal.classList.add('on');}
+  else{
+    modal=document.createElement('div');
+    modal.id='modal-agregar-jornada-laser';
+    modal.className='modal on';
+    var html='<div class="mc">';
+    html+='<div class="mc-title">Agregar jornada de depilación</div>';
+    html+='<label class="flbl">Fecha</label>';
+    html+='<input class="finp" type="date" id="nlaser-fecha" style="margin-top:.4rem">';
+    html+='<div id="ok-nlaser" class="ok" style="margin-top:.5rem"></div>';
+    html+='<div class="mc-acts" style="margin-top:1rem">';
+    html+='<button class="btn-cancel" onclick="cerrarMJornadaLaser()">Cancelar</button>';
+    html+='<button class="btn-v" style="flex:1" onclick="guardarJornadaLaserDesdeModal()">Agregar</button>';
+    html+='</div></div>';
+    modal.innerHTML=html;
+    document.body.appendChild(modal);
+  }
+  var inp=document.getElementById('nlaser-fecha');
+  if(inp)inp.value='';
+  var ok=document.getElementById('ok-nlaser');
+  if(ok)ok.classList.remove('on');
+}
+
+function cerrarMJornadaLaser(){
+  var m=document.getElementById('modal-agregar-jornada-laser');
+  if(m)m.classList.remove('on');
+}
+function guardarJornadaLaserDesdeModal(){
+  var inp=document.getElementById('nlaser-fecha');
+  var ok=document.getElementById('ok-nlaser');
+  if(!inp||!inp.value){if(ok){ok.textContent='Seleccioná una fecha.';ok.className='er on';}return;}
+  var f=inp.value;
+  if(!D.jornadasLaser)D.jornadasLaser=[];
+  if(D.jornadasLaser.includes(f)){if(ok){ok.textContent='Esa fecha ya está cargada.';ok.className='er on';}return;}
+  D.jornadasLaser.push(f);
+  if(!agD.bloqueos)agD.bloqueos=[];
+  var bloqId='blq_laser_'+f;
+  if(!agD.bloqueos.find(function(b){return b.id===bloqId;})){
+    agD.bloqueos.push({id:bloqId,prof:'camila',fecha:f,todo:true,motivo:'Jornada depilación definitiva'});
+  }
+  agSv();sv();
+  renderJornadas();
+  if(typeof renderLaserJornadas==='function')renderLaserJornadas();
+  cerrarM('modal-agregar-jornada-laser');
+}
+
 
 function borrarJornada(f){
   const d=pk(f);
@@ -2554,7 +2612,7 @@ function agRender(){
           const workH=getWorkH(p.id,f.getDay());
           const inWork=!workH||(slotMin/60>=workH[0]&&slotMin/60<workH[1]);
           const hasT=getSlotTurno(p.id,fStr,slotH);
-          const blq=(agD.bloqueos||[]).find(function(b){return b.prof===p.id&&b.fecha===fStr&&b.h===slotH;});
+          const blq=(agD.bloqueos||[]).find(function(b){return b.prof===p.id&&b.fecha===fStr&&(b.todo||(b.h&&b.h===slotH)||(b.desde&&b.hasta&&slotH>=b.desde&&slotH<b.hasta));});
           out+=renderSlotCell(p.id,fStr,slotH,inWork,hasT,blq,isHour,true);
         });
       });
@@ -2564,7 +2622,7 @@ function agRender(){
         const workH=getWorkH(p.id,agFecha.getDay());
         const inWork=!workH||(slotMin/60>=workH[0]&&slotMin/60<workH[1]);
         const hasT=getSlotTurno(p.id,fStr,slotH);
-        const blq=(agD.bloqueos||[]).find(function(b){return b.prof===p.id&&b.fecha===fStr&&b.h===slotH;});
+        const blq=(agD.bloqueos||[]).find(function(b){return b.prof===p.id&&b.fecha===fStr&&(b.todo||(b.h&&b.h===slotH)||(b.desde&&b.hasta&&slotH>=b.desde&&slotH<b.hasta));});
         out+=renderSlotCell(p.id,fStr,slotH,inWork,hasT,blq,isHour,false);
       });
     }
@@ -2592,7 +2650,7 @@ function getSlotTurno(profId,fecha,hora){
 function renderSlotCell(profId,fecha,hora,inWork,turno,blq,isHour,small){
   const borderB=isHour?'1px solid var(--cd)':'1px dashed rgba(184,178,172,.3)';
   if(blq){
-    return '<td style="background:rgba(176,168,160,.3);border-bottom:'+borderB+';border-left:1px solid var(--cd)" title="Bloqueado"></td>';
+    return '<td style="background:rgba(220,60,60,.15);border-bottom:'+borderB+';border-left:1px solid var(--cd);border-top:1px solid rgba(220,60,60,.25);vertical-align:middle;text-align:center" title="'+(blq.motivo||'Bloqueado')+'"><span style="font-size:9px;color:rgba(180,30,30,.7);font-family:Raleway,sans-serif">🚫</span></td>';
   }
   if(turno){
     const bg=AG_COLORS[profId]||'var(--oliva)';
@@ -2692,6 +2750,42 @@ function agEliminarDesdeVer(){
   cerrarM('modal-ag-ver');agRender();
 }
 
+var AG_PROF_CATS={emilia:['masajes','maquillaje'],camila:['facial','laser'],ludovica:['mani','pedi'],rosario:['pestañas','facial'],virginia:['pedi']};
+
+function agLlenarServiciosSel(srvSel, servicioActual){
+  if(!srvSel)return;
+  var profId=document.getElementById('ag-mt-prof').value;
+  var def=defD();
+  var pr=D.profesionales.find(function(p){return p.id===profId;});
+  var defPr=def.profesionales.find(function(p){return p.id===profId;});
+  var cats=(pr&&pr.cats&&pr.cats.length)?pr.cats
+           :(defPr&&defPr.cats&&defPr.cats.length)?defPr.cats
+           :(AG_PROF_CATS[profId]||Object.keys(def.servicios));
+  cats=cats.filter(function(v,i,a){return a.indexOf(v)===i;}); // dedup
+  var html='<option value="">— Elegí un servicio —</option>';
+  cats.forEach(function(cat){
+    var svs=(D.servicios&&D.servicios[cat]&&D.servicios[cat].length)?D.servicios[cat]:(def.servicios[cat]||[]);
+    if(!svs.length)return;
+    html+='<optgroup label="'+(CATS_LABELS[cat]||cat)+'">';
+    svs.forEach(function(sv){
+      var dur=sv.dur||60;
+      if(sv.d){
+        var a=sv.d.match(/([0-9]+)\s*hora/i);if(a)dur=parseInt(a[1])*60;
+        var b=sv.d.match(/([0-9]+)\s*min/i);if(b)dur=parseInt(b[1]);
+      }
+      var precio=parseInt((sv.p||'0').replace(/[^0-9]/g,''))||0;
+      html+='<option value="'+sv.n+'|'+dur+'|'+precio+'">'+sv.n+(sv.p?' — '+sv.p:'')+'</option>';
+    });
+    html+='</optgroup>';
+  });
+  srvSel.innerHTML=html;
+  if(servicioActual){
+    var opts=Array.from(srvSel.options);
+    var match=opts.find(function(o){return o.value.split('|')[0]===servicioActual;});
+    if(match)srvSel.value=match.value;
+  }
+}
+
 function agAbrirNuevo(t=null){
   document.getElementById('ag-mt-title').textContent=t?'Editar turno':'Nuevo turno';
   document.getElementById('ag-mt-id').value=t?t.id:'';
@@ -2715,27 +2809,9 @@ function agAbrirNuevo(t=null){
     var profId=document.getElementById('ag-mt-prof').value;
     var srvSel=document.getElementById('ag-mt-srv-sel');
     if(!srvSel)return;
-    function buildOpts(pId){
-      var pr=D.profesionales.find(function(p){return p.id===pId;});
-      var cats=pr&&pr.cats&&pr.cats.length?pr.cats:Object.keys(D.servicios||{});
-      var o='<option value="">— Elegí un servicio —</option>';
-      cats.forEach(function(cat){
-        var svs=(D.servicios||{})[cat]||[];
-        if(!svs.length)return;
-        o+='<optgroup label="'+(CATS_LABELS[cat]||cat)+'">';
-        svs.forEach(function(sv){
-          var dur=sv.dur||60;
-          if(sv.d){var a=sv.d.match(/([0-9]+)\s*hora/i);if(a)dur=parseInt(a[1])*60;var b=sv.d.match(/([0-9]+)\s*min/i);if(b)dur=parseInt(b[1]);}
-          var precioNum=parseInt((sv.p||'0').replace(/[^0-9]/g,''))||0;
-          o+='<option value="'+sv.n+'|'+dur+'|'+precioNum+'">'+sv.n+(sv.p?' — '+sv.p:'')+'</option>';
-        });
-        o+='</optgroup>';
-      });
-      return o;
-    }
-    srvSel.innerHTML=buildOpts(profId);
+    agLlenarServiciosSel(srvSel, t ? t.servicio : null);
     document.getElementById('ag-mt-prof').onchange=function(){
-      srvSel.innerHTML=buildOpts(this.value);
+      agLlenarServiciosSel(srvSel, null);
     };
   })();
   document.getElementById('modal-ag-turno').classList.add('on');
@@ -5719,7 +5795,13 @@ function clsSetTab(tab,btn){
     <div style="font-family:Raleway,sans-serif;font-size:16px;font-weight:600;color:#fff;flex:1">Agenda Depilación Definitiva</div>
   </div>
   <div style="padding:1rem">
-    <div class="panel"><div class="ptitle">Jornadas</div><div id="laser-ag-jornadas" style="display:flex;flex-wrap:wrap;gap:.4rem"></div></div>
+    <div class="panel">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.6rem">
+    <div class="ptitle" style="margin:0">Jornadas</div>
+    <button class="btn-v" style="font-size:11px;padding:4px 10px" onclick="abrirModalAgregarJornadaLaser()">+ Agregar fecha</button>
+  </div>
+  <div id="laser-ag-jornadas" style="display:flex;flex-wrap:wrap;gap:.4rem"></div>
+</div>
     <div class="panel" id="laser-ag-turnos-panel" style="display:none">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.8rem">
         <div class="ptitle" style="margin:0" id="laser-ag-fecha-tit">Jornada</div>
