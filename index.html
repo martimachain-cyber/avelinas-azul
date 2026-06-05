@@ -2815,16 +2815,23 @@ function agAbrirNuevo(t=null){
   document.getElementById('ok-ag-mt').classList.remove('on');
   document.getElementById('er-ag-mt').classList.remove('on');
   document.getElementById('modal-ag-turno').classList.add('on');
-  // Load services after modal is visible
+  // Load services - multiple attempts to handle any async resets
   var _t=t;
-  setTimeout(function(){
+  function _fillSrvs(){
     var srvSel=document.getElementById('ag-mt-srv-sel');
     if(!srvSel)return;
     agLlenarServiciosSel(srvSel, _t ? _t.servicio : null);
     document.getElementById('ag-mt-prof').onchange=function(){
       agLlenarServiciosSel(document.getElementById('ag-mt-srv-sel'), null);
     };
-  }, 50);
+    // Re-fill on focus in case something reset it
+    srvSel.onfocus=function(){
+      if(this.options.length<=1)agLlenarServiciosSel(this, _t?_t.servicio:null);
+    };
+  }
+  setTimeout(_fillSrvs, 50);
+  setTimeout(_fillSrvs, 200);
+  setTimeout(_fillSrvs, 500);
 }
 
 let agTipoActual = 'turno';
