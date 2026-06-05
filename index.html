@@ -1236,6 +1236,16 @@ td.ag-slot-free{background:transparent}
     <div><label class="flbl" style="margin-top:0">Desde</label><input class="finp" id="mp-d" type="time" value="09:00" style="margin-top:.3rem"></div>
     <div><label class="flbl" style="margin-top:0">Hasta</label><input class="finp" id="mp-h" type="time" value="17:00" style="margin-top:.3rem"></div>
   </div>
+  <label class="flbl" style="margin-top:.8rem">📋 Servicios que realiza</label>
+  <div id="mp-cats" style="display:flex;flex-wrap:wrap;gap:.5rem;margin-top:.4rem">
+    <label style="display:flex;align-items:center;gap:4px;font-family:Raleway,sans-serif;font-size:12px;cursor:pointer"><input type="checkbox" value="facial"> Faciales</label>
+    <label style="display:flex;align-items:center;gap:4px;font-family:Raleway,sans-serif;font-size:12px;cursor:pointer"><input type="checkbox" value="mani"> Manicura</label>
+    <label style="display:flex;align-items:center;gap:4px;font-family:Raleway,sans-serif;font-size:12px;cursor:pointer"><input type="checkbox" value="pedi"> Pedicura</label>
+    <label style="display:flex;align-items:center;gap:4px;font-family:Raleway,sans-serif;font-size:12px;cursor:pointer"><input type="checkbox" value="masajes"> Masajes</label>
+    <label style="display:flex;align-items:center;gap:4px;font-family:Raleway,sans-serif;font-size:12px;cursor:pointer"><input type="checkbox" value="pestañas"> Pestañas & Cejas</label>
+    <label style="display:flex;align-items:center;gap:4px;font-family:Raleway,sans-serif;font-size:12px;cursor:pointer"><input type="checkbox" value="maquillaje"> Maquillaje</label>
+    <label style="display:flex;align-items:center;gap:4px;font-family:Raleway,sans-serif;font-size:12px;cursor:pointer"><input type="checkbox" value="laser"> Dep. definitiva</label>
+  </div>
   <div id="ok-mp" class="ok"></div><div id="er-mp" class="er"></div>
   <div class="mc-acts"><button class="btn-cancel" onclick="cerrarM(&#39;m-prof&#39;)">Cancelar</button><button class="btn-v" style="flex:1" onclick="guardarP()">Guardar</button></div>
 </div></div>
@@ -2804,17 +2814,17 @@ function agAbrirNuevo(t=null){
   sel.value=t?t.prof:(ROL_PANEL[curPUser]==='prof'?curPUser:AG_PROFS[0].id);
   document.getElementById('ok-ag-mt').classList.remove('on');
   document.getElementById('er-ag-mt').classList.remove('on');
-  // Load services for selected prof
-  (function(){
-    var profId=document.getElementById('ag-mt-prof').value;
+  document.getElementById('modal-ag-turno').classList.add('on');
+  // Load services after modal is visible
+  var _t=t;
+  setTimeout(function(){
     var srvSel=document.getElementById('ag-mt-srv-sel');
     if(!srvSel)return;
-    agLlenarServiciosSel(srvSel, t ? t.servicio : null);
+    agLlenarServiciosSel(srvSel, _t ? _t.servicio : null);
     document.getElementById('ag-mt-prof').onchange=function(){
-      agLlenarServiciosSel(srvSel, null);
+      agLlenarServiciosSel(document.getElementById('ag-mt-srv-sel'), null);
     };
-  })();
-  document.getElementById('modal-ag-turno').classList.add('on');
+  }, 50);
 }
 
 let agTipoActual = 'turno';
