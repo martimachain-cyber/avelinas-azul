@@ -5,6 +5,10 @@
   setTimeout(function(){
     if(fecha){var fd=document.getElementById('ag-mt-fecha');if(fd)fd.value=fecha;}
     if(profId){var pr=document.getElementById('ag-mt-prof');if(pr)pr.value=profId;}
+    setTimeout(function(){
+      var s=document.getElementById('ag-mt-srv-sel');
+      if(s&&typeof agLlenarServiciosSel==='function')agLlenarServiciosSel(s,null);
+    },200);
   },60);
 }
 <!-- saved from url=(0034)https://avelinas-azul.netlify.app/ -->
@@ -2829,9 +2833,7 @@ function agAbrirNuevo(t=null){
       if(this.options.length<=1)agLlenarServiciosSel(this, _t?_t.servicio:null);
     };
   }
-  setTimeout(_fillSrvs, 50);
-  setTimeout(_fillSrvs, 200);
-  setTimeout(_fillSrvs, 500);
+  setTimeout(_fillSrvs, 300);
 }
 
 let agTipoActual = 'turno';
@@ -5219,10 +5221,7 @@ function agNuevoDesdeSlot(el){
     const prEl=document.getElementById('ag-mt-prof');if(prEl&&profId)prEl.value=profId;
     const horaSel=document.getElementById('ag-mt-hora');if(horaSel&&hora)horaSel.value=hora;
     const prof=D.profesionales.find(function(p){return p.id===profId;});
-    if(prof&&prof.cats&&prof.cats.length){
-      const catSel=document.getElementById('ag-mt-cat');
-      if(catSel){catSel.value=prof.cats[0];if(typeof agMtCatChange==='function')agMtCatChange();}
-    }
+    agLlenarServiciosSel(document.getElementById('ag-mt-srv-sel'), null);
   }, 80);
 }
 
@@ -5256,11 +5255,7 @@ function agMtNuevaCl(){
   if(drop)drop.style.display='none';
 }
 function agMtCatChange(){
-  const cat=document.getElementById('ag-mt-cat').value;
-  const sel=document.getElementById('ag-mt-srv-sel');if(!sel)return;
-  const svs=cat?D.servicios[cat]||[]:[];
-  sel.innerHTML='<option value="">— Elegí un servicio —</option>'+svs.map(function(s){return'<option value="'+s.n+'|'+(s.dur||30)+'">'+s.n+'</option>';}).join('');
-  document.getElementById('ag-mt-servicio').value='';
+  agLlenarServiciosSel(document.getElementById('ag-mt-srv-sel'), null);
 }
 function agMtSrvChange(){
   const val=document.getElementById('ag-mt-srv-sel').value;
