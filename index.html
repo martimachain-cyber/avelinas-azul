@@ -351,7 +351,7 @@ td.ag-slot-free{background:transparent}
     <li><a onclick="goPage(&#39;nosotras&#39;)">Nosotras</a></li>
     <li><a onclick="goPage(&#39;contacto&#39;)">Contacto</a></li>
   </ul>
-  <button class="nav-cta" onclick="abrirMiCuenta()" id="nav-mi-cuenta">Martina</button>
+  <button class="nav-cta" onclick="abrirMiCuenta()" id="nav-mi-cuenta">Mi cuenta</button>
   <button class="nav-menu" onclick="toggleMobMenu()">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="22" height="22">
       <line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="18" x2="21" y2="18"></line>
@@ -1249,7 +1249,8 @@ td.ag-slot-free{background:transparent}
   <button class="mc-cancel" onclick="cerrarM(&#39;m-canje&#39;)">Cancelar</button>
 </div></div>
 
-<script>
+<script>try{var _pu=sessionStorage.getItem("avPU");if(_pu&&ROL_PANEL[_pu]){curPUser=_pu;setTimeout(function(){document.querySelectorAll(".pg").forEach(function(p){p.style.display="";});goPage("panel");var _pl=document.getElementById("panel-login");if(_pl)_pl.style.display="none";if(ROL_PANEL[_pu]==="admin"){var _pa=document.getElementById("panel-admin");if(_pa)_pa.style.display="block";renderAdmRes();}else{initProfPanel();}},200);}}catch(e){}
+
 // ===== DATA =====
 const CLAVES_PANEL={martina:'avelinas743',lucia:'lucia123',emilia:'emilia123',camila:'camila123',ludovica:'ludo123',rosario:'rosario123',virginia:'virginia123'};
 const ROL_PANEL={martina:'admin',lucia:'admin',emilia:'prof',camila:'prof',ludovica:'prof',rosario:'prof',virginia:'prof'};
@@ -2795,7 +2796,7 @@ function irAgendaDesdePanel(){
   // Hide all panel sections
   // pg-panel hides via the .pg class system (removes 'on')
   // Also hide pg-panel if it exists as a pg
-  document.querySelectorAll('.pg').forEach(function(p){p.classList.remove('on');});
+  document.querySelectorAll('.pg').forEach(function(p){p.classList.remove('on');p.style.display='';});
   const agPg=document.getElementById('pg-agenda');
   if(agPg){agPg.classList.add('on');agPg.style.display='block';}
   agFecha=new Date();
@@ -5539,7 +5540,7 @@ function clsSetTab(tab,btn){
   </div>
 </div>
 
-<div id="pg-agenda" class="pg" style="display: block;">
+<div id="pg-agenda" class="pg">
   <div id="ag-toolbar" style="background:var(--texto);padding:.6rem 1rem;margin-top:54px;display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;position:sticky;top:0;z-index:10">
     <button class="ag-btn" onclick="agNavSem(-1)">◀</button>
     <div id="ag-titulo" style="font-family:Raleway,sans-serif;font-size:13px;color:var(--crema);flex:1;text-align:center">Mar 19 Mayo 2026</div>
