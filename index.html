@@ -2513,7 +2513,7 @@ function agRender(){
     out+='<tr style="height:24px">';
     // Time label cell
     out+='<td style="width:56px;min-width:56px;background:#fff;position:sticky;left:0;z-index:2;border-right:2px solid var(--cd);vertical-align:top;padding:2px 6px 0 4px">';
-    if(isHour) out+='<span style="font-size:10px;color:var(--gc);font-family:Raleway,sans-serif;white-space:nowrap">'+slotH+'</span>';
+    out+='<span style="font-size:'+(isHour?'10':'9')+'px;color:'+(isHour?'var(--gc)':'var(--cd)')+';font-family:Raleway,sans-serif;white-space:nowrap">'+slotH+'</span>';
     out+='</td>';
     // Prof columns
     if(agVista==='semana'){
