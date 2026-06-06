@@ -2714,7 +2714,7 @@ function agMtCargarServicios(forzarProfId){
       o+='<optgroup label="'+(CATS_LABELS[cat]||cat)+'">';
       svs.forEach(function(sv){
         var dur=sv.dur||0;
-        if(!dur&&sv.d){var a=sv.d.match(/([0-9]+)h/i);if(a)dur=parseInt(a[1])*60;var b=sv.d.match(/([0-9]+)\s*min/i);if(b)dur+=(dur?parseInt(b[1]):parseInt(b[1]));}
+        if(!dur&&sv.d){var a=sv.d.match(/([0-9]+)\s*h/i);if(a)dur=parseInt(a[1])*60;var b=sv.d.match(/([0-9]+)\s*min/i);if(b)dur+=parseInt(b[1]);}
         if(!dur)dur=60;
         var _pNum=parseInt((sv.p||'0').replace(/[^0-9]/g,''))||0;
         o+='<option value="'+sv.n+'|'+dur+'|'+_pNum+'">'+sv.n+(sv.p?' — '+sv.p:'')+'</option>';
