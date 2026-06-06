@@ -1804,6 +1804,27 @@ function volverClub(){
 }
 
 // ===== LOGIN CLIENTA =====
+function actualizarNavBtn(){
+  var btn=document.getElementById('nav-mi-cuenta');
+  if(!btn)return;
+  if(curPUser&&ROL_PANEL[curPUser]){
+    // Admin o profesional — mostrar "Panel →"
+    btn.textContent='Panel →';
+    btn.style.background='var(--oliva)';
+    btn.style.color='#fff';
+  }else if(curCl){
+    // Clienta logueada — mostrar su nombre
+    btn.textContent=curCl.n.split(' ')[0];
+    btn.style.background='';
+    btn.style.color='';
+  }else{
+    // Sin sesión
+    btn.textContent='Iniciar sesión';
+    btn.style.background='';
+    btn.style.color='';
+  }
+}
+
 function abrirMiCuenta(){
   // Si ya está logueada como clienta o equipo, ir directo
   if(curPUser){
@@ -1895,7 +1916,7 @@ function doRegistro(){
   sv();
   curCl=nuevaCl;
   cerrarM('modal-mi-cuenta');
-  document.getElementById('nav-mi-cuenta').textContent=nombre.split(' ')[0];
+  actualizarNavBtn();
   setTimeout(()=>{
     alert('¡Bienvenida, '+nombre.split(' ')[0]+'! 🌿\nTu cuenta fue creada exitosamente.');
     initTurnos();initClub();
@@ -1959,7 +1980,7 @@ function doLoginEquipo(){
   try{sessionStorage.setItem('avPU',eqSelU);}catch(e){}
   cerrarM('modal-mi-cuenta');
   // Update nav button
-  document.getElementById('nav-mi-cuenta').textContent=NOMBRES_P[curPUser]||curPUser;
+  actualizarNavBtn();
   if(ROL_PANEL[curPUser]==='admin'){
     initAdmin();
     goPage('panel');
@@ -1983,7 +2004,7 @@ function doLoginCl(){
   err.classList.remove('on');curCl=cl;
   cerrarM('modal-mi-cuenta');
   cerrarM('modal-cl-login');
-  document.getElementById('nav-mi-cuenta').textContent=cl.n.split(' ')[0];
+  actualizarNavBtn();
   initTurnos();initClub();
   // If we came from laser booking
   const laserPg=document.getElementById('pg-laser');if(laserPg&&laserPg.classList.contains('on')){initLaserBooking();}
@@ -2856,6 +2877,7 @@ function calNo(){
 // Wire up buttons that need event listeners
 document.addEventListener('DOMContentLoaded', function(){
   // Restaurar sesión desde sessionStorage
+  actualizarNavBtn();
   try{
     var _pu=sessionStorage.getItem('avPU');
     if(_pu&&ROL_PANEL[_pu]){
@@ -2873,7 +2895,7 @@ document.addEventListener('DOMContentLoaded', function(){
       }
       // Update nav button
       var navBtn=document.getElementById('nav-mi-cuenta');
-      if(navBtn)navBtn.textContent=NOMBRES_P[_pu]||_pu;
+      actualizarNavBtn();
     }
   }catch(e){}
 
