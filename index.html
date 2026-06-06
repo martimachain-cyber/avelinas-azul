@@ -2677,7 +2677,7 @@ function agAbrirNuevo(t=null){
   document.getElementById('ok-ag-mt').classList.remove('on');
   document.getElementById('er-ag-mt').classList.remove('on');
   // Load services for selected prof
-  (function(){
+  setTimeout(function(){
     var profId=document.getElementById('ag-mt-prof').value;
     var srvSel=document.getElementById('ag-mt-srv-sel');
     if(!srvSel)return;
@@ -2703,7 +2703,7 @@ function agAbrirNuevo(t=null){
     document.getElementById('ag-mt-prof').onchange=function(){
       srvSel.innerHTML=buildOpts(this.value);
     };
-  })();
+  },50);
   document.getElementById('modal-ag-turno').classList.add('on');
 }
 
