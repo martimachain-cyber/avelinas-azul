@@ -2680,8 +2680,9 @@ function agAbrirNuevo(t=null){
   sel.value=_profIdNuevo;
   document.getElementById('ok-ag-mt').classList.remove('on');
   document.getElementById('er-ag-mt').classList.remove('on');
-  // Pasar profId explícito para evitar timing issues
+  // Cargar servicios — con doble intento para cubrir timing de Supabase
   agMtCargarServicios(_profIdNuevo);
+  setTimeout(function(){agMtCargarServicios(_profIdNuevo);},600);
   document.getElementById('modal-ag-turno').classList.add('on');
 }
 
@@ -4823,7 +4824,18 @@ async function sbSync(){
         try {
           const parsed = JSON.parse(row.value);
           if(row.key==='main'){
-            D = Object.assign(defD(), parsed);
+            const _def = defD();
+            D = Object.assign(_def, parsed);
+            // Los servicios siempre vienen del código, nunca de Supabase
+            // (son datos del sistema, no del usuario)
+            D.servicios = _def.servicios;
+            // Preservar cats de profesionales si los del código son más completos
+            if(_def.profesionales && D.profesionales){
+              D.profesionales.forEach(function(p){
+                var dp=_def.profesionales.find(function(x){return x.id===p.id;});
+                if(dp&&dp.cats&&dp.cats.length&&(!p.cats||!p.cats.length))p.cats=dp.cats;
+              });
+            }
             localStorage.setItem(KEY, JSON.stringify(D));
           } else if(row.key==='caja'){
             cjD = parsed;
@@ -4837,6 +4849,17 @@ async function sbSync(){
           }
         } catch(e){}
       });
+      // Mergear dur de servicios laser (pueden no estar en Supabase)
+      if(D.servicios&&D.servicios.laser){
+        var laserDurs={'l1':90,'l2':75,'l3':70,'l4':55,'l5':40,'l6':35,'l7':45,'l8':25,'l9':15,'l10':10,'l11':20,'l12':10,'l13':10,'l14':10,'l15':15,'l16':20,'l17':20};
+        D.servicios.laser.forEach(function(sv){if(!sv.dur&&laserDurs[sv.id])sv.dur=laserDurs[sv.id];});
+      }
+      // Si el modal de turno está abierto, recargar servicios
+      var modalAbierto=document.getElementById('modal-ag-turno');
+      if(modalAbierto&&modalAbierto.classList.contains('on')){
+        var profActual=document.getElementById('ag-mt-prof');
+        if(profActual&&typeof agMtCargarServicios==='function')agMtCargarServicios(profActual.value);
+      }
       renderSrvPage();
       console.log('✓ Datos sincronizados desde Supabase');
       // Show sync indicator
