@@ -2823,11 +2823,23 @@ function mostrarModalCalendario(srv, prof, fecha, hora, dur){
   const d=pk(fecha);
   const DS2=['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
   const MSC2=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
-  document.getElementById('cal-modal-detalle').innerHTML=`
-    <strong>${srv}</strong><br>
-    👩 ${profNombre}<br>
-    📅 ${DS2[d.getDay()]} ${d.getDate()} ${MSC2[d.getMonth()]}<br>
-    🕐 ${hora}`;
+  const calDetalle=`<strong>${srv}</strong><br>👩 ${profNombre}<br>📅 ${DS2[d.getDay()]} ${d.getDate()} ${MSC2[d.getMonth()]}<br>🕐 ${hora}`;
+  const calContentEl=document.getElementById('cal-content')||document.getElementById('cal-modal-detalle');
+  if(calContentEl) calContentEl.innerHTML=calDetalle;
+  // Construir URL de Google Calendar
+  const [cy,cm,cd]=fecha.split('-');
+  const [chh,cmm]=hora.split(':');
+  const startDt=cy+cm+cd+'T'+chh+cmm+'00';
+  const endMinCal=parseInt(chh)*60+parseInt(cmm)+(dur||60);
+  const endHCal=String(Math.floor(endMinCal/60)).padStart(2,'0');
+  const endMCal=String(endMinCal%60).padStart(2,'0');
+  const endDt=cy+cm+cd+'T'+endHCal+endMCal+'00';
+  const gcalTit=encodeURIComponent(srv+' — Avelinas Azul');
+  const gcalDet=encodeURIComponent('Profesional: '+profNombre+'\nDirección: Olavarría 529, Azul\nTel: 2494 251936');
+  const gcalLoc=encodeURIComponent('Olavarría 529, Azul, Buenos Aires');
+  const gcalUrl='https://calendar.google.com/calendar/render?action=TEMPLATE&text='+gcalTit+'&dates='+startDt+'/'+endDt+'&details='+gcalDet+'&location='+gcalLoc+'&sf=true&output=xml';
+  const calLinkEl=document.getElementById('cal-link');
+  if(calLinkEl) calLinkEl.href=gcalUrl;
   document.getElementById('modal-calendario').classList.add('on');
 }
 function calSi(){
@@ -5923,7 +5935,7 @@ function clsSetTab(tab,btn){
   <div id="cal-content" style="text-align:center;padding:.5rem 0"></div>
   <div class="mc-acts">
     <button class="btn-cancel" onclick="cerrarM(&#39;modal-calendario&#39;)">Cerrar</button>
-    <a id="cal-link" href="https://avelinas-azul.netlify.app/#" target="_blank" class="btn-v" style="flex:1;text-align:center;display:flex;align-items:center;justify-content:center;text-decoration:none">📅 Agregar a Google Calendar</a>
+    <a id="cal-link" href="#" target="_blank" class="btn-v" style="flex:1;text-align:center;display:flex;align-items:center;justify-content:center;text-decoration:none">📅 Agregar a Google Calendar</a>
   </div>
 </div></div>
 
