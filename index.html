@@ -2565,8 +2565,16 @@ function renderSlotCell(profId,fecha,hora,inWork,turno,blq,isHour,small){
   }
   if(turno){
     const bg=AG_COLORS[profId]||'var(--oliva)';
-    const tid=turno.id||('r_'+turno.id);
-    return '<td style="background:'+bg+';border-bottom:'+borderB+';border-left:1px solid var(--cd);cursor:pointer" onclick="agVerTurnoById(this.dataset.p,this.dataset.f,this.dataset.h)" data-p="'+profId+'" data-f="'+fecha+'" data-h="'+hora+'" title="'+(turno.cliente||turno.cl||'Turno')+'"></td>';
+    const fg=AG_FONTS[profId]||'#fff';
+    const esPrimero=(turno.hora===hora)||(turno.h===hora);
+    const nombre=turno.cliente||turno.cl||'Turno';
+    const srv=turno.servicio||turno.srv||'';
+    const dur=turno.duracion||turno.dur||'';
+    const label=esPrimero
+      ?('<div style="font-size:10px;font-weight:600;color:'+fg+';overflow:hidden;white-space:nowrap;text-overflow:ellipsis;line-height:1.2">'+nombre+'</div>'
+        +(srv?'<div style="font-size:9px;color:'+fg+';opacity:.75;overflow:hidden;white-space:nowrap;text-overflow:ellipsis">'+srv+(dur?' · '+dur+'min':'')+'</div>':''))
+      :'';
+    return '<td style="background:'+bg+';border-bottom:'+borderB+';border-left:1px solid var(--cd);cursor:pointer;padding:2px 4px;vertical-align:top" onclick="agVerTurnoById(this.dataset.p,this.dataset.f,this.dataset.h)" data-p="'+profId+'" data-f="'+fecha+'" data-h="'+hora+'" title="'+nombre+'">'+label+'</td>';
   }
   if(!inWork){
     return '<td style="background:rgba(0,0,0,.04);border-bottom:'+borderB+';border-left:1px solid var(--cd)"></td>';
@@ -5318,72 +5326,82 @@ function renderLaserTimeline(fecha){
   var manual=(agD.turnos||[]).filter(function(t){return t.fecha===fecha&&t.prof==='camila';});
   var online=(D.reservas||[]).filter(function(r){return r.f===fecha&&r.prof==='camila';});
   var todos=manual.map(function(t){
-    return{hora:t.hora,cliente:t.cliente||'',srv:t.servicio||'',dur:t.duracion||30,precio:t.precio||0,id:String(t.id),senia:t.senia||0,manual:true};
+    return{hora:t.hora,dur:t.duracion||30,nombre:t.cliente||'',srv:t.servicio||'',precio:t.precio||0,id:String(t.id),senia:t.senia||0};
   }).concat(online.map(function(r){
-    return{hora:r.h,cliente:r.cl||'',srv:r.srv||'',dur:60,precio:0,id:'r_'+r.id,manual:false};
+    return{hora:r.h,dur:60,nombre:r.cl||'',srv:r.srv||'',precio:0,id:'r_'+r.id,senia:0};
   }));
   todos.sort(function(a,b){return a.hora.localeCompare(b.hora);});
 
   var totalRec=todos.reduce(function(s,t){return s+(t.precio||0);},0);
   var totalMin=todos.reduce(function(s,t){return s+(t.dur||30);},0);
 
-  function slotOcupado(slotHora){
-    var slotMin=parseInt(slotHora.split(':')[0])*60+parseInt(slotHora.split(':')[1]);
-    return todos.find(function(t){
-      var ini=parseInt(t.hora.split(':')[0])*60+parseInt(t.hora.split(':')[1]);
-      return slotMin>=ini&&slotMin<ini+(t.dur||30);
-    });
-  }
+  // Mapa de minutos ocupados
+  var ocupMap={};
+  todos.forEach(function(t){
+    var ini=parseInt(t.hora.split(':')[0])*60+parseInt(t.hora.split(':')[1]);
+    for(var i=0;i<t.dur;i++) ocupMap[ini+i]=t;
+  });
 
+  function toStr(m){return String(Math.floor(m/60)).padStart(2,'0')+':'+String(m%60).padStart(2,'0');}
+
+  // Stats
   var out='<div style="display:flex;gap:.5rem;margin-bottom:.8rem">'
     +'<div class="sc" style="flex:1"><div class="sc-n" style="color:var(--oliva)">'+todos.length+'</div><div class="sc-l">Turnos</div></div>'
     +'<div class="sc" style="flex:1"><div class="sc-n">'+totalMin+' min</div><div class="sc-l">Tiempo</div></div>'
     +'<div class="sc" style="flex:1"><div class="sc-n" style="color:var(--oliva)">'+fmtPeso(totalRec)+'</div><div class="sc-l">Total</div></div>'
     +'</div>';
 
-  if(todos.length){
-    out+='<div style="margin-bottom:.8rem">';
-    todos.forEach(function(t){
-      var seniaHtml=t.senia?(' · <span style="color:var(--oliva)">Seña: '+fmtPeso(t.senia)+'</span>'):'';
-      var restoHtml=(t.precio&&t.senia)?(' · <span style="color:var(--gc)">Resto: '+fmtPeso(t.precio-t.senia)+'</span>'):'';
-      var editBtn=t.manual?('<button class="ls-edit" data-id="'+t.id+'" style="background:var(--crema);border:1px solid var(--cd);border-radius:2px;padding:4px 8px;font-size:10px;cursor:pointer;color:var(--texto)">Editar</button>'):'';
-      var cobrarBtn='<button class="ls-cobrar" data-id="'+t.id+'" data-fecha="'+fecha+'" style="background:var(--oliva);border:none;border-radius:2px;padding:4px 8px;font-size:10px;cursor:pointer;color:#fff">💰 Cobrar</button>';
-      out+='<div style="display:flex;align-items:center;gap:.5rem;padding:8px;background:#fff;border:1px solid var(--cd);border-radius:3px;margin-bottom:4px;border-left:3px solid var(--oliva)">'
-        +'<div style="font-family:Raleway,sans-serif;font-size:13px;font-weight:600;color:var(--oliva);min-width:45px">'+t.hora+'</div>'
-        +'<div style="flex:1;min-width:0">'
-        +'<div style="font-size:13px;font-weight:500;color:var(--texto);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+t.cliente+'</div>'
-        +'<div style="font-size:11px;color:var(--gc)">'+t.srv+' · '+t.dur+' min</div>'
-        +(t.precio?'<div style="font-size:11px;color:var(--texto)">'+fmtPeso(t.precio)+seniaHtml+restoHtml+'</div>':'')
-        +'</div>'
-        +'<div style="display:flex;gap:4px;flex-shrink:0">'+editBtn+cobrarBtn+'</div>'
-        +'</div>';
-    });
-    out+='</div>';
-  }
+  // Grilla — tabla con hora a la izquierda y columna Camila
+  out+='<div style="border:1px solid var(--cd);border-radius:4px;overflow:hidden">';
+  out+='<table style="width:100%;border-collapse:collapse">';
+  out+='<thead><tr>'
+    +'<th style="width:52px;background:var(--crema);border-bottom:1px solid var(--cd);padding:6px 4px;font-size:10px;color:var(--gris);font-family:Raleway,sans-serif"></th>'
+    +'<th style="background:var(--crema);border-bottom:1px solid var(--cd);border-left:1px solid var(--cd);padding:6px;text-align:center;font-size:12px;font-weight:600;color:var(--oliva);font-family:Raleway,sans-serif">Camila · Depilación definitiva</th>'
+    +'</tr></thead>';
+  out+='<tbody>';
 
-  out+='<div style="font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--gc);margin-bottom:.5rem">Horarios disponibles</div>';
-  out+='<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:4px">';
+  var rendered={};
   for(var m=8*60;m<20*60;m+=30){
-    var hStr=String(Math.floor(m/60)).padStart(2,'0')+':'+String(m%60).padStart(2,'0');
-    if(!slotOcupado(hStr)){
-      out+='<div class="ls-slot-libre" data-fecha="'+fecha+'" data-hora="'+hStr+'" style="padding:8px 4px;text-align:center;border-radius:3px;border:1.5px solid var(--cd);cursor:pointer;background:#fff;-webkit-tap-highlight-color:transparent">'
-        +'<div style="font-family:Raleway,sans-serif;font-size:12px;font-weight:500;color:var(--texto)">'+hStr+'</div>'
-        +'<div style="font-size:9px;color:var(--oliva);text-transform:uppercase;letter-spacing:.05em">Libre</div>'
-        +'</div>';
-    }
-  }
-  out+='</div>';
-  slotsEl.innerHTML=out;
+    var isHour=m%60===0;
+    var hStr=toStr(m);
+    var borderB=isHour?'1px solid var(--cd)':'1px dashed rgba(184,178,172,.3)';
+    var turno=ocupMap[m];
+    var esPrimero=turno&&(turno.hora===hStr);
 
-  // Event listeners para los botones dinámicos
-  slotsEl.querySelectorAll('.ls-edit').forEach(function(btn){
-    btn.addEventListener('click',function(){laserEditarTurno(this.dataset.id);});
+    out+='<tr>';
+    // Celda hora
+    out+='<td style="width:52px;min-width:52px;background:var(--crema);border-bottom:'+borderB+';padding:2px 6px 0;vertical-align:top">'
+      +(isHour?'<span style="font-size:10px;color:var(--gc);font-family:Raleway,sans-serif">'+hStr+'</span>':'')
+      +'</td>';
+
+    // Celda turno o libre
+    if(turno&&!rendered[turno.id]){
+      // Primera celda de este turno — calcular rowspan
+      rendered[turno.id]=true;
+      var slots=Math.max(Math.round((turno.dur||30)/30),1);
+      var ht=slots*20;
+      out+='<td rowspan="'+slots+'" class="ls-edit" data-id="'+turno.id+'" style="background:#a8b8c5;border-bottom:1px solid var(--cd);border-left:1px solid var(--cd);cursor:pointer;padding:4px 6px;vertical-align:top">'
+        +'<div style="font-size:11px;font-weight:600;color:#1e3040;overflow:hidden;white-space:nowrap;text-overflow:ellipsis">'+turno.nombre+'</div>'
+        +(turno.srv?'<div style="font-size:10px;color:#1e3040;opacity:.8;overflow:hidden;white-space:nowrap;text-overflow:ellipsis">'+turno.srv+' · '+turno.dur+' min</div>':'')
+        +(turno.precio?'<div style="font-size:10px;color:#1e3040;opacity:.65">'+fmtPeso(turno.precio)+(turno.senia?' · Seña: '+fmtPeso(turno.senia):'')+'</div>':'')
+        +'</td>';
+    } else if(!turno){
+      out+='<td class="ls-slot-libre" data-fecha="'+fecha+'" data-hora="'+hStr+'" style="border-bottom:'+borderB+';border-left:1px solid var(--cd);cursor:pointer;text-align:center;padding:4px">'
+        +'<span style="font-size:10px;color:var(--oliva);opacity:.5">+ '+hStr+'</span>'
+        +'</td>';
+    }
+    // Si está ocupado pero ya renderizado (rowspan), no agregar celda
+    out+='</tr>';
+  }
+
+  out+='</tbody></table></div>';
+  slotsEl.innerHTML=out;
+  // Event listeners para celdas dinámicas
+  slotsEl.querySelectorAll('.ls-edit').forEach(function(el){
+    el.addEventListener('click',function(){laserEditarTurno(this.dataset.id);});
   });
-  slotsEl.querySelectorAll('.ls-cobrar').forEach(function(btn){
-    btn.addEventListener('click',function(){laserCobrarTurno(this.dataset.id,this.dataset.fecha);});
-  });
-  slotsEl.querySelectorAll('.ls-slot-libre').forEach(function(slot){
-    slot.addEventListener('click',function(){laserAgregarDesdeSlot(this.dataset.fecha,this.dataset.hora);});
+  slotsEl.querySelectorAll('.ls-slot-libre').forEach(function(el){
+    el.addEventListener('click',function(){laserAgregarDesdeSlot(this.dataset.fecha,this.dataset.hora);});
   });
 }
 
