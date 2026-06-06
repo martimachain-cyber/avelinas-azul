@@ -2353,7 +2353,7 @@ const AG_FONTS={emilia:'#2d4a28',camila:'#1e3040',ludovica:'#40301e',rosario:'#4
 const AG_H_INI=8,AG_H_FIN=21,AG_SLOT=40,AG_SLOT_MIN=30;
 
 function agLd(){try{const d=localStorage.getItem(AG_KEY);return d?JSON.parse(d):{turnos:[]}}catch(e){return{turnos:[]}}}
-function agSv(){try{localStorage.setItem(AG_KEY,JSON.stringify(agD))}catch(e){}sbSaveKey('agenda',agD);}
+function agSv(){try{localStorage.setItem(AG_KEY,JSON.stringify(agD))}catch(e){}if(typeof sbSaveKey==='function')sbSaveKey('agenda',agD);}
 let agD=agLd();
 let agVista='dia',agFecha=new Date(),agFiltroProfs=AG_PROFS.map(p=>p.id),agVerTurnoId=null;
 
@@ -3081,7 +3081,7 @@ function cjLd(){
     if(!parsed.cierres)parsed.cierres=[];
     return parsed;
   }catch(e){return{cobros:[],egresos:[],adelantos:[],retiros:[],cierres:[]};}}
-function cjSv(){try{localStorage.setItem(CJ_KEY,JSON.stringify(cjD))}catch(e){}sbSaveKey('caja',cjD);}
+function cjSv(){try{localStorage.setItem(CJ_KEY,JSON.stringify(cjD))}catch(e){}if(typeof sbSaveKey==='function')sbSaveKey('caja',cjD);}
 let cjD=cjLd();
 let cjPer='mes', cjTab='resumen', cjMesSel='';
 
@@ -3851,7 +3851,7 @@ function exportarExcel(){
 // ===== PRODUCTOS =====
 const PROD_KEY='av_prod_v1';
 function prodLd(){try{const d=localStorage.getItem(PROD_KEY);return d?JSON.parse(d):{productos:[],ventas:[],proveedores:[],cuentaCorriente:[],pedidoManuales:[]}}catch(e){return{productos:[],ventas:[],proveedores:[],cuentaCorriente:[],pedidoManuales:[]}}}
-function prodSv(){try{localStorage.setItem(PROD_KEY,JSON.stringify(prodD))}catch(e){}sbSaveKey('productos',prodD);}
+function prodSv(){try{localStorage.setItem(PROD_KEY,JSON.stringify(prodD))}catch(e){}if(typeof sbSaveKey==='function')sbSaveKey('productos',prodD);}
 let prodD=prodLd();
 // Remove duplicate products by ID
 if(prodD.productos){
@@ -4766,9 +4766,9 @@ function initSupabase(){
 // Periodic sync every 5 minutes to keep cloud updated
 setInterval(function(){
   if(!sbSyncEnabled||!sbClient)return;
-  sbSaveKey('caja', cjD);
-  sbSaveKey('agenda', agD);
-  sbSaveKey('productos', prodD);
+  if(typeof sbSaveKey==='function')sbSaveKey('caja', cjD);
+  if(typeof sbSaveKey==='function')sbSaveKey('agenda', agD);
+  if(typeof sbSaveKey==='function')sbSaveKey('productos', prodD);
 }, 300000);
 
 async function sbSync(){
