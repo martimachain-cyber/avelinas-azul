@@ -1168,6 +1168,7 @@ td.ag-slot-free{background:transparent}
   <div style="display:flex;gap:.3rem;margin-bottom:.8rem;border-bottom:1px solid var(--cd);padding-bottom:.5rem">
     <button class="cpill on" id="ficha-tab-obs" onclick="fichaSetTab(&#39;obs&#39;,this)" style="font-size:11px;padding:4px 10px">📝 Observaciones</button>
     <button class="cpill" id="ficha-tab-hist" onclick="fichaSetTab(&#39;hist&#39;,this)" style="font-size:11px;padding:4px 10px">📋 Historial</button>
+    <button class="cpill" id="ficha-tab-cc" onclick="fichaSetTab(&#39;cc&#39;,this)" style="font-size:11px;padding:4px 10px">💳 Cta. cte.</button>
     <button class="cpill" id="ficha-tab-info" onclick="fichaSetTab(&#39;info&#39;,this)" style="font-size:11px;padding:4px 10px">👤 Info</button>
   </div>
   <div id="ficha-obs">
@@ -1178,7 +1179,22 @@ td.ag-slot-free{background:transparent}
     </div>
   </div>
   <div id="ficha-hist" style="display:none"><div id="ficha-hist-lista" style="max-height:260px;overflow-y:auto"></div></div>
-  <div id="ficha-info" style="display:none"><div id="ficha-info-content" style="font-size:13px;color:var(--gris);line-height:1.9"></div></div>
+  <div id="ficha-cc" style="display:none">
+  <div id="ficha-cc-saldo" style="margin-bottom:.8rem"></div>
+  <div id="ficha-cc-lista" style="margin-bottom:.8rem"></div>
+  <div id="ficha-cc-form" style="background:var(--crema);border-radius:4px;padding:.8rem">
+    <div style="font-size:11px;font-weight:600;color:var(--oliva);margin-bottom:.5rem;font-family:Raleway,sans-serif">Registrar movimiento</div>
+    <select class="fsel" id="ficha-cc-tipo" style="margin-bottom:.4rem">
+      <option value="pago">Pago recibido</option>
+      <option value="cargo">Cargo (deuda)</option>
+      <option value="ajuste">Ajuste manual</option>
+    </select>
+    <input class="finp" id="ficha-cc-monto" type="number" min="0" placeholder="Monto $" style="margin-bottom:.4rem">
+    <input class="finp" id="ficha-cc-concepto" placeholder="Concepto (ej: seña facial)" style="margin-bottom:.6rem">
+    <button class="btn-v" style="width:100%" onclick="fichaGuardarCC()">Guardar</button>
+  </div>
+</div>
+<div id="ficha-info" style="display:none"><div id="ficha-info-content" style="font-size:13px;color:var(--gris);line-height:1.9"></div></div>
 </div></div>
 
 <div id="modal-cl-login" class="modal" style="display:none!important"></div>
@@ -1641,8 +1657,11 @@ function selTDia(f){tDia=f;tSlot=null;renderTCal();renderTSlots()}
 function renderTSlots(){
   const p=D.profesionales.find(x=>x.id===tProf);
   const d=pk(tDia),h=p&&p.h[d.getDay()];if(!h)return;
-  const ocup=D.reservas.filter(r=>r.prof===tProf&&r.f===tDia).map(r=>r.h);
-  let slots=[];let m=h[0]*60;while(m<h[1]*60){slots.push(String(Math.floor(m/60)).padStart(2,'0')+':'+String(m%60).padStart(2,'0'));m+=15;}
+  const ocup=[
+    ...D.reservas.filter(r=>r.prof===tProf&&r.f===tDia).map(r=>r.h),
+    ...(agD.turnos||[]).filter(t=>t.prof===tProf&&t.fecha===tDia).map(t=>t.hora)
+  ];
+  let slots=[];let m=h[0]*60;while(m<h[1]*60){slots.push(String(Math.floor(m/60)).padStart(2,'0')+':'+String(m%60).padStart(2,'0'));m+=30;}
   document.getElementById('t-slots-tit').textContent=ff(d);
   document.getElementById('t-slots').innerHTML=slots.map(s=>{const o=ocup.includes(s);return`<div class="sl ${o?'ocp':tSlot===s?'slc':'lib'}" onclick="${o?'':'selTSlot(\''+s+'\')'}"><div class="sl-h">${s}</div><div class="sl-e">${o?'Ocp':'Libre'}</div></div>`}).join('');
   document.getElementById('t-slots-wrap').style.display='block';
@@ -1664,8 +1683,24 @@ function tConfirmar(){
   const ok=document.getElementById('ok-t'),er=document.getElementById('er-t');
   ok.classList.remove('on');er.classList.remove('on');
   if(D.reservas.find(r=>r.prof===tProf&&r.f===tDia&&r.h===tSlot)){er.textContent='Ese turno ya fue tomado.';er.classList.add('on');return}
+  const resId='r_'+Date.now();
   const nuevaRes={id:Date.now(),prof:tProf,f:tDia,h:tSlot,tel:curCl.tel,cl:curCl.n,srv:tSrv.n,dur:tSrv.dur||60};
   D.reservas.push(nuevaRes);
+  // También agregar a agD.turnos para que aparezca en la agenda del panel
+  if(!agD.turnos) agD.turnos=[];
+  agD.turnos.push({
+    id: resId,
+    prof: tProf,
+    fecha: tDia,
+    hora: tSlot,
+    duracion: tSrv.dur||60,
+    cliente: curCl.n,
+    tel: curCl.tel,
+    servicio: tSrv.n,
+    precio: parseInt((tSrv.p||'0').replace(/[^0-9]/g,''))||0,
+    online: true
+  });
+  agSv();
   sv();
   // Show calendar prompt
   mostrarModalCalendario(tSrv.n, tProf, tDia, tSlot, tSrv.dur||60);
@@ -2644,10 +2679,17 @@ function agVerTurno(id){
   const isAdmin=ROL_PANEL[curPUser]==='admin';
   const canEdit=isAdmin&&!t.online;
   const _mvId="modal-ag-ver";
-  const agMvCancelBtn="<button class=\"btn-cancel\" onclick=\"cerrarM('"+_mvId+"')\">Cerrar</button>";
-  const agMvEditBtn=canEdit?"<button class=\"btn-red\" onclick=\"agEditarDesdeVer()\">Editar</button>":"";
+  const agMvCancelBtn="<button class=\"btn-cancel\" onclick=\"cerrarM('modal-ag-ver')\">Cerrar</button>";
+  const agMvEditBtn=canEdit?"<button class=\"btn-v\" onclick=\"agEditarDesdeVer()\">Editar</button>":"";
   const agMvDelBtn=isAdmin?"<button class=\"btn-red\" onclick=\"agEliminarDesdeVer()\">Eliminar</button>":"";
-  document.getElementById("ag-mv-acts").innerHTML=agMvCancelBtn+agMvEditBtn+agMvDelBtn;
+  const agMvFichaBtn=clFicha?"<button class=\"btn-v\" style=\"background:var(--oliva)\" onclick=\"cerrarM('modal-ag-ver');abrirFicha('"+clFicha.id+"',false)\">👤 Ver ficha</button>":"";
+  // WhatsApp recordatorio
+  const clTel=(clFicha&&clFicha.tel)||t.tel||'';
+  const profN2=AG_PROFS.find(function(p){return p.id===t.prof;});
+  const waMsg=encodeURIComponent('Hola '+t.cliente+'! Te recordamos tu turno en Avelinas Azul:\n✦ '+t.servicio+'\n👩 '+(profN2?profN2.n:t.prof)+'\n📅 '+agFf(agPk(t.fecha))+' a las '+t.hora+'hs\nTe esperamos! 🌿');
+  const waTel=clTel.replace(/[^0-9]/g,'');
+  const waBtn=clTel?"<button class=\"btn-v\" style=\"background:#25d366\" onclick=\"window.open('https://wa.me/549"+waTel+"?text="+waMsg+"','_blank')\">📱 WhatsApp</button>":"";
+  document.getElementById("ag-mv-acts").innerHTML=agMvFichaBtn+waBtn+agMvEditBtn+agMvCancelBtn+agMvDelBtn;
   document.getElementById('modal-ag-ver').classList.add('on');
 }
 
@@ -3527,7 +3569,38 @@ function abrirModalCobro(id){
   document.getElementById('ok-cobro').classList.remove('on');
   document.getElementById('er-cobro').classList.remove('on');
   document.getElementById('modal-cobro').classList.add('on');
+  setTimeout(cjActualizarInfoCC,100);
 }
+
+function cjActualizarInfoCC(){
+  var nombre = (document.getElementById('cobro-cliente')||{}).value||'';
+  var infoEl = document.getElementById('cobro-cc-info');
+  var opcsEl = document.getElementById('cobro-cc-opciones');
+  if(!infoEl||!opcsEl) return;
+  var cl = D.clientas.find(function(c){return c.n.toLowerCase()===nombre.toLowerCase();});
+  if(!cl||!cl.cc||!cl.cc.length){
+    infoEl.style.display='none';
+    opcsEl.style.display='none';
+    return;
+  }
+  var cc = fichaGetCC(cl);
+  var saldo = cc.saldo;
+  if(saldo===0){
+    infoEl.style.display='none';
+    opcsEl.style.display='none';
+    return;
+  }
+  var color = saldo>0?'var(--oliva)':'#c0392b';
+  var label = saldo>0?'💳 Tiene saldo a favor: ':'⚠️ Tiene deuda pendiente: ';
+  infoEl.style.display='block';
+  infoEl.style.borderLeft='3px solid '+color;
+  infoEl.innerHTML='<span style="color:'+color+';font-weight:600">'+label+fmtPeso(Math.abs(saldo))+'</span>';
+  opcsEl.style.display='block';
+  // Si tiene deuda, no mostrar checkbox de saldo a favor
+  var chk = document.getElementById('cobro-aplicar-cc');
+  if(chk) chk.parentElement.style.display = saldo>0?'flex':'none';
+}
+
 
 function cjGuardarCobro(){
   const prof=document.getElementById('cobro-prof').value;
@@ -3545,9 +3618,27 @@ function cjGuardarCobro(){
     const idx=cjD.cobros.findIndex(function(x){return x.id===id;});
     if(idx>=0)cjD.cobros[idx]=Object.assign(cjD.cobros[idx],{prof,cliente,srv,monto,metodo,fecha,notas});
   }else{
-    cjD.cobros.push({id:'cb_'+Date.now(),prof,cliente,srv,monto,metodo,fecha,notas});
-    // Auto suma punto club
+    // Verificar si hay saldo de cuenta corriente a aplicar
+    const aplicarCC=document.getElementById('cobro-aplicar-cc')&&document.getElementById('cobro-aplicar-cc').checked;
     const cl=D.clientas.find(function(c){return c.n.toLowerCase()===cliente.toLowerCase();});
+    let montoFinal=monto;
+    if(cl&&aplicarCC){
+      const cc=fichaGetCC(cl);
+      if(cc.saldo>0){
+        const aplicado=Math.min(cc.saldo,monto);
+        montoFinal=monto-aplicado;
+        if(!cl.cc)cl.cc=[];
+        cl.cc.push({id:'cc_'+Date.now(),tipo:'cargo',monto:aplicado,concepto:'Aplicado a cobro: '+srv,fecha:fecha,autor:'Sistema'});
+      }
+    }
+    // Si quedó debiendo (monto ingresado = 0 o parcial), registrar deuda
+    const deuda=parseFloat(document.getElementById('cobro-deuda')?document.getElementById('cobro-deuda').value:0)||0;
+    if(cl&&deuda>0){
+      if(!cl.cc)cl.cc=[];
+      cl.cc.push({id:'cc_'+Date.now(),tipo:'cargo',monto:deuda,concepto:'Deuda: '+srv,fecha:fecha,autor:NOMBRES_P[curPUser]||curPUser});
+    }
+    cjD.cobros.push({id:'cb_'+Date.now(),prof,cliente,srv,monto:montoFinal||monto,metodo,fecha,notas});
+    // Auto suma punto club
     if(cl){cl.pts=(cl.pts||0)+1;cl.hist=cl.hist||[];cl.hist.unshift({d:'Servicio: '+srv,f:fnow(),p:1});sv();}
   }
   cjSv();renderCaja();
@@ -4949,13 +5040,14 @@ function abrirFicha(clId, soloLectura){
 function fichaSetTab(tab, btn){
   document.querySelectorAll('#modal-ficha .cpill').forEach(function(b){b.classList.remove('on');});
   if(btn) btn.classList.add('on');
-  ['obs','hist','info'].forEach(function(t){
+  ['obs','hist','info','cc'].forEach(function(t){
     const el=document.getElementById('ficha-'+t);
     if(el) el.style.display=t===tab?'block':'none';
   });
   if(tab==='obs') fichaRenderObs();
   if(tab==='hist') fichaRenderHist();
   if(tab==='info') fichaRenderInfo();
+  if(tab==='cc') fichaRenderCC();
 }
 
 function fichaRenderObs(){
@@ -4972,10 +5064,110 @@ function fichaRenderObs(){
   obs.forEach(function(o){
     const d=document.createElement('div');
     d.style.cssText='background:var(--crema);border-radius:3px;padding:.6rem .8rem;margin-bottom:.4rem;border-left:3px solid var(--oliva)';
-    d.innerHTML='<div style="font-size:13px;color:var(--texto);line-height:1.5">'+o.texto+'</div>'
+    const puedeborrar=curPUser==='martina';
+    const delBtn=puedeborrar?'<button class="ficha-del-obs" data-id="'+o.id+'" style="background:transparent;border:none;font-size:11px;color:var(--gc);cursor:pointer;padding:0;float:right">✕</button>':'';
+    d.innerHTML=delBtn+'<div style="font-size:13px;color:var(--texto);line-height:1.5">'+o.texto+'</div>'
       +'<div style="font-size:10px;color:var(--gc);margin-top:3px">'+o.autor+' · '+o.fecha+'</div>';
     lista.appendChild(d);
   });
+  // Event listeners para borrar obs (solo Martina)
+  lista.querySelectorAll('.ficha-del-obs').forEach(function(btn){
+    btn.addEventListener('click',function(){fichaEliminarObs(this.dataset.id);});
+  });
+}
+
+function fichaGetCC(cl){
+  // Calcular saldo actual desde los movimientos
+  var movs = cl.cc || [];
+  var saldo = movs.reduce(function(s, m){
+    if(m.tipo==='pago'||m.tipo==='ajuste_favor') return s + (m.monto||0);
+    if(m.tipo==='cargo'||m.tipo==='ajuste_deuda') return s - (m.monto||0);
+    if(m.tipo==='ajuste') return s + (m.monto||0); // positivo=favor, negativo=deuda
+    return s;
+  }, 0);
+  return {saldo: saldo, movs: movs};
+}
+
+function fichaRenderCC(){
+  var cl = D.clientas.find(function(c){return c.id===fichaClId;});
+  if(!cl) return;
+  var cc = fichaGetCC(cl);
+  var saldo = cc.saldo;
+  var saldoEl = document.getElementById('ficha-cc-saldo');
+  var listaEl = document.getElementById('ficha-cc-lista');
+  if(!saldoEl||!listaEl) return;
+
+  // Saldo actual
+  var saldoColor = saldo >= 0 ? 'var(--oliva)' : '#c0392b';
+  var saldoLabel = saldo >= 0 ? 'Saldo a favor' : 'Deuda pendiente';
+  saldoEl.innerHTML = '<div style="background:var(--crema);border-radius:4px;padding:.8rem;text-align:center;border-left:4px solid '+saldoColor+'">'
+    + '<div style="font-family:Raleway,sans-serif;font-size:22px;font-weight:600;color:'+saldoColor+'">'+(saldo>=0?'+':'')+fmtPeso(Math.abs(saldo))+'</div>'
+    + '<div style="font-size:11px;color:var(--gc);margin-top:2px">'+saldoLabel+'</div>'
+    + '</div>';
+
+  // Historial de movimientos
+  if(!cc.movs.length){
+    listaEl.innerHTML='<div class="empty" style="font-size:12px">Sin movimientos registrados.</div>';
+    return;
+  }
+  var html='';
+  cc.movs.slice().reverse().forEach(function(m){
+    var esFavor = m.tipo==='pago'||(m.tipo==='ajuste'&&m.monto>=0);
+    var color = esFavor ? 'var(--oliva)' : '#c0392b';
+    var signo = esFavor ? '+' : '-';
+    var label = m.tipo==='pago'?'Pago':m.tipo==='cargo'?'Cargo':'Ajuste';
+    var delBtn = curPUser==='martina'
+      ? '<button class="ficha-del-cc" data-id="'+m.id+'" style="background:transparent;border:none;font-size:11px;color:var(--gc);cursor:pointer;float:right">✕</button>'
+      : '';
+    html += '<div style="display:flex;align-items:center;gap:.5rem;padding:7px 0;border-bottom:1px solid var(--cd)">'
+      + '<div style="flex:1"><div style="font-size:12px;font-weight:500;color:var(--texto)">'+label+(m.concepto?' — '+m.concepto:'')+'</div>'
+      + '<div style="font-size:10px;color:var(--gc)">'+m.fecha+' · '+( m.autor||'')+'</div></div>'
+      + delBtn
+      + '<div style="font-family:Raleway,sans-serif;font-size:13px;font-weight:600;color:'+color+'">'+signo+fmtPeso(Math.abs(m.monto))+'</div>'
+      + '</div>';
+  });
+  listaEl.innerHTML=html;
+  listaEl.querySelectorAll('.ficha-del-cc').forEach(function(btn){
+    btn.addEventListener('click',function(){fichaEliminarCC(this.dataset.id);});
+  });
+}
+
+function fichaGuardarCC(){
+  var cl = D.clientas.find(function(c){return c.id===fichaClId;});
+  if(!cl) return;
+  var tipo = document.getElementById('ficha-cc-tipo').value;
+  var monto = parseFloat(document.getElementById('ficha-cc-monto').value)||0;
+  var concepto = document.getElementById('ficha-cc-concepto').value.trim();
+  if(!monto){
+    alert('Ingresá un monto.');
+    return;
+  }
+  if(!cl.cc) cl.cc=[];
+  var autor = curPUser?(NOMBRES_P[curPUser]||curPUser):'Admin';
+  cl.cc.push({id:'cc_'+Date.now(), tipo:tipo, monto:monto, concepto:concepto, fecha:fnow(), autor:autor});
+  sv();
+  document.getElementById('ficha-cc-monto').value='';
+  document.getElementById('ficha-cc-concepto').value='';
+  fichaRenderCC();
+}
+
+function fichaEliminarCC(movId){
+  if(curPUser!=='martina') return;
+  var cl = D.clientas.find(function(c){return c.id===fichaClId;});
+  if(!cl||!cl.cc) return;
+  cl.cc = cl.cc.filter(function(m){return m.id!==movId;});
+  sv();
+  fichaRenderCC();
+}
+
+
+function fichaEliminarObs(obsId){
+  if(curPUser!=='martina')return;
+  const cl=D.clientas.find(function(c){return c.id===fichaClId;});
+  if(!cl||!cl.observaciones)return;
+  cl.observaciones=cl.observaciones.filter(function(o){return o.id!==obsId;});
+  sv();
+  fichaRenderObs();
 }
 
 function fichaGuardarObs(){
@@ -4985,7 +5177,7 @@ function fichaGuardarObs(){
   if(!texto)return;
   if(!cl.observaciones) cl.observaciones=[];
   const autor = curPUser ? (NOMBRES_P[curPUser]||curPUser) : 'Admin';
-  cl.observaciones.push({texto:texto, autor:autor, fecha:fnow()});
+  cl.observaciones.push({id:'obs_'+Date.now(),texto:texto, autor:autor, fecha:fnow()});
   sv();
   document.getElementById('ficha-nueva-obs').value='';
   fichaRenderObs();
@@ -5557,7 +5749,7 @@ function clsSetTab(tab,btn){
   <div class="mc-title" id="cobro-title">Registrar cobro</div>
   <input type="hidden" id="cobro-id">
   <label class="flbl">Profesional</label><select class="fsel" id="cobro-prof"></select>
-  <label class="flbl">Clienta</label><input class="finp" id="cobro-cliente" placeholder="Nombre de la clienta">
+  <label class="flbl">Clienta</label><input class="finp" id="cobro-cliente" placeholder="Nombre de la clienta" oninput="cjActualizarInfoCC()">
   <label class="flbl">Servicio</label><input class="finp" id="cobro-srv" placeholder="Ej: Facial GLOW">
   <label class="flbl">Monto ($)</label><input class="finp" id="cobro-monto" type="number" min="0" placeholder="0">
   <label class="flbl">Método de pago</label>
@@ -5569,6 +5761,16 @@ function clsSetTab(tab,btn){
   </select>
   <label class="flbl">Fecha</label><input class="finp" id="cobro-fecha" type="date">
   <label class="flbl">Notas</label><input class="finp" id="cobro-notas" placeholder="Opcional">
+  <div id="cobro-cc-info" style="display:none;background:var(--crema);border-radius:3px;padding:.6rem;margin-top:.4rem;font-size:12px"></div>
+  <div id="cobro-cc-opciones" style="display:none;margin-top:.4rem">
+    <label style="display:flex;align-items:center;gap:.5rem;font-size:12px;color:var(--texto);cursor:pointer">
+      <input type="checkbox" id="cobro-aplicar-cc" style="accent-color:var(--oliva)"> Aplicar saldo a favor al cobro
+    </label>
+    <div style="margin-top:.4rem">
+      <label class="flbl" style="font-size:11px">¿Quedó debiendo? (monto deuda $)</label>
+      <input class="finp" id="cobro-deuda" type="number" min="0" placeholder="0" style="">
+    </div>
+  </div>
   <div id="ok-cobro" class="ok"></div><div id="er-cobro" class="er"></div>
   <div class="mc-acts">
     <button class="btn-cancel" onclick="cerrarM(&#39;modal-cobro&#39;)">Cancelar</button>
