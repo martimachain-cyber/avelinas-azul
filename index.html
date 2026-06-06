@@ -2678,11 +2678,16 @@ function agAbrirNuevo(t=null){
   sel.innerHTML=AG_PROFS.map(p=>`<option value="${p.id}">${p.n}</option>`).join('');
   const _profIdNuevo=t?t.prof:(ROL_PANEL[curPUser]==='prof'?curPUser:AG_PROFS[0].id);
   sel.value=_profIdNuevo;
+  // Registrar onchange AQUÍ, después de reconstruir el select
+  sel.onchange=function(){agMtCargarServicios(this.value);};
   document.getElementById('ok-ag-mt').classList.remove('on');
   document.getElementById('er-ag-mt').classList.remove('on');
-  // Cargar servicios — con doble intento para cubrir timing de Supabase
   agMtCargarServicios(_profIdNuevo);
-  setTimeout(function(){agMtCargarServicios(_profIdNuevo);},600);
+  // Segundo intento para cubrir timing de Supabase — lee el value actual del select
+  setTimeout(function(){
+    var profActual=document.getElementById('ag-mt-prof');
+    if(profActual)agMtCargarServicios(profActual.value);
+  },600);
   document.getElementById('modal-ag-turno').classList.add('on');
 }
 
@@ -2724,12 +2729,7 @@ function agMtCargarServicios(forzarProfId){
     return o;
   }
   srvSel.innerHTML=buildOpts(profId);
-  var profSelOc=document.getElementById('ag-mt-prof');
-  if(profSelOc){
-    profSelOc.onchange=function(){
-      if(srvSel)srvSel.innerHTML=buildOpts(this.value);
-    };
-  }
+  // onchange se registra en agAbrirNuevo para evitar sobreescritura
 }
 
 function agGuardarTurno(){
