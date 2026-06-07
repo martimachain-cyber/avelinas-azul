@@ -2570,6 +2570,7 @@ function agRender(){
 
   // BODY ROWS - one row per 30min slot
   out+='<tbody>';
+  const agRowspanMap={};
   const totalSlots=totalH*2;
   for(let i=0;i<totalSlots;i++){
     const slotMin=AG_H_INI*60+i*30;
@@ -2585,21 +2586,46 @@ function agRender(){
       profs.forEach(function(p){
         fechas.forEach(function(f){
           const fStr=agFk(f);
+          // Skip si cubierto por rowspan
+          if(agRowspanMap[p.id+'_'+fStr+'_'+slotH]) return;
           const workH=getWorkH(p.id,f.getDay());
           const inWork=!workH||(slotMin/60>=workH[0]&&slotMin/60<workH[1]);
           const hasT=getSlotTurno(p.id,fStr,slotH);
           const blq=(agD.bloqueos||[]).find(function(b){return b.prof===p.id&&b.fecha===fStr&&b.h===slotH;});
-          out+=renderSlotCell(p.id,fStr,slotH,inWork,hasT,blq,isHour,true);
+          if(hasT&&hasT.hora===slotH){
+            const slots=Math.max(Math.round((hasT.duracion||hasT.dur||30)/30),1);
+            for(var rs=1;rs<slots;rs++){
+              const nextMin=slotMin+rs*30;
+              const nextH=String(Math.floor(nextMin/60)).padStart(2,'0')+':'+String(nextMin%60).padStart(2,'0');
+              agRowspanMap[p.id+'_'+fStr+'_'+nextH]=true;
+            }
+            out+=renderSlotCellSpan(p.id,fStr,slotH,inWork,hasT,blq,isHour,true,slots);
+          }else{
+            out+=renderSlotCell(p.id,fStr,slotH,inWork,hasT,blq,isHour,true);
+          }
         });
       });
     }else{
       const fStr=agFk(agFecha);
       profs.forEach(function(p){
+        // Skip si esta celda está cubierta por rowspan de un turno anterior
+        if(agRowspanMap[p.id+'_'+fStr+'_'+slotH]) return;
         const workH=getWorkH(p.id,agFecha.getDay());
         const inWork=!workH||(slotMin/60>=workH[0]&&slotMin/60<workH[1]);
         const hasT=getSlotTurno(p.id,fStr,slotH);
         const blq=(agD.bloqueos||[]).find(function(b){return b.prof===p.id&&b.fecha===fStr&&b.h===slotH;});
-        out+=renderSlotCell(p.id,fStr,slotH,inWork,hasT,blq,isHour,false);
+        if(hasT&&hasT.hora===slotH){
+          // Primer slot de este turno — calcular rowspan y marcar siguientes
+          const slots=Math.max(Math.round((hasT.duracion||hasT.dur||30)/30),1);
+          for(var rs=1;rs<slots;rs++){
+            const nextMin=slotMin+rs*30;
+            const nextH=String(Math.floor(nextMin/60)).padStart(2,'0')+':'+String(nextMin%60).padStart(2,'0');
+            agRowspanMap[p.id+'_'+fStr+'_'+nextH]=true;
+          }
+          out+=renderSlotCellSpan(p.id,fStr,slotH,inWork,hasT,blq,isHour,false,slots);
+        }else{
+          out+=renderSlotCell(p.id,fStr,slotH,inWork,hasT,blq,isHour,false);
+        }
       });
     }
     out+='</tr>';
@@ -2623,10 +2649,28 @@ function getSlotTurno(profId,fecha,hora){
   return online||manual;
 }
 
+function renderSlotCellSpan(profId,fecha,hora,inWork,turno,blq,isHour,small,span){
+  const borderB=isHour?'1px solid var(--cd)':'1px dashed rgba(184,178,172,.3)';
+  if(turno){
+    const bg=AG_COLORS[profId]||'var(--oliva)';
+    const fg=AG_FONTS[profId]||'#fff';
+    const nombre=turno.cliente||turno.cl||'Turno';
+    const srv=turno.servicio||turno.srv||'';
+    const dur=turno.duracion||turno.dur||'';
+    const label='<div style="font-size:10px;font-weight:600;color:'+fg+';overflow:hidden;white-space:nowrap;text-overflow:ellipsis;line-height:1.3">'+nombre+'</div>'
+      +(srv?'<div style="font-size:9px;color:'+fg+';opacity:.75;overflow:hidden;white-space:nowrap;text-overflow:ellipsis">'+srv+(dur?' · '+dur+'min':'')+'</div>':'');
+    return '<td rowspan="'+span+'" style="background:'+bg+';border-bottom:1px solid var(--cd);border-left:1px solid var(--cd);border-right:1px solid var(--cd);cursor:pointer;padding:3px 5px;vertical-align:top;max-width:'+(small?'80px':'140px')+';overflow:hidden" onclick="agVerTurnoById(this.dataset.p,this.dataset.f,this.dataset.h)" data-p="'+profId+'" data-f="'+fecha+'" data-h="'+hora+'" title="'+nombre+'">'+label+'</td>';
+  }
+  return renderSlotCell(profId,fecha,hora,inWork,turno,blq,isHour,small);
+}
+
 function renderSlotCell(profId,fecha,hora,inWork,turno,blq,isHour,small){
   const borderB=isHour?'1px solid var(--cd)':'1px dashed rgba(184,178,172,.3)';
   if(blq){
-    return '<td style="background:rgba(176,168,160,.3);border-bottom:'+borderB+';border-left:1px solid var(--cd)" title="Bloqueado"></td>';
+    const esIni=blq.horaIni===hora;
+    const motivo=blq.motivo||'Bloqueado';
+    const label=esIni?'<div style="font-size:9px;color:#6b6560;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;padding:2px 4px">🔒 '+motivo+'</div>':'';
+    return '<td style="background:rgba(176,168,160,.35);border-bottom:'+borderB+';border-left:1px solid var(--cd);vertical-align:top" title="'+motivo+'" >'+label+'</td>';
   }
   if(turno){
     const bg=AG_COLORS[profId]||'var(--oliva)';
@@ -2838,7 +2882,20 @@ function agGuardarTurno(){
     const yaExiste=agD.turnos.find(function(t){return t.prof===prof&&t.fecha===fecha&&t.hora===hora&&!t.bloqueo;});
     if(yaExiste&&!esBloqueo){er.textContent='Ya hay un turno en ese horario.';er.classList.add('on');return;}
     const precioT=parseFloat((document.getElementById('ag-mt-precio')||{}).value)||0;
-    agD.turnos.push({id:Date.now(),prof,fecha,hora,duracion:dur,cliente,servicio,notas,precio:precioT,manual:true,bloqueo:esBloqueo});
+    if(esBloqueo){
+      // Guardar bloqueo en agD.bloqueos con rango de horas
+      const motivo=document.getElementById('ag-mt-motivo')?document.getElementById('ag-mt-motivo').value.trim():'';
+      // Generar todos los slots del rango
+      var blqIni=parseInt(hora.split(':')[0])*60+parseInt(hora.split(':')[1]);
+      var blqFin=blqIni+(dur||30);
+      for(var bm=blqIni;bm<blqFin;bm+=30){
+        var bh=String(Math.floor(bm/60)).padStart(2,'0')+':'+String(bm%60).padStart(2,'0');
+        agD.bloqueos=agD.bloqueos||[];
+        agD.bloqueos.push({id:'blq_'+Date.now()+'_'+bm,prof,fecha,h:bh,motivo:motivo||'Bloqueado',horaIni:hora,horaFin:String(Math.floor(blqFin/60)).padStart(2,'0')+':'+String(blqFin%60).padStart(2,'0')});
+      }
+    }else{
+      agD.turnos.push({id:Date.now(),prof,fecha,hora,duracion:dur,cliente,servicio,notas,precio:precioT,manual:true,bloqueo:false});
+    }
   }
   agSv();ok.textContent=editId?'Actualizado ✓':(esBloqueo?'Bloqueo agregado ✓':'Turno agregado ✓');ok.classList.add('on');
   setTimeout(function(){
