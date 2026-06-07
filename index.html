@@ -2537,7 +2537,8 @@ function agRender(){
 
   // Build table: one big div with overflow-x:auto
   // Structure: sticky header row + scrollable body
-  let out='<table style="border-collapse:collapse;min-width:'+((profs.length*120)+60)+'px;width:100%">';
+  const _colW=agVista==='semana'?80:140;
+  let out='<table style="border-collapse:collapse;min-width:'+(agVista==='semana'?(profs.length*7*_colW+60):(profs.length*_colW+60))+'px;width:100%">';
   
   // HEADER ROW
   out+='<thead><tr>';
@@ -2549,7 +2550,7 @@ function agRender(){
       out+='<div style="display:flex">';
       fechas.forEach(function(f){
         const isH=agFk(f)===agHoy();
-        out+='<div style="flex:1;font-size:9px;color:'+(isH?'var(--oliva)':'var(--gc)')+';font-weight:'+(isH?'700':'400')+';text-align:center">'+DS[f.getDay()]+' '+f.getDate()+'</div>';
+        out+='<div style="flex:1;min-width:'+_colW+'px;font-size:9px;color:'+(isH?'var(--oliva)':'var(--gc)')+';font-weight:'+(isH?'700':'400')+';text-align:center">'+DS[f.getDay()]+' '+f.getDate()+'</div>';
       });
       out+='</div></th>';
     });
