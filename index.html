@@ -2635,12 +2635,12 @@ function renderSlotCell(profId,fecha,hora,inWork,turno,blq,isHour,small){
       ?('<div style="font-size:10px;font-weight:600;color:'+fg+';overflow:hidden;white-space:nowrap;text-overflow:ellipsis;line-height:1.2">'+nombre+'</div>'
         +(srv?'<div style="font-size:9px;color:'+fg+';opacity:.75;overflow:hidden;white-space:nowrap;text-overflow:ellipsis">'+srv+(dur?' · '+dur+'min':'')+'</div>':''))
       :'';
-    return '<td style="background:'+bg+';border-bottom:'+borderB+';border-left:1px solid var(--cd);cursor:pointer;padding:2px 4px;vertical-align:top" onclick="agVerTurnoById(this.dataset.p,this.dataset.f,this.dataset.h)" data-p="'+profId+'" data-f="'+fecha+'" data-h="'+hora+'" title="'+nombre+'">'+label+'</td>';
+    return '<td style="background:'+bg+';border-bottom:'+borderB+';border-left:1px solid var(--cd);border-right:1px solid var(--cd);cursor:pointer;padding:2px 4px;vertical-align:top" onclick="agVerTurnoById(this.dataset.p,this.dataset.f,this.dataset.h)" data-p="'+profId+'" data-f="'+fecha+'" data-h="'+hora+'" title="'+nombre+'">'+label+'</td>';
   }
   if(!inWork){
-    return '<td style="background:rgba(0,0,0,.04);border-bottom:'+borderB+';border-left:1px solid var(--cd)"></td>';
+    return '<td style="background:rgba(0,0,0,.04);border-bottom:'+borderB+';border-left:1px solid var(--cd);border-right:1px solid rgba(184,178,172,.2)"></td>';
   }
-  return '<td class="ag-slot-free" style="border-bottom:'+borderB+';border-left:1px solid var(--cd);cursor:pointer" onclick="agNuevoDesdeSlot(this)" data-prof="'+profId+'" data-fecha="'+fecha+'" data-hora="'+hora+'"></td>';
+  return '<td class="ag-slot-free" style="border-bottom:'+borderB+';border-left:1px solid var(--cd);border-right:1px solid rgba(184,178,172,.2);cursor:pointer" onclick="agNuevoDesdeSlot(this)" data-prof="'+profId+'" data-fecha="'+fecha+'" data-hora="'+hora+'"></td>';
 }
 
 function renderTurnosOverlay(){
