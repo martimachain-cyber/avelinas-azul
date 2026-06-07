@@ -2808,7 +2808,11 @@ function agMtCargarServicios(forzarProfId){
   // onchange se registra en agAbrirNuevo para evitar sobreescritura
 }
 
+var _agGuardando=false;
 function agGuardarTurno(){
+  if(_agGuardando)return;
+  _agGuardando=true;
+  setTimeout(function(){_agGuardando=false;},2000);
   const prof=document.getElementById('ag-mt-prof').value;
   const fecha=document.getElementById('ag-mt-fecha').value;
   const hora=document.getElementById('ag-mt-hora').value;
@@ -2826,20 +2830,25 @@ function agGuardarTurno(){
     const idx=agD.turnos.findIndex(t=>t.id==editId);
     if(idx>=0)agD.turnos[idx]={...agD.turnos[idx],prof,fecha,hora,duracion:dur,cliente,servicio,notas,manual:true,bloqueo:esBloqueo};
   }else{
+    // Evitar duplicados: verificar que no existe ya este turno
+    const yaExiste=agD.turnos.find(function(t){return t.prof===prof&&t.fecha===fecha&&t.hora===hora&&!t.bloqueo;});
+    if(yaExiste&&!esBloqueo){er.textContent='Ya hay un turno en ese horario.';er.classList.add('on');return;}
     const precioT=parseFloat((document.getElementById('ag-mt-precio')||{}).value)||0;
-  agD.turnos.push({id:Date.now(),prof,fecha,hora,duracion:dur,cliente,servicio,notas,precio:precioT,manual:true,bloqueo:esBloqueo});
+    agD.turnos.push({id:Date.now(),prof,fecha,hora,duracion:dur,cliente,servicio,notas,precio:precioT,manual:true,bloqueo:esBloqueo});
   }
   agSv();ok.textContent=editId?'Actualizado ✓':(esBloqueo?'Bloqueo agregado ✓':'Turno agregado ✓');ok.classList.add('on');
   setTimeout(function(){
     cerrarM('modal-ag-turno');
-    // Si venimos de la agenda laser, refrescar esa vista
-    var esPgLaser=document.getElementById('pg-laser-ag')&&document.getElementById('pg-laser-ag').style.display!=='none';
-    if(esPgLaser||typeof laserJornadaSel!=='undefined'&&laserJornadaSel){
-      if(typeof renderLaserAgenda==='function')renderLaserAgenda();
-    }else{
-      agRender();
-    }
-  },1000);
+    // Render después de cerrar el modal
+    setTimeout(function(){
+      var esPgLaser=document.getElementById('pg-laser-ag')&&document.getElementById('pg-laser-ag').style.display!=='none';
+      if(esPgLaser||typeof laserJornadaSel!=='undefined'&&laserJornadaSel){
+        if(typeof renderLaserAgenda==='function')renderLaserAgenda();
+      }else{
+        agRender();
+      }
+    },100);
+  },800);
 }
 
 let calData={};
@@ -5969,7 +5978,7 @@ function clsSetTab(tab,btn){
   <div id="ok-ag-t" class="ok"></div><div id="er-ag-t" class="er"></div>
   <div class="mc-acts" id="ag-mt-acts">
     <button class="btn-cancel" onclick="cerrarM(&#39;modal-ag-turno&#39;)">Cancelar</button>
-    <button class="btn-v" style="flex:1" onclick="agGuardarTurno()">Guardar</button>
+    <button class="btn-v" style="flex:1" onclick="this.disabled=true;agGuardarTurno();setTimeout(()=>this.disabled=false,2000)">Guardar</button>
   </div>
 </div></div>
 
