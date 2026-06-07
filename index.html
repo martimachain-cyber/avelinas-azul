@@ -2538,21 +2538,24 @@ function agRender(){
   // Build table: one big div with overflow-x:auto
   // Structure: sticky header row + scrollable body
   const _colW=agVista==='semana'?80:140;
-  let out='<table style="border-collapse:collapse;min-width:'+(agVista==='semana'?(profs.length*7*_colW+60):(profs.length*_colW+60))+'px;width:100%">';
+  let out='<table style="border-collapse:collapse;table-layout:fixed;min-width:'+(agVista==='semana'?(profs.length*7*_colW+60):(profs.length*_colW+60))+'px;width:100%">';
   
   // HEADER ROW
   out+='<thead><tr>';
   out+='<th style="width:56px;min-width:56px;background:#fff;position:sticky;left:0;z-index:3;border-bottom:2px solid var(--cd);border-right:2px solid var(--cd)"></th>';
   if(agVista==='semana'){
+    // Fila 1: nombre de profesional
     profs.forEach(function(p){
-      out+='<th colspan="'+fechas.length+'" style="background:#fff;border-bottom:2px solid var(--cd);border-left:1px solid var(--cd);padding:.4rem;text-align:center">';
+      out+='<th colspan="'+fechas.length+'" style="width:'+(fechas.length*_colW)+'px;background:#fff;border-bottom:1px solid var(--cd);border-left:1px solid var(--cd);padding:.3rem;text-align:center">';
       out+='<div style="font-family:Raleway,sans-serif;font-size:12px;font-weight:600;color:'+AG_COLORS[p.id]+'">'+p.n+'</div>';
-      out+='<div style="display:flex">';
+      out+='</th>';
+    });
+    out+='</tr><tr><th style="width:56px;min-width:56px;background:#fff;border-right:2px solid var(--cd);border-bottom:2px solid var(--cd)"></th>';
+    profs.forEach(function(p){
       fechas.forEach(function(f){
         const isH=agFk(f)===agHoy();
-        out+='<div style="flex:1;min-width:'+_colW+'px;font-size:9px;color:'+(isH?'var(--oliva)':'var(--gc)')+';font-weight:'+(isH?'700':'400')+';text-align:center">'+DS[f.getDay()]+' '+f.getDate()+'</div>';
+        out+='<th style="width:'+_colW+'px;min-width:'+_colW+'px;max-width:'+_colW+'px;background:#fff;border-bottom:2px solid var(--cd);border-left:1px solid var(--cd);padding:2px;text-align:center;font-size:9px;color:'+(isH?'var(--oliva)':'var(--gc)')+';font-weight:'+(isH?'700':'400')+'">'+DS[f.getDay()]+' '+f.getDate()+'</th>';
       });
-      out+='</div></th>';
     });
   }else{
     profs.forEach(function(p){
@@ -2636,12 +2639,12 @@ function renderSlotCell(profId,fecha,hora,inWork,turno,blq,isHour,small){
       ?('<div style="font-size:10px;font-weight:600;color:'+fg+';overflow:hidden;white-space:nowrap;text-overflow:ellipsis;line-height:1.2">'+nombre+'</div>'
         +(srv?'<div style="font-size:9px;color:'+fg+';opacity:.75;overflow:hidden;white-space:nowrap;text-overflow:ellipsis">'+srv+(dur?' · '+dur+'min':'')+'</div>':''))
       :'';
-    return '<td style="background:'+bg+';border-bottom:'+borderB+';border-left:1px solid var(--cd);border-right:1px solid var(--cd);cursor:pointer;padding:2px 4px;vertical-align:top" onclick="agVerTurnoById(this.dataset.p,this.dataset.f,this.dataset.h)" data-p="'+profId+'" data-f="'+fecha+'" data-h="'+hora+'" title="'+nombre+'">'+label+'</td>';
+    return '<td style="background:'+bg+';border-bottom:'+borderB+';border-left:1px solid var(--cd);border-right:1px solid var(--cd);cursor:pointer;padding:2px 4px;vertical-align:top;max-width:'+(small?'80px':'140px')+';overflow:hidden" onclick="agVerTurnoById(this.dataset.p,this.dataset.f,this.dataset.h)" data-p="'+profId+'" data-f="'+fecha+'" data-h="'+hora+'" title="'+nombre+'">'+label+'</td>';
   }
   if(!inWork){
     return '<td style="background:rgba(0,0,0,.04);border-bottom:'+borderB+';border-left:1px solid var(--cd);border-right:1px solid rgba(184,178,172,.2)"></td>';
   }
-  return '<td class="ag-slot-free" style="border-bottom:'+borderB+';border-left:1px solid var(--cd);border-right:1px solid rgba(184,178,172,.2);cursor:pointer" onclick="agNuevoDesdeSlot(this)" data-prof="'+profId+'" data-fecha="'+fecha+'" data-hora="'+hora+'"></td>';
+  return '<td class="ag-slot-free" style="border-bottom:'+borderB+';border-left:1px solid var(--cd);border-right:1px solid rgba(184,178,172,.2);cursor:pointer;overflow:hidden" onclick="agNuevoDesdeSlot(this)" data-prof="'+profId+'" data-fecha="'+fecha+'" data-hora="'+hora+'"></td>';
 }
 
 function renderTurnosOverlay(){
