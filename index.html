@@ -2901,8 +2901,13 @@ document.addEventListener('DOMContentLoaded', function(){
       // Update nav button
       var navBtn=document.getElementById('nav-mi-cuenta');
       actualizarNavBtn();
+    } else {
+      // Sin sesión de equipo — forzar inicio
+      goPage('inicio');
     }
-  }catch(e){}
+  }catch(e){
+    goPage('inicio');
+  }
 
   // Event delegation for dynamically shown buttons
   document.addEventListener('click', function(e){
@@ -2916,13 +2921,16 @@ document.addEventListener('DOMContentLoaded', function(){
     if(id==='btn-guardar-prod') guardarProd();
   });
 
-  // Si no hay sesión activa, mostrar modal de bienvenida
-  setTimeout(function(){
+  // Si no hay sesión activa después de intentar restaurar, mostrar bienvenida
+  // Esperamos a Supabase (sbSync) antes de decidir
+  window._mostrarBienvenidaSiSinSesion = function(){
     if(!curPUser && !curCl){
       mcMostrarTipo();
       document.getElementById('modal-mi-cuenta').classList.add('on');
     }
-  }, 300);
+  };
+  // Llamar después de que Supabase tenga tiempo de sincronizar (2s)
+  window._welcomeTimer = setTimeout(window._mostrarBienvenidaSiSinSesion, 2000);
 });
 
 ['modal-ag-turno','modal-ag-ver','modal-calendario','modal-cobro','modal-egreso','modal-adelanto','modal-retiro','modal-prod','modal-venta-prod','modal-prov','modal-cc','modal-pedido','modal-compra','modal-ficha'].forEach(id=>{
@@ -5008,6 +5016,12 @@ async function sbSync(){
       }
       renderSrvPage();
       console.log('✓ Datos sincronizados desde Supabase');
+      // Cancelar el timeout de bienvenida si ya hay sesión
+      if(typeof window._mostrarBienvenidaSiSinSesion === 'function'){
+        clearTimeout(window._welcomeTimer);
+        window._mostrarBienvenidaSiSinSesion();
+        window._mostrarBienvenidaSiSinSesion = null;
+      }
       // Show sync indicator
       const ind = document.createElement('div');
       ind.style.cssText='position:fixed;bottom:70px;right:12px;background:var(--oliva);color:#fff;font-size:11px;padding:5px 10px;border-radius:20px;z-index:999;opacity:0;transition:opacity .3s';
