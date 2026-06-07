@@ -2716,7 +2716,7 @@ function agVerTurno(id){
   // WhatsApp recordatorio
   const clTel=(clFicha&&clFicha.tel)||t.tel||'';
   const profN2=AG_PROFS.find(function(p){return p.id===t.prof;});
-  const waMsg=encodeURIComponent('Hola '+t.cliente+'! Te recordamos tu turno en Avelinas Azul:\n✦ '+t.servicio+'\n👩 '+(profN2?profN2.n:t.prof)+'\n📅 '+agFf(agPk(t.fecha))+' a las '+t.hora+'hs\nTe esperamos! 🌿');
+  const waMsg=encodeURIComponent('Hola '+t.cliente+'! Te recordamos tu turno en Avelinas Azul 🌿\n\n✦ '+t.servicio+'\n👩 '+(profN2?profN2.n:t.prof)+'\n📅 '+agFf(agPk(t.fecha))+' a las '+t.hora+'hs\n📍 Olavarría 529, Azul\n\n¿Confirmás tu turno?\n✅ Confirmo\n❌ No puedo asistir');
   const waTel=clTel.replace(/[^0-9]/g,'');
   const waBtn=clTel?"<button class=\"btn-v\" style=\"background:#25d366\" onclick=\"window.open('https://wa.me/549"+waTel+"?text="+waMsg+"','_blank')\">📱 WhatsApp</button>":"";
   document.getElementById("ag-mv-acts").innerHTML=agMvFichaBtn+waBtn+agMvEditBtn+agMvCancelBtn+agMvDelBtn;
@@ -2862,7 +2862,7 @@ function mostrarModalCalendario(srv, prof, fecha, hora, dur){
   const d=pk(fecha);
   const DS2=['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
   const MSC2=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
-  const calDetalle=`<strong>${srv}</strong><br>👩 ${profNombre}<br>📅 ${DS2[d.getDay()]} ${d.getDate()} ${MSC2[d.getMonth()]}<br>🕐 ${hora}`;
+  const calDetalle=`<strong>${srv}</strong><br>👩 ${profNombre}<br>📅 ${DS2[d.getDay()]} ${d.getDate()} ${MSC2[d.getMonth()]}<br>🕐 ${hora}<br>📍 Olavarría 529, Azul`;
   const calContentEl=document.getElementById('cal-content')||document.getElementById('cal-modal-detalle');
   if(calContentEl) calContentEl.innerHTML=calDetalle;
   // Construir URL de Google Calendar
