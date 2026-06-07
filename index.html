@@ -2703,7 +2703,7 @@ function agVerTurno(id){
       <div>📅 ${agFf(d)}</div>
       <div>🕐 ${t.hora} — ${agMh(agHm(t.hora)+(t.duracion||60))}</div>
       <div>⏱ ${t.duracion||60} min</div>
-      +(t.notas?'<div>📝 '+t.notas+'</div>':'')
+      ${t.notas?'<div>📝 '+t.notas+'</div>':''}
       <div style="font-size:11px;color:var(--gc);margin-top:4px">${t.manual||!t.online?'Cargado manualmente':'Reserva online'}</div>
     </div>`;
   const isAdmin=ROL_PANEL[curPUser]==='admin';
