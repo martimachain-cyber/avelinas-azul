@@ -1061,7 +1061,7 @@ td.ag-slot-free{background:transparent}
   </div>
 
   
-  <div id="mc-tipo-sel" style="display: none;">
+  <div id="mc-tipo-sel" style="display:block">
     <div style="font-family:Raleway,sans-serif;font-size:14px;font-weight:500;color:var(--texto);margin-bottom:.8rem;text-align:center">¿Cómo querés ingresar?</div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:.6rem;margin-bottom:.5rem">
       <div onclick="mcSelTipo(&#39;clienta&#39;)" style="padding: 1.2rem 0.8rem; background: var(--crema); border-color: var(--cd); border-top-style: ; border-top-width: ; border-right-style: ; border-right-width: ; border-bottom-style: ; border-bottom-width: ; border-left-style: ; border-left-width: ; border-image-source: ; border-image-slice: ; border-image-width: ; border-image-outset: ; border-image-repeat: ; border-radius: 4px; cursor: pointer; text-align: center; -webkit-tap-highlight-color: transparent; transition: 0.15s;" id="mc-opt-clienta">
@@ -1111,11 +1111,11 @@ td.ag-slot-free{background:transparent}
   </div>
 
   
-  <div id="mc-login-equipo" style="display: block;">
+  <div id="mc-login-equipo" style="display:none">
     <button onclick="mcVolverTipo()" style="background:none;border:none;color:var(--gris);font-family:Raleway,sans-serif;font-size:12px;cursor:pointer;padding:0;margin-bottom:1rem">← Volver</button>
     <div class="mc-title" style="margin-bottom:.3rem">Ingresá como equipo</div>
     <div style="font-size:13px;color:var(--gris);margin-bottom:.8rem">Elegí tu nombre y escribí tu clave</div>
-    <div id="eq-login-err" class="er" style="margin-top:0;margin-bottom:.8rem">Clave incorrecta.</div>
+    <div id="eq-login-err" class="er" style="margin-top:0;margin-bottom:.8rem;display:none">Clave incorrecta.</div>
     <label class="flbl" style="margin-top:0">Soy</label>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px;margin:.4rem 0 .8rem" id="eq-pb-grid">
         <div onclick="eqSelUser(&#39;martina&#39;,this)" style="padding: 8px 5px; background: var(--oliva); border-color: var(--oliva); border-top-style: ; border-top-width: ; border-right-style: ; border-right-width: ; border-bottom-style: ; border-bottom-width: ; border-left-style: ; border-left-width: ; border-image-source: ; border-image-slice: ; border-image-width: ; border-image-outset: ; border-image-repeat: ; border-radius: 3px; cursor: pointer; text-align: center; -webkit-tap-highlight-color: transparent; transition: 0.15s;" class="eq-pb">
@@ -1915,6 +1915,8 @@ function doRegistro(){
   }
   sv();
   curCl=nuevaCl;
+  curPUser=null;
+  try{sessionStorage.removeItem('avPU');}catch(e){}
   cerrarM('modal-mi-cuenta');
   actualizarNavBtn();
   setTimeout(()=>{
@@ -1977,6 +1979,7 @@ function doLoginEquipo(){
   if(CLAVES_PANEL[eqSelU]!==clave){err.textContent='Clave incorrecta.';err.classList.add('on');return}
   err.classList.remove('on');
   curPUser=eqSelU;
+  curCl=null;
   try{sessionStorage.setItem('avPU',eqSelU);}catch(e){}
   cerrarM('modal-mi-cuenta');
   // Update nav button
@@ -2002,6 +2005,8 @@ function doLoginCl(){
     return;
   }
   err.classList.remove('on');curCl=cl;
+  curPUser=null;
+  try{sessionStorage.removeItem('avPU');}catch(e){}
   cerrarM('modal-mi-cuenta');
   cerrarM('modal-cl-login');
   actualizarNavBtn();
@@ -2910,6 +2915,14 @@ document.addEventListener('DOMContentLoaded', function(){
     if(id==='btn-nuevo-retiro') abrirModalRetiro();
     if(id==='btn-guardar-prod') guardarProd();
   });
+
+  // Si no hay sesión activa, mostrar modal de bienvenida
+  setTimeout(function(){
+    if(!curPUser && !curCl){
+      mcMostrarTipo();
+      document.getElementById('modal-mi-cuenta').classList.add('on');
+    }
+  }, 300);
 });
 
 ['modal-ag-turno','modal-ag-ver','modal-calendario','modal-cobro','modal-egreso','modal-adelanto','modal-retiro','modal-prod','modal-venta-prod','modal-prov','modal-cc','modal-pedido','modal-compra','modal-ficha'].forEach(id=>{
