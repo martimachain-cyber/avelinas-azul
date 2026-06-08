@@ -1162,7 +1162,6 @@ function defD(){return{
     {id:'camila',n:'Camila',esp:'Faciales · Depilación definitiva',pass:'camila123',cats:['facial','laser'],h:{1:[13,17],2:[9,13],3:[13,17],4:[9,13],5:[13,17]},foto:'',frase:'La piel sana empieza con el cuidado adecuado.',bio:'Técnica universitaria en cosmetología y operadora láser certificada. Cada sesión es segura, personalizada y con los más altos estándares.',titulos:['Técnica Universitaria en Cosmetología Facial y Corporal — UBA (2024)','Auxiliar Operadora en Depilación Láser — IPADI/OIEP, Reg. S-0021375/2025'],comision:50,comisionesCat:{}},
     {id:'ludovica',n:'Ludovica',esp:'Manicura · Uñas',pass:'ludo123',cats:['mani','pedi'],h:{1:[9,17],2:[9,17],3:[9,17],4:[9,17],5:[9,17],6:[9,13]},foto:'',frase:'Las manos también merecen brillar.',bio:'Especialista en nail art, kapping, softgel y técnicas de uñas. Cada detalle es una obra de arte.',titulos:[],comision:65,comisionesCat:{}},
     {id:'rosario',n:'Rosario',esp:'Pestañas · Cejas · Faciales',pass:'rosario123',cats:['pestañas','facial'],h:{1:[9,17],2:[9,17],3:[9,17],4:[9,17],5:[9,17]},foto:'',frase:'Una buena ceja cambia todo.',bio:'Especialista en diseño de cejas, pestañas y tratamientos faciales. Transforma la mirada con precisión y estilo.',titulos:[],comision:50,comisionesCat:{}},
-    {id:'virginia',n:'Virginia',esp:'Podología · Pedicura',pass:'virginia123',cats:['pedi'],h:{1:[14,17],5:[14,17],6:[10,13]},foto:'',frase:'Pies sanos, cuerpo feliz.',bio:'Especialista en podología y podocosmiatría. Cuida tus pies con la dedicación y el profesionalismo que merecen.',titulos:[],comision:75,comisionesCat:{}},
     {id:'lucia',n:'Lucía',esp:'Secretaria · Recepción',pass:'lucia123',cats:[],h:{1:[9,18],2:[9,18],3:[9,18],4:[9,18],5:[9,18],6:[9,13]},foto:'',frase:'El primer contacto lo hace todo.',bio:'La voz y el alma de Avelinas Azul. Lucía es quien da la bienvenida, organiza cada jornada y se asegura de que cada clienta se sienta en el lugar correcto.',titulos:[],comision:0,comisionesCat:{}}
   ],
   servicios:{
@@ -2291,8 +2290,7 @@ const AG_PROFS=[
   {id:'emilia',n:'Emilia',esp:'Masajes · Maquillaje'},
   {id:'camila',n:'Camila',esp:'Faciales · Láser'},
   {id:'ludovica',n:'Ludovica',esp:'Manicura · Uñas'},
-  {id:'rosario',n:'Rosario',esp:'Pestañas · Cejas'},
-  {id:'virginia',n:'Virginia',esp:'Podología'}
+  {id:'rosario',n:'Rosario',esp:'Pestañas · Cejas'}
 ];
 const AG_COLORS={emilia:'#7daa74',camila:'#7496aa',ludovica:'#aa8f6e',rosario:'#aa7490'};
 const AG_FONTS={emilia:'#1a3a17',camila:'#0e2a3a',ludovica:'#3a2010',rosario:'#3a1025'};
@@ -4955,9 +4953,11 @@ async function sbSync(){
               // Si no existe en Supabase (ej: Lucía nueva), usar el del código
               return dp;
             });
-            // Eliminar profesionales dados de baja
+            // Eliminar profesionales dados de baja y ordenar
             var _eliminados=['virginia'];
             D.profesionales = _profsMerged.filter(function(p){return !_eliminados.includes(p.id);});
+            var _orden=['lucia','emilia','camila','ludovica','rosario'];
+            D.profesionales.sort(function(a,b){var ai=_orden.indexOf(a.id);var bi=_orden.indexOf(b.id);return (ai===-1?99:ai)-(bi===-1?99:bi);});
             localStorage.setItem(KEY, JSON.stringify(D));
           } else if(row.key==='caja'){
             cjD = parsed;
