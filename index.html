@@ -1205,9 +1205,19 @@ td.ag-slot-free{background:transparent}
   <label class="flbl">Nombre</label><input class="finp" id="mp-n" placeholder="Nombre">
   <label class="flbl">Especialidad (subtítulo)</label><input class="finp" id="mp-e" placeholder="Ej: Faciales · Láser">
   <label class="flbl">Clave de acceso</label><input class="finp" id="mp-p" placeholder="Clave personal">
-  <label class="flbl" style="margin-top:.8rem">📷 URL de foto</label>
-  <input class="finp" id="mp-foto" placeholder="https://... (link de la foto)" oninput="prevFoto(this.value)">
-  <div id="mp-foto-preview" style="margin-top:.4rem;display:none"><img id="mp-foto-img" style="width:60px;height:60px;border-radius:50%;object-fit:cover;object-position:center top;border:2px solid var(--cd)"></div>
+  <label class="flbl" style="margin-top:.8rem">📷 Foto de perfil</label>
+  <div style="display:flex;align-items:center;gap:.8rem;margin-top:.3rem">
+    <div id="mp-foto-preview" style="width:60px;height:60px;border-radius:50%;background:var(--oliva);overflow:hidden;flex-shrink:0;border:2px solid var(--cd);display:flex;align-items:center;justify-content:center">
+      <img id="mp-foto-img" style="width:100%;height:100%;object-fit:cover;object-position:center top;display:none">
+      <span id="mp-foto-inicial" style="font-family:Raleway,sans-serif;font-size:22px;font-weight:600;color:rgba(255,255,255,.5)">?</span>
+    </div>
+    <div style="flex:1">
+      <input type="file" id="mp-foto-file" accept="image/*" style="display:none" onchange="mpFotoSeleccionada(this)">
+      <button type="button" onclick="document.getElementById('mp-foto-file').click()" style="background:var(--crema);border:1px solid var(--cd);border-radius:3px;padding:7px 14px;font-size:12px;cursor:pointer;color:var(--texto);width:100%">📁 Elegir foto</button>
+      <div id="mp-foto-nombre" style="font-size:10px;color:var(--gc);margin-top:4px">Ninguna foto seleccionada</div>
+      <input type="hidden" id="mp-foto" value="">
+    </div>
+  </div>
   <label class="flbl" style="margin-top:.8rem">💬 Frase</label>
   <input class="finp" id="mp-frase" placeholder="Ej: El cuerpo habla, yo escucho.">
   <label class="flbl">📝 Descripción / Bio</label>
@@ -2158,7 +2168,7 @@ function renderAdmProfs(){
     const horario=Object.entries(p.h||{}).map(function(e){return DS[e[0]]+' '+e[1][0]+'-'+e[1][1]+'h';}).join(' · ');
     const div=document.createElement('div');
     div.className='irow';
-    div.innerHTML='<div class="iav">'+p.n[0]+'</div>'
+    div.innerHTML='<div class="iav" style="'+(p.foto?'background:transparent;overflow:hidden;padding:0':'')+'">'+(p.foto?'<img src="'+p.foto+'" style="width:100%;height:100%;object-fit:cover;object-position:center top;border-radius:50%" onerror="this.style.display=none">':p.n[0])+'</div>'
       +'<div class="iinfo"><div class="inombre">'+p.n+'</div><div class="isub">'+p.esp+'</div>'
       +'<div class="isub" style="color:var(--oliva)">'+horario+'</div>'
       +'<div class="isub">Clave: <strong>'+p.pass+'</strong></div>'
@@ -2180,7 +2190,13 @@ function abrirMP(id){
   document.getElementById('mp-d').value=p?`${String(Object.values(p.h||{})[0]?.[0]||9).padStart(2,'0')}:00`:'09:00';
   const fotoUrl=p?.foto||'';
   document.getElementById('mp-foto').value=fotoUrl;
-  prevFoto(fotoUrl);
+  prevFoto(fotoUrl, p?.n?.[0]||'?');
+  const nombreEl=document.getElementById('mp-foto-nombre');
+  if(nombreEl)nombreEl.textContent=fotoUrl?'Foto cargada':'Ninguna foto seleccionada';
+  const fotoImg=document.getElementById('mp-foto-img');
+  if(fotoImg)fotoImg.style.display=fotoUrl?'block':'none';
+  const fotoInicial=document.getElementById('mp-foto-inicial');
+  if(fotoInicial){fotoInicial.style.display=fotoUrl?'none':'block';fotoInicial.textContent=p?.n?.[0]||'?';}
   document.getElementById('mp-frase').value=p?.frase||'';
   document.getElementById('mp-bio').value=p?.bio||'';
   // Render titulos
@@ -5460,11 +5476,32 @@ function laserNuevaCliente(){
 renderSrvPage();
 initSupabase();
 
-function prevFoto(url){
-  const prev=document.getElementById('mp-foto-preview');
-  const img=document.getElementById('mp-foto-img');
-  if(url){prev.style.display='block';img.src=url}
-  else prev.style.display='none';
+function prevFoto(src, inicial){
+  var img=document.getElementById('mp-foto-img');
+  var span=document.getElementById('mp-foto-inicial');
+  if(!img)return;
+  if(src){
+    img.src=src;img.style.display='block';
+    if(span)span.style.display='none';
+  }else{
+    img.style.display='none';
+    if(span){span.style.display='block';span.textContent=inicial||'?';}
+  }
+}
+
+function mpFotoSeleccionada(input){
+  if(!input.files||!input.files[0])return;
+  var file=input.files[0];
+  if(file.size>2*1024*1024){alert('La foto no puede superar 2MB.');input.value='';return;}
+  var nombreEl=document.getElementById('mp-foto-nombre');
+  if(nombreEl)nombreEl.textContent=file.name;
+  var reader=new FileReader();
+  reader.onload=function(e){
+    var b64=e.target.result;
+    document.getElementById('mp-foto').value=b64;
+    prevFoto(b64);
+  };
+  reader.readAsDataURL(file);
 }
 
 let mpTitulosTemp=[];
