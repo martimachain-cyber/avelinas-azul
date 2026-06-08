@@ -1022,7 +1022,7 @@ td.ag-slot-free{background:transparent}
   </div>
 
   
-  <div id="mc-tipo-sel" style="display:block">
+  <div id="mc-tipo-sel" style="display: none;">
     <div style="font-family:Raleway,sans-serif;font-size:14px;font-weight:500;color:var(--texto);margin-bottom:.8rem;text-align:center">¿Cómo querés ingresar?</div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:.6rem;margin-bottom:.5rem">
       <div onclick="mcSelTipo(&#39;clienta&#39;)" style="padding: 1.2rem 0.8rem; background: var(--crema); border-color: var(--cd); border-top-style: ; border-top-width: ; border-right-style: ; border-right-width: ; border-bottom-style: ; border-bottom-width: ; border-left-style: ; border-left-width: ; border-image-source: ; border-image-slice: ; border-image-width: ; border-image-outset: ; border-image-repeat: ; border-radius: 4px; cursor: pointer; text-align: center; -webkit-tap-highlight-color: transparent; transition: 0.15s;" id="mc-opt-clienta">
@@ -1072,7 +1072,7 @@ td.ag-slot-free{background:transparent}
   </div>
 
   
-  <div id="mc-login-equipo" style="display:none">
+  <div id="mc-login-equipo" style="display: block;">
     <button onclick="mcVolverTipo()" style="background:none;border:none;color:var(--gris);font-family:Raleway,sans-serif;font-size:12px;cursor:pointer;padding:0;margin-bottom:1rem">← Volver</button>
     <div class="mc-title" style="margin-bottom:.3rem">Ingresá como equipo</div>
     <div style="font-size:13px;color:var(--gris);margin-bottom:.8rem">Elegí tu nombre y escribí tu clave</div>
@@ -1103,10 +1103,6 @@ td.ag-slot-free{background:transparent}
           <span style="font-family:Raleway,sans-serif;font-size:12px;font-weight:500;color:var(--texto);display:block">Rosario</span>
           <span style="font-size:9px;color:var(--gc);display:block;margin-top:1px">Profesional</span>
         </div></div>
-    <label class="flbl">Clave</label>
-    <input class="finp" id="eq-clave" type="password" placeholder="Tu clave personal" onkeydown="if(event.key===&#39;Enter&#39;)doLoginEquipo()">
-    <button class="btn-v full" onclick="doLoginEquipo()" style="margin-top:.5rem">Entrar →</button>
-  </div>
     <label class="flbl">Clave</label>
     <input class="finp" id="eq-clave" type="password" placeholder="Tu clave personal" onkeydown="if(event.key===&#39;Enter&#39;)doLoginEquipo()">
     <button class="btn-v full" onclick="doLoginEquipo()" style="margin-top:.5rem">Entrar →</button>
