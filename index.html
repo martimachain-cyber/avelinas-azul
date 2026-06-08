@@ -1796,8 +1796,8 @@ function abrirMiCuenta(){
   if(curPUser){
     if(ROL_PANEL[curPUser]==='admin'){
       goPage('panel');
-      document.getElementById('panel-login').style.display='none';
-      document.getElementById('panel-admin').style.display='block';
+      var _pl=document.getElementById('panel-login');if(_pl)_pl.style.display='none';
+      var _pa=document.getElementById('panel-admin');if(_pa)_pa.style.display='block';
       renderAdmRes();
     }else{
       goPage('agenda');
