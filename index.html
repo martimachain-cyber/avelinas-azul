@@ -1312,9 +1312,9 @@ function cerrarM(id){document.getElementById(id).classList.remove('on')}
 
 // ===== NAVIGATION =====
 function goPage(id){
-  document.querySelectorAll('.pg').forEach(function(p){p.classList.remove('on');p.style.display='';});
+  document.querySelectorAll('.pg').forEach(function(p){p.classList.remove('on');p.style.display='none';});
   const pg=document.getElementById('pg-'+id);
-  if(pg)pg.classList.add('on');
+  if(pg){pg.classList.add('on');pg.style.display='block';}
   document.querySelectorAll('.nav-links a').forEach(function(a){a.classList.remove('on');});
   document.querySelectorAll('.nav-links a').forEach(function(a){
     if(a.getAttribute('onclick')==="goPage('"+id+"')")a.classList.add('on');
@@ -2901,7 +2901,7 @@ function irAgendaDesdePanel(){
   // Hide all panel sections
   // pg-panel hides via the .pg class system (removes 'on')
   // Also hide pg-panel if it exists as a pg
-  document.querySelectorAll('.pg').forEach(function(p){p.classList.remove('on');p.style.display='';});
+  document.querySelectorAll('.pg').forEach(function(p){p.classList.remove('on');p.style.display='none';});
   const agPg=document.getElementById('pg-agenda');
   if(agPg){agPg.classList.add('on');agPg.style.display='block';}
   agFecha=new Date();
@@ -4712,7 +4712,7 @@ function irLaserBooking(){
     // Staff → go directly to admin laser agenda
     var plPg=document.getElementById('pg-laser');
     if(plPg){plPg.classList.remove('on');plPg.style.display='';}
-    document.querySelectorAll('.pg').forEach(function(p){p.classList.remove('on');p.style.display='';});
+    document.querySelectorAll('.pg').forEach(function(p){p.classList.remove('on');p.style.display='none';});
     var laPg=document.getElementById('pg-laser-agenda');
     if(laPg){laPg.classList.add('on');laPg.style.display='block';}
     setTimeout(function(){if(typeof renderLaserAgenda==='function')renderLaserAgenda();},50);
