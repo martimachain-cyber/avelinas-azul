@@ -988,16 +988,7 @@ td.ag-slot-free{background:transparent}
       <div style="font-family:Raleway,sans-serif;font-size:13px;font-style:italic;color:var(--oliva);border-left:3px solid var(--op);padding-left:.8rem;margin-bottom:.8rem;line-height:1.5">"Avelinas nació de un sueño y se convirtió en mi lugar en el mundo."</div>
       <div style="font-size:13px;color:var(--gris);line-height:1.8">Oriunda de Tandil, mamá de Simón y Filippa, esposa de Matías. Elegí Azul para construir este proyecto que hoy es mi mayor orgullo.</div>
     </div>
-    <div class="lucia-card">
-      <div class="lucia-foto" style="display:flex;align-items:center;justify-content:center;background:var(--oliva)"><span style="font-family:Raleway,sans-serif;font-size:28px;font-weight:600;color:rgba(255,255,255,.5)">L</span></div>
-      <div class="eq-body" style="padding:1rem">
-        <div class="lucia-badge">Secretaria</div>
-        <div class="eq-n">Lucía</div>
-        <div class="eq-e">Recepción · Atención al cliente</div>
-        <div style="font-size:12px;color:var(--gris);line-height:1.5;margin-bottom:.4rem">La primera sonrisa que encontrás al llegar.</div>
-        <div class="eq-f">"Que te sientas cómoda empieza antes de sentarte."</div>
-      </div>
-    </div>
+    
     <div class="eq-grid" style="grid-template-columns:1fr" id="eq-grid-dynamic"></div>
   </div>
   
@@ -1083,7 +1074,43 @@ td.ag-slot-free{background:transparent}
 
   
   <div id="mc-login-equipo" style="display:none">
-    
+    <button onclick="mcVolverTipo()" style="background:none;border:none;color:var(--gris);font-family:Raleway,sans-serif;font-size:12px;cursor:pointer;padding:0;margin-bottom:1rem">← Volver</button>
+    <div class="mc-title" style="margin-bottom:.3rem">Ingresá como equipo</div>
+    <div style="font-size:13px;color:var(--gris);margin-bottom:.8rem">Elegí tu nombre y escribí tu clave</div>
+    <div id="eq-login-err" class="er" style="margin-top:0;margin-bottom:.8rem">Clave incorrecta.</div>
+    <label class="flbl" style="margin-top:0">Soy</label>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px;margin:.4rem 0 .8rem" id="eq-pb-grid">
+        <div onclick="eqSelUser(&#39;martina&#39;,this)" style="padding: 8px 5px; background: var(--oliva); border-color: var(--oliva); border-top-style: ; border-top-width: ; border-right-style: ; border-right-width: ; border-bottom-style: ; border-bottom-width: ; border-left-style: ; border-left-width: ; border-image-source: ; border-image-slice: ; border-image-width: ; border-image-outset: ; border-image-repeat: ; border-radius: 3px; cursor: pointer; text-align: center; -webkit-tap-highlight-color: transparent; transition: 0.15s;" class="eq-pb">
+          <span style="font-family: Raleway, sans-serif; font-size: 12px; font-weight: 500; color: rgb(255, 255, 255); display: block;">Martina</span>
+          <span style="font-size: 9px; color: rgb(255, 255, 255); display: block; margin-top: 1px;">Admin</span>
+        </div>
+        <div onclick="eqSelUser(&#39;lucia&#39;,this)" style="padding: 8px 5px; background: var(--crema); border-color: var(--cd); border-top-style: ; border-top-width: ; border-right-style: ; border-right-width: ; border-bottom-style: ; border-bottom-width: ; border-left-style: ; border-left-width: ; border-image-source: ; border-image-slice: ; border-image-width: ; border-image-outset: ; border-image-repeat: ; border-radius: 3px; cursor: pointer; text-align: center; -webkit-tap-highlight-color: transparent; transition: 0.15s;" class="eq-pb">
+          <span style="font-family:Raleway,sans-serif;font-size:12px;font-weight:500;color:var(--texto);display:block">Lucía</span>
+          <span style="font-size:9px;color:var(--gc);display:block;margin-top:1px">Secretaria</span>
+        </div>
+        <div onclick="eqSelUser(&#39;emilia&#39;,this)" style="padding: 8px 5px; background: var(--crema); border-color: var(--cd); border-top-style: ; border-top-width: ; border-right-style: ; border-right-width: ; border-bottom-style: ; border-bottom-width: ; border-left-style: ; border-left-width: ; border-image-source: ; border-image-slice: ; border-image-width: ; border-image-outset: ; border-image-repeat: ; border-radius: 3px; cursor: pointer; text-align: center; -webkit-tap-highlight-color: transparent; transition: 0.15s;" class="eq-pb">
+          <span style="font-family:Raleway,sans-serif;font-size:12px;font-weight:500;color:var(--texto);display:block">Emilia</span>
+          <span style="font-size:9px;color:var(--gc);display:block;margin-top:1px">Profesional</span>
+        </div>
+        <div onclick="eqSelUser(&#39;camila&#39;,this)" style="padding: 8px 5px; background: var(--crema); border-color: var(--cd); border-top-style: ; border-top-width: ; border-right-style: ; border-right-width: ; border-bottom-style: ; border-bottom-width: ; border-left-style: ; border-left-width: ; border-image-source: ; border-image-slice: ; border-image-width: ; border-image-outset: ; border-image-repeat: ; border-radius: 3px; cursor: pointer; text-align: center; -webkit-tap-highlight-color: transparent; transition: 0.15s;" class="eq-pb">
+          <span style="font-family:Raleway,sans-serif;font-size:12px;font-weight:500;color:var(--texto);display:block">Camila</span>
+          <span style="font-size:9px;color:var(--gc);display:block;margin-top:1px">Profesional</span>
+        </div>
+        <div onclick="eqSelUser(&#39;ludovica&#39;,this)" style="padding: 8px 5px; background: var(--crema); border-color: var(--cd); border-top-style: ; border-top-width: ; border-right-style: ; border-right-width: ; border-bottom-style: ; border-bottom-width: ; border-left-style: ; border-left-width: ; border-image-source: ; border-image-slice: ; border-image-width: ; border-image-outset: ; border-image-repeat: ; border-radius: 3px; cursor: pointer; text-align: center; -webkit-tap-highlight-color: transparent; transition: 0.15s;" class="eq-pb">
+          <span style="font-family:Raleway,sans-serif;font-size:12px;font-weight:500;color:var(--texto);display:block">Ludovica</span>
+          <span style="font-size:9px;color:var(--gc);display:block;margin-top:1px">Profesional</span>
+        </div>
+        <div onclick="eqSelUser(&#39;rosario&#39;,this)" style="padding: 8px 5px; background: var(--crema); border-color: var(--cd); border-top-style: ; border-top-width: ; border-right-style: ; border-right-width: ; border-bottom-style: ; border-bottom-width: ; border-left-style: ; border-left-width: ; border-image-source: ; border-image-slice: ; border-image-width: ; border-image-outset: ; border-image-repeat: ; border-radius: 3px; cursor: pointer; text-align: center; -webkit-tap-highlight-color: transparent; transition: 0.15s;" class="eq-pb">
+          <span style="font-family:Raleway,sans-serif;font-size:12px;font-weight:500;color:var(--texto);display:block">Rosario</span>
+          <span style="font-size:9px;color:var(--gc);display:block;margin-top:1px">Profesional</span>
+        </div>
+        <div onclick="eqSelUser(&#39;virginia&#39;,this)" style="padding: 8px 5px; background: var(--crema); border-color: var(--cd); border-top-style: ; border-top-width: ; border-right-style: ; border-right-width: ; border-bottom-style: ; border-bottom-width: ; border-left-style: ; border-left-width: ; border-image-source: ; border-image-slice: ; border-image-width: ; border-image-outset: ; border-image-repeat: ; border-radius: 3px; cursor: pointer; text-align: center; -webkit-tap-highlight-color: transparent; transition: 0.15s;" class="eq-pb">
+          <span style="font-family:Raleway,sans-serif;font-size:12px;font-weight:500;color:var(--texto);display:block">Virginia</span>
+          <span style="font-size:9px;color:var(--gc);display:block;margin-top:1px">Profesional</span>
+        </div></div>
+    <label class="flbl">Clave</label>
+    <input class="finp" id="eq-clave" type="password" placeholder="Tu clave personal" onkeydown="if(event.key===&#39;Enter&#39;)doLoginEquipo()">
+    <button class="btn-v full" onclick="doLoginEquipo()" style="margin-top:.5rem">Entrar →</button>
   </div>
 
 </div>
@@ -1758,8 +1785,8 @@ function actualizarNavBtn(){
     btn.style.background='var(--oliva)';
     btn.style.color='#fff';
   }else if(curCl){
-    // Clienta logueada — mostrar su nombre
-    btn.textContent=curCl.n.split(' ')[0];
+    // Clienta logueada — mostrar "Mi cuenta" (discreto)
+    btn.textContent='Mi cuenta';
     btn.style.background='';
     btn.style.color='';
   }else{
