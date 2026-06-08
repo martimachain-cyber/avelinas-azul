@@ -4953,11 +4953,9 @@ async function sbSync(){
               // Si no existe en Supabase (ej: Lucía nueva), usar el del código
               return dp;
             });
-            // Eliminar profesionales dados de baja y ordenar
+            // Eliminar profesionales dados de baja
             var _eliminados=['virginia'];
             D.profesionales = _profsMerged.filter(function(p){return !_eliminados.includes(p.id);});
-            var _orden=['lucia','emilia','camila','ludovica','rosario'];
-            D.profesionales.sort(function(a,b){var ai=_orden.indexOf(a.id);var bi=_orden.indexOf(b.id);return (ai===-1?99:ai)-(bi===-1?99:bi);});
             localStorage.setItem(KEY, JSON.stringify(D));
           } else if(row.key==='caja'){
             cjD = parsed;
