@@ -5067,16 +5067,22 @@ async function sbSync(){
           if(row.key==='main'){
             const _def = defD();
             D = Object.assign(_def, parsed);
-            // Los servicios siempre vienen del código, nunca de Supabase
-            // (son datos del sistema, no del usuario)
+            // Servicios siempre del código
             D.servicios = _def.servicios;
-            // Preservar cats de profesionales si los del código son más completos
-            if(_def.profesionales && D.profesionales){
-              D.profesionales.forEach(function(p){
-                var dp=_def.profesionales.find(function(x){return x.id===p.id;});
-                if(dp&&dp.cats&&dp.cats.length&&(!p.cats||!p.cats.length))p.cats=dp.cats;
-              });
-            }
+            // Mergear profesionales: partir de los del código y actualizar con datos de Supabase
+            var _profsMerged = _def.profesionales.map(function(dp){
+              var sp = D.profesionales.find(function(p){return p.id===dp.id;});
+              // Si existe en Supabase, usar esos datos (tienen foto, bio, etc actualizados)
+              // pero preservar cats y pass del código si faltan
+              if(sp){
+                if(!sp.cats||!sp.cats.length) sp.cats=dp.cats;
+                if(!sp.pass) sp.pass=dp.pass;
+                return sp;
+              }
+              // Si no existe en Supabase (ej: Lucía nueva), usar el del código
+              return dp;
+            });
+            D.profesionales = _profsMerged;
             localStorage.setItem(KEY, JSON.stringify(D));
           } else if(row.key==='caja'){
             cjD = parsed;
@@ -5095,6 +5101,18 @@ async function sbSync(){
         var laserDurs={'l1':90,'l2':75,'l3':70,'l4':55,'l5':40,'l6':35,'l7':45,'l8':25,'l9':15,'l10':10,'l11':20,'l12':10,'l13':10,'l14':10,'l15':15,'l16':20,'l17':20};
         D.servicios.laser.forEach(function(sv){if(!sv.dur&&laserDurs[sv.id])sv.dur=laserDurs[sv.id];});
       }
+      // Asegurar que todos los profesionales base estén en D.profesionales
+      var _defProfs=defD().profesionales;
+      _defProfs.forEach(function(dp){
+        if(!D.profesionales.find(function(p){return p.id===dp.id;})){
+          D.profesionales.push(dp);
+        }
+      });
+      // Ordenar en el orden correcto
+      var _orden=['lucia','emilia','camila','ludovica','rosario','virginia'];
+      D.profesionales.sort(function(a,b){
+        return _orden.indexOf(a.id)-_orden.indexOf(b.id);
+      });
       // Si el modal de turno está abierto, recargar servicios
       var modalAbierto=document.getElementById('modal-ag-turno');
       if(modalAbierto&&modalAbierto.classList.contains('on')){
