@@ -610,71 +610,347 @@ td.ag-slot-free{background:transparent}
   </div>
 
   
-  
-
-
-  
-  
-</div>
-
-
-<div id="pg-tienda" class="pg" style="padding-top:54px">
-  <div class="sec">
-    <div class="sec-tag">Nuestra tienda</div>
-    <h2 class="sec-title">Productos para <em>seguir brillando</em></h2>
-    <div class="tienda-hero">
-      <div class="tienda-icon">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="28" height="28"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 01-8 0"></path></svg>
+  <div id="panel-admin" style="display:none">
+    <div class="top"><div><div class="top-brand" id="adm-brand">Panel Admin</div><div class="top-sub">Avelinas Azul</div></div><button class="out-btn" onclick="pLogout()">Salir</button></div>
+    <div class="adm-tabs" id="adm-tabs-el" style="grid-template-columns: repeat(6, 1fr);"><button class="adm-tab" onclick="stAdm(&#39;a-res&#39;,this)">Resumen</button><button class="adm-tab" onclick="stAdm(&#39;a-pro&#39;,this)">Profesionales</button><button class="adm-tab" onclick="stAdm(&#39;a-srv&#39;,this)">Servicios</button><button class="adm-tab on" onclick="stAdm(&#39;a-cls&#39;,this)">Clientas</button><button class="adm-tab" onclick="stAdm(&#39;a-caja&#39;,this)">💰 Caja</button><button class="adm-tab" onclick="stAdm(&#39;a-prod&#39;,this)">📦 Productos</button></div>
+    <div id="a-res" class="tsec">
+      <div style="padding:1rem">
+        <div class="stats"><div class="sc"><div class="sc-n" id="a-sh">0</div><div class="sc-l">Hoy</div></div><div class="sc"><div class="sc-n" id="a-ss">1</div><div class="sc-l">Semana</div></div><div class="sc"><div class="sc-n" id="a-sc">5</div><div class="sc-l">Clientas</div></div></div><div id="a-cumples" style="display:none;background:rgba(255,200,50,.1);border:1px solid rgba(255,200,50,.4);border-radius:3px;padding:.8rem;margin-bottom:.8rem"></div><button class="btn-v full" onclick="irAgendaDesdePanel()" style="margin-bottom:.8rem">📅 Ver agenda completa</button>
+        <button class="btn-v full" onclick="irLaserBooking()" style="margin-bottom:.8rem;background:var(--gris)">💜 Agenda depilación definitiva</button>
+        <div class="panel"><div class="ptitle">Turnos de hoy</div><div id="a-hoy"><div class="empty">Sin turnos hoy.</div></div></div>
+        <div class="panel"><div class="ptitle">Turnos de mañana <span style="font-size:10px;color:var(--gc);font-weight:400">— tocá 'Recordar' para avisar a cada clienta</span></div><div id="a-manana"><div class="empty">Sin turnos mañana.</div></div></div>
+        <div class="panel"><div class="ptitle">Próximos</div><div id="a-prox"><div class="ti"><div class="ti-h">10:00</div><div class="ti-i"><div class="ti-n">Lucia Estrebou · Jue 21 May</div><div class="ti-s">Rosario · Facial Premium</div></div><button class="ti-x" onclick="cancelarR(1779132562618)">✕</button></div></div></div>
       </div>
-      <div style="font-family:Raleway,sans-serif;font-size:18px;font-weight:300;color:#fff;margin-bottom:.5rem">Lo que usamos y <em style="font-style:italic;color:var(--crema)">recomendamos</em></div>
-      <div style="font-size:13px;color:var(--gc);margin-bottom:1.2rem;line-height:1.7">Productos profesionales disponibles para seguir el cuidado desde casa. Envíos a toda la provincia de Buenos Aires.</div>
-      <div style="margin-bottom:1.2rem"><span class="ttag">Productos profesionales</span><span class="ttag">Envíos a domicilio</span><span class="ttag">Pago seguro</span></div>
-      <a href="https://avelinas3.mitiendanube.com/" class="btn-p" target="_blank" style="display:inline-block">Ir a la tienda online →</a>
     </div>
-  </div>
-  <div class="wa-bar">
-    <span class="wa-text">¿Consultas sobre productos?</span>
-    <a href="https://wa.me/542494251936" class="wa-btn">WhatsApp →</a>
-  </div>
-</div>
-
-<div id="pg-nosotras" class="pg" style="padding-top:54px">
-  <div class="sec">
-    <div class="sec-tag">Quiénes somos</div>
-    <h2 class="sec-title">El <em>equipo</em></h2>
-    <p class="sec-sub">"Creemos que la belleza es una forma de cuidado, no de perfección."</p>
-    <div style="background:#fff;border:1px solid var(--cd);border-radius:3px;padding:1.2rem;margin-bottom:1rem">
-      <div style="display:flex;align-items:center;gap:.8rem;margin-bottom:.8rem">
-        <div style="width:48px;height:48px;border-radius:50%;background:var(--oliva);display:flex;align-items:center;justify-content:center;font-family:Raleway,sans-serif;font-size:18px;font-weight:600;color:#fff;flex-shrink:0">M</div>
-        <div><div style="font-family:Raleway,sans-serif;font-size:15px;font-weight:600;color:var(--texto)">Martina</div><div style="font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--oliva);font-family:Raleway,sans-serif">Dueña · Manicura · Esteticista · Maquilladora</div></div>
+    <div id="a-pro" class="tsec"><div style="padding:1rem">
+    <div class="panel"><div class="ptitle">Equipo</div><div id="a-profs-l"></div><button class="btn-v full" onclick="abrirMP(null)">+ Agregar profesional</button></div>
+    <div class="panel">
+      <div class="ptitle">Jornadas de depilación definitiva — Camila</div>
+      <div style="font-size:12px;color:var(--gc);margin-bottom:.8rem;line-height:1.5">En estas fechas Camila <strong>solo atiende depilación definitiva</strong>. No aparece disponible para otros servicios.</div>
+      <div id="jornadas-lista" style="margin-bottom:.8rem"></div>
+      <div style="display:flex;gap:.5rem;align-items:center">
+        <input class="finp" type="date" id="nueva-jornada" style="flex:1;margin:0">
+        <button class="btn-v" onclick="agregarJornada()" style="flex-shrink:0;white-space:nowrap">+ Agregar</button>
       </div>
-      <div style="font-family:Raleway,sans-serif;font-size:13px;font-style:italic;color:var(--oliva);border-left:3px solid var(--op);padding-left:.8rem;margin-bottom:.8rem;line-height:1.5">"Avelinas nació de un sueño y se convirtió en mi lugar en el mundo."</div>
-      <div style="font-size:13px;color:var(--gris);line-height:1.8">Oriunda de Tandil, mamá de Simón y Filippa, esposa de Matías. Elegí Azul para construir este proyecto que hoy es mi mayor orgullo.</div>
+      <div id="ok-jornada" class="ok"></div>
     </div>
+  </div></div>
+    <div id="a-srv" class="tsec"><div style="padding:1rem"><div class="cpills" id="a-srv-pills"></div><div class="panel"><div class="ptitle" id="a-srv-title">Servicios</div><div id="a-srv-l"></div><button class="btn-v full" onclick="abrirMS(null)">+ Agregar servicio</button></div></div></div>
+    <div id="a-cls" class="tsec on"><div style="padding:1rem"><div class="panel">
+  <div style="display:flex;gap:.4rem;margin-bottom:.8rem">
+    <button class="cpill on" id="cls-tab-lista" onclick="clsSetTab(&#39;lista&#39;,this)">👥 Clientas</button>
+    <button class="cpill" id="cls-tab-ranking" onclick="clsSetTab(&#39;ranking&#39;,this)">⭐ Ranking</button>
+  </div>
+  <div id="cls-lista-sec">
+    <input class="finp" id="a-cls-q" type="text" placeholder="Buscar clienta..." oninput="filtraCls(this.value)" style="margin-top:0">
+    <div id="a-cls-l"><div class="irow"><div class="iav" style="font-size:13px">LM</div><div class="iinfo"><div class="inombre">Laura Martínez</div><div class="isub">2494111222</div><div style="display:flex;align-items:center;gap:6px;margin-top:3px"><span class="pts-b">8 pts</span></div></div><div class="iacts" style="flex-direction:column;gap:4px;align-items:flex-end"><div style="display:flex;gap:4px"><button class="btn-v" style="padding:4px 8px;font-size:10px">📋 Ficha</button><button class="btn-e">Editar</button><button class="btn-r">✕</button></div><div style="display:flex;gap:4px"><button class="btn-v" style="padding:4px 8px;font-size:10px">+1</button><button class="btn-v" style="padding:4px 8px;font-size:10px;background:var(--gris)">-1</button></div></div></div><div class="irow"><div class="iav" style="font-size:13px">AG</div><div class="iinfo"><div class="inombre">Ana González</div><div class="isub">2494333444</div><div style="display:flex;align-items:center;gap:6px;margin-top:3px"><span class="pts-b">6 pts</span></div></div><div class="iacts" style="flex-direction:column;gap:4px;align-items:flex-end"><div style="display:flex;gap:4px"><button class="btn-v" style="padding:4px 8px;font-size:10px">📋 Ficha</button><button class="btn-e">Editar</button><button class="btn-r">✕</button></div><div style="display:flex;gap:4px"><button class="btn-v" style="padding:4px 8px;font-size:10px">+1</button><button class="btn-v" style="padding:4px 8px;font-size:10px;background:var(--gris)">-1</button></div></div></div><div class="irow"><div class="iav" style="font-size:13px">MC</div><div class="iinfo"><div class="inombre">María Castro</div><div class="isub">2494555666</div><div style="display:flex;align-items:center;gap:6px;margin-top:3px"><span class="pts-b">10 pts</span></div></div><div class="iacts" style="flex-direction:column;gap:4px;align-items:flex-end"><div style="display:flex;gap:4px"><button class="btn-v" style="padding:4px 8px;font-size:10px">📋 Ficha</button><button class="btn-e">Editar</button><button class="btn-r">✕</button></div><div style="display:flex;gap:4px"><button class="btn-v" style="padding:4px 8px;font-size:10px">+1</button><button class="btn-v" style="padding:4px 8px;font-size:10px;background:var(--gris)">-1</button></div></div></div></div>
+    <button class="btn-v full" onclick="abrirMC(null)">+ Nueva clienta</button>
+  </div>
+  <div id="cls-ranking-sec" style="display:none"><div id="cls-ranking-lista"></div></div>
+</div></div></div>
+
+  <div id="a-prod" class="tsec"><div style="padding:1rem">
     
-    <div class="eq-grid" style="grid-template-columns:1fr" id="eq-grid-dynamic"></div>
-  </div>
-  
-  <div style="background:var(--crema);border-top:1px solid var(--cd);padding:1.5rem;text-align:center;margin-top:1rem">
-    <div style="font-family:Raleway,sans-serif;font-size:13px;font-weight:500;color:var(--texto);margin-bottom:.4rem">¿Querés trabajar con nosotras?</div>
-    <div style="font-size:12px;color:var(--gris);margin-bottom:.8rem">Envianos tu CV y te contactamos</div>
-    <a href="mailto:avelinasazul@gmail.com?subject=CV%20-%20Quiero%20trabajar%20en%20Avelinas%20Azul&amp;body=Hola!%20Les%20env%C3%ADo%20mi%20CV%20para%20sumarme%20al%20equipo." style="display:inline-block;background:var(--oliva);color:#fff;font-family:Raleway,sans-serif;font-size:12px;font-weight:500;padding:10px 20px;border-radius:2px;text-decoration:none;letter-spacing:.06em">📩 Enviar mi CV</a>
-  </div>
-  <div class="wa-bar">
-    <span class="wa-text">Olavarría 529, Azul</span>
-    <a href="https://wa.me/542494251936" class="wa-btn">Escribinos →</a>
-  </div>
-</div>
+    <div style="display:flex;gap:.4rem;margin-bottom:1rem;overflow-x:auto;scrollbar-width:none">
+      <button class="cpill on" id="prod-tab-stock" onclick="prodSetTab(&#39;stock&#39;,this)">📦 Stock</button>
+      <button class="cpill" id="prod-tab-ventas" onclick="prodSetTab(&#39;ventas&#39;,this)">💵 Ventas</button>
+      <button class="cpill" id="prod-tab-pedidos" onclick="prodSetTab(&#39;pedidos&#39;,this)">📋 Pedidos</button>
+      <button class="cpill" id="prod-tab-proveedores" onclick="prodSetTab(&#39;proveedores&#39;,this)">🏪 Proveedores</button>
+    </div>
 
-<div id="pg-contacto" class="pg" style="padding-top:54px">
-  <div class="sec">
-    <div class="sec-tag">Encontranos</div>
-    <h2 class="sec-title">Hablemos</h2>
-    <div class="ci"><div class="ci-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"></path><circle cx="12" cy="10" r="3"></circle></svg></div><div><div class="ci-lbl">Dirección</div><div class="ci-val">Olavarría 529, Azul, Buenos Aires</div></div></div>
-    <div class="ci"><div class="ci-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.8 19.79 19.79 0 01.22 1.18 2 2 0 012.22 0h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.91 7.09a16 16 0 006 6l.56-.56a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 14.92z"></path></svg></div><div><div class="ci-lbl">WhatsApp</div><div class="ci-val"><a href="https://wa.me/542494251936">2494 251936</a></div></div></div>
-    <div class="ci"><div class="ci-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="4" width="20" height="16" rx="2"></rect><polyline points="2,4 12,13 22,4"></polyline></svg></div><div><div class="ci-lbl">Mail</div><div class="ci-val"><a href="mailto:avelinasazul@gmail.com">avelinasazul@gmail.com</a></div></div></div>
-    <div class="ci"><div class="ci-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="20" height="20" rx="5"></rect><circle cx="12" cy="12" r="4"></circle><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"></circle></svg></div><div><div class="ci-lbl">Instagram</div><div class="ci-val"><a href="https://instagram.com/avelinas.azul" target="_blank">@avelinas.azul</a></div></div></div>
-    <div class="ci"><div class="ci-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="4" width="18" height="18" rx="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg></div><div><div class="ci-lbl">Horarios</div><div class="ci-val">Lun–Vie 9 a 17 hs · Sáb 9 a 13 hs</div></div></div>
+    
+    <div id="prod-stock">
+      
+      <div class="stats" style="grid-template-columns:repeat(3,1fr);margin-bottom:.8rem">
+        <div class="sc"><div class="sc-n" id="ps-total" style="font-size:16px">0</div><div class="sc-l">Productos</div></div>
+        <div class="sc"><div class="sc-n" id="ps-bajos" style="font-size:16px;color:#c07820">0</div><div class="sc-l">Stock bajo</div></div>
+        <div class="sc"><div class="sc-n" id="ps-agotados" style="font-size:16px;color:var(--rojo)">0</div><div class="sc-l">Sin stock</div></div>
+      </div>
+      
+      <div style="display:flex;gap:.5rem;margin-bottom:.8rem;flex-wrap:wrap">
+        <input class="finp" type="text" id="prod-buscar" placeholder="🔍 Buscar producto o código..." oninput="prodFiltrar(this.value)" style="flex:1;margin:0">
+        <select class="fsel" id="prod-filtro-prov" onchange="prodFiltrar()" style="flex:1;margin:0;max-width:160px">
+          <option value="">Todos los proveedores</option>
+        </select>
+        <select class="fsel" id="prod-filtro-estado" onchange="prodFiltrar()" style="margin:0;max-width:130px">
+          <option value="">Todos</option>
+          <option value="bajo">Stock bajo</option>
+          <option value="agotado">Sin stock</option>
+          <option value="ok">En stock</option>
+        </select>
+      </div>
+      <div class="panel" style="padding:.8rem">
+        <div id="prod-stock-lista"></div>
+        <button class="btn-v full" onclick="abrirModalProd(null)" style="margin-top:.5rem">+ Agregar producto</button>
+      </div>
+      
+      <div class="panel" style="padding:.8rem">
+        <div class="ptitle">Stock por proveedor</div>
+        <div id="prod-stock-por-prov"></div>
+      </div>
+    </div>
+
+    
+    <div id="prod-ventas" style="display:none">
+      <div style="display:flex;gap:.5rem;margin-bottom:.8rem;flex-wrap:wrap">
+        <button class="cpill on" id="pv-btn-hoy" onclick="prodVentasPeriodo(&#39;hoy&#39;,this)">Hoy</button>
+        <button class="cpill" id="pv-btn-sem" onclick="prodVentasPeriodo(&#39;semana&#39;,this)">Semana</button>
+        <button class="cpill" id="pv-btn-mes" onclick="prodVentasPeriodo(&#39;mes&#39;,this)">Mes</button>
+      </div>
+      <div class="stats">
+        <div class="sc"><div class="sc-n" id="pv-total">$0</div><div class="sc-l">Total ventas</div></div>
+        <div class="sc"><div class="sc-n" id="pv-ganancia">$0</div><div class="sc-l">Ganancia</div></div>
+        <div class="sc"><div class="sc-n" id="pv-com">$0</div><div class="sc-l">Comisión</div></div>
+      </div>
+      <div class="panel" style="padding:.8rem">
+        <div class="ptitle">Registros de venta</div>
+        <div id="prod-ventas-lista"></div>
+        <button class="btn-v full" onclick="abrirModalVentaProd(null)">+ Registrar venta</button>
+      </div>
+    </div>
+
+    
+    <div id="prod-pedidos" style="display:none">
+      <div class="panel" style="padding:.8rem">
+        <div class="ptitle">Productos a reponer <span style="font-size:10px;color:var(--gc);font-weight:400">— stock en 0 o bajo mínimo</span></div>
+        <div id="prod-pedidos-auto"></div>
+      </div>
+      <div class="panel" style="padding:.8rem">
+        <div class="ptitle">Generar pedido por proveedor</div>
+        <select class="fsel" id="pedido-prov-sel" style="margin-bottom:.8rem">
+          <option value="">Seleccioná proveedor</option>
+        </select>
+        <div id="prod-pedido-preview"></div>
+        
+      </div>
+      <div class="panel" style="padding:.8rem">
+        <div class="ptitle">Agregar producto manual al pedido</div>
+        <input class="finp" id="pedido-manual-nombre" placeholder="Nombre del producto" style="margin-bottom:.4rem">
+        <input class="finp" id="pedido-manual-cant" type="number" placeholder="Cantidad" style="margin-bottom:.4rem">
+        <button class="btn-v full" onclick="agregarPedidoManual()">+ Agregar</button>
+        <div id="pedido-manuales" style="margin-top:.8rem"></div>
+      </div>
+    </div>
+
+    
+    <div id="prod-proveedores" style="display:none">
+      <div class="panel" style="padding:.8rem">
+        <div class="ptitle">Proveedores</div>
+        <div id="proveedores-lista"></div>
+        <button class="btn-v full" onclick="abrirModalProv(null)">+ Agregar proveedor</button>
+      </div>
+      
+      <div id="prov-detalle" style="display:none">
+        <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.8rem">
+          <button onclick="cerrarProvDetalle()" style="background:transparent;border:none;color:var(--gris);font-family:Raleway,sans-serif;font-size:12px;cursor:pointer">← Volver</button>
+          <span id="prov-detalle-nombre" style="font-family:Raleway,sans-serif;font-size:14px;font-weight:600;color:var(--texto)"></span>
+        </div>
+        
+        <div style="display:flex;gap:.4rem;margin-bottom:.8rem">
+          <button class="cpill on" id="pd-tab-cc" onclick="pdSetTab(&#39;cc&#39;,this)">💳 Cuenta corriente</button>
+          <button class="cpill" id="pd-tab-prod" onclick="pdSetTab(&#39;prod&#39;,this)">📦 Productos</button>
+          <button class="cpill" id="pd-tab-compras" onclick="pdSetTab(&#39;compras&#39;,this)">🧾 Compras</button>
+        </div>
+        
+        <div id="pd-cc">
+          <div class="stats" style="grid-template-columns:1fr 1fr 1fr;margin-bottom:.8rem">
+            <div class="sc"><div class="sc-n" id="pd-cc-debe" style="font-size:16px;color:var(--rojo)">$0</div><div class="sc-l">Saldo</div></div>
+            <div class="sc"><div class="sc-n" id="pd-cc-compras" style="font-size:16px">$0</div><div class="sc-l">Compras</div></div>
+            <div class="sc"><div class="sc-n" id="pd-cc-pagado" style="font-size:16px;color:var(--oliva)">$0</div><div class="sc-l">Pagado</div></div>
+          </div>
+          <div class="panel" style="padding:.8rem">
+            <div class="ptitle">Movimientos</div>
+            <div id="pd-cc-lista"></div>
+            <button class="btn-v full" onclick="abrirModalCC()" style="margin-top:.8rem">+ Registrar movimiento</button>
+          </div>
+        </div>
+        
+        <div id="pd-prod" style="display:none">
+          <div class="panel" style="padding:.8rem">
+            <div class="ptitle">Productos de este proveedor</div>
+            <div id="pd-consig-alert" style="display:none;background:rgba(139,143,107,.08);border:1px solid rgba(139,143,107,.2);border-radius:3px;padding:.6rem .8rem;font-size:12px;color:var(--gris);margin-bottom:.6rem"></div>
+            <div id="pd-prod-lista"></div>
+          </div>
+        </div>
+        
+        <div id="pd-compras" style="display:none">
+          <div class="panel" style="padding:.8rem">
+            <div class="ptitle">Historial de compras</div>
+            <div id="pd-compras-lista"></div>
+            <button class="btn-v full" onclick="abrirModalCompra()" style="margin-top:.8rem">+ Registrar compra</button>
+          </div>
+        </div>
+      </div>
+      
+      <select id="cc-prov-sel" style="display:none"></select>
+    </div>
+
+  </div></div>
+  <div id="a-caja" class="tsec"><div style="padding:1rem">
+
+    
+    <div style="display:flex;gap:.4rem;margin-bottom:.8rem;flex-wrap:wrap">
+      <button class="cpill on" id="cj-p-hoy" onclick="cjSetPer(&#39;hoy&#39;,this)">Hoy</button>
+      <button class="cpill" id="cj-p-sem" onclick="cjSetPer(&#39;semana&#39;,this)">Semana</button>
+      <button class="cpill" id="cj-p-mes" onclick="cjSetPer(&#39;mes&#39;,this)">Este mes</button>
+      <button class="cpill" id="cj-p-todo" onclick="cjSetPer(&#39;todo&#39;,this)">Todo</button>
+      <input type="month" id="cj-mes-sel" onchange="cjSetMes(this.value)" style="padding:4px 8px;border:1px solid var(--cd);border-radius:20px;font-family:Raleway,sans-serif;font-size:10px;background:var(--crema);color:var(--gris);cursor:pointer">
+    </div>
+
+    
+    <div style="display:flex;gap:.4rem;margin-bottom:1rem;overflow-x:auto;scrollbar-width:none">
+      <button class="cpill on" id="cj-tab-resumen" onclick="cjSetTab(&#39;resumen&#39;,this)">📊 Resumen</button>
+      <button class="cpill" id="cj-tab-ingresos" onclick="cjSetTab(&#39;ingresos&#39;,this)">💰 Ingresos</button>
+      <button class="cpill" id="cj-tab-egresos" onclick="cjSetTab(&#39;egresos&#39;,this)">💸 Egresos</button>
+      <button class="cpill" id="cj-tab-comisiones" onclick="cjSetTab(&#39;comisiones&#39;,this)">👩 Comisiones</button>
+      <button class="cpill" id="cj-tab-reportes" onclick="cjSetTab(&#39;reportes&#39;,this)">📋 Reportes</button>
+      <button class="cpill" id="cj-tab-cierre" onclick="cjSetTab(&#39;cierre&#39;,this)">🔒 Cierre</button>
+    </div>
+
+    
+    <div id="cj-resumen">
+      <div class="stats" style="grid-template-columns:repeat(3,1fr)">
+        <div class="sc"><div class="sc-n" id="cj-r-ing" style="color:var(--oliva)">$0</div><div class="sc-l">Ingresos</div></div>
+        <div class="sc"><div class="sc-n" id="cj-r-eg" style="color:var(--rojo)">$0</div><div class="sc-l">Egresos</div></div>
+        <div class="sc"><div class="sc-n" id="cj-r-net">$0</div><div class="sc-l">Neto</div></div>
+      </div>
+      <div class="stats" style="grid-template-columns:repeat(3,1fr)">
+        <div class="sc"><div class="sc-n" id="cj-r-efec" style="font-size:14px">$0</div><div class="sc-l">Efectivo</div></div>
+        <div class="sc"><div class="sc-n" id="cj-r-transf" style="font-size:14px">$0</div><div class="sc-l">Transferencia</div></div>
+        <div class="sc"><div class="sc-n" id="cj-r-comi" style="font-size:14px">$0</div><div class="sc-l">A pagar comis.</div></div>
+      </div>
+      <div class="panel">
+        <div class="ptitle">Por categoría de egreso</div>
+        <div id="cj-r-cats"></div>
+      </div>
+      <div class="panel">
+        <div class="ptitle">Por profesional</div>
+        <div id="cj-r-profs"></div>
+      </div>
+      <div style="display:flex;gap:.5rem;margin-top:.5rem">
+        <button class="btn-v" onclick="exportarPDF()" style="flex:1">📄 Exportar PDF</button>
+        <button class="btn-v" onclick="exportarExcel()" style="flex:1;background:var(--gris)">📊 Exportar Excel</button>
+      </div>
+    </div>
+
+    
+    <div id="cj-ingresos" style="display:none">
+      <div class="stats" style="grid-template-columns:repeat(2,1fr)">
+        <div class="sc"><div class="sc-n" id="cj-i-total" style="color:var(--oliva)">$0</div><div class="sc-l">Total</div></div>
+        <div class="sc"><div class="sc-n" id="cj-i-cant" style="font-size:16px">0</div><div class="sc-l">Cobros</div></div>
+      </div>
+      <div class="panel">
+        <div class="ptitle">Registros</div>
+        <div id="cj-i-lista"></div>
+        <button class="btn-v full" id="btn-nuevo-cobro" style="margin-top:.8rem">+ Registrar cobro</button>
+      </div>
+    </div>
+
+    
+    <div id="cj-egresos" style="display:none">
+      <div class="stats" style="grid-template-columns:repeat(2,1fr)">
+        <div class="sc"><div class="sc-n" id="cj-e-total" style="color:var(--rojo)">$0</div><div class="sc-l">Total egresos</div></div>
+        <div class="sc"><div class="sc-n" id="cj-e-cant" style="font-size:16px">0</div><div class="sc-l">Movimientos</div></div>
+      </div>
+      <div class="panel">
+        <div class="ptitle">Registros</div>
+        <div id="cj-e-lista"></div>
+        <button class="btn-v full" id="btn-nuevo-egreso" style="margin-top:.8rem">+ Registrar egreso</button>
+      </div>
+    </div>
+
+    
+    <div id="cj-comisiones" style="display:none">
+      <div class="panel">
+        <div class="ptitle">Liquidación del período</div>
+        <div id="cj-com-lista"></div>
+      </div>
+      <div class="panel">
+        <div class="ptitle">Adelantos registrados</div>
+        <div id="cj-ade-lista"></div>
+        <button class="btn-v full" id="btn-nuevo-adelanto" style="margin-top:.8rem">+ Registrar adelanto</button>
+      </div>
+      <div class="panel">
+        <div class="ptitle">Retiro de productos (precio profesional)</div>
+        <div id="cj-ret-lista"></div>
+        <button class="btn-v full" id="btn-nuevo-retiro" style="margin-top:.8rem">+ Registrar retiro</button>
+      </div>
+    </div>
+
+    
+    <div id="cj-cierre" style="display:none">
+      
+      <div class="panel">
+        <div class="ptitle">Caja de hoy</div>
+        <div class="stats" style="grid-template-columns:repeat(3,1fr)">
+          <div class="sc"><div class="sc-n" id="ci-efec-hoy" style="color:var(--oliva)">$0</div><div class="sc-l">Efectivo</div></div>
+          <div class="sc"><div class="sc-n" id="ci-transf-hoy" style="color:var(--oliva)">$0</div><div class="sc-l">Transferencia</div></div>
+          <div class="sc"><div class="sc-n" id="ci-total-hoy">$0</div><div class="sc-l">Total cobrado</div></div>
+        </div>
+        <div class="stats" style="grid-template-columns:repeat(2,1fr)">
+          <div class="sc"><div class="sc-n" id="ci-eg-hoy" style="color:var(--rojo)">$0</div><div class="sc-l">Egresos del día</div></div>
+          <div class="sc"><div class="sc-n" id="ci-neto-hoy">$0</div><div class="sc-l">Neto del día</div></div>
+        </div>
+      </div>
+      
+      <div class="panel">
+        <div class="ptitle">Registrar cierre</div>
+        <label class="flbl">Efectivo en caja (contado físico)</label>
+        <input class="finp" id="ci-efectivo-real" type="number" min="0" placeholder="$0">
+        <label class="flbl">Transferencias recibidas</label>
+        <input class="finp" id="ci-transf-real" type="number" min="0" placeholder="$0">
+        <label class="flbl">Observaciones</label>
+        <input class="finp" id="ci-obs" placeholder="Notas del cierre...">
+        <div id="ci-diferencia" style="display:none;border-radius:3px;padding:.7rem;margin:.5rem 0;font-size:13px;font-family:Raleway,sans-serif"></div>
+        <div style="display:flex;gap:.5rem;margin-top:.5rem">
+          <button class="btn-v" onclick="ciCalcular()" style="flex:1;background:var(--gris)">Calcular diferencia</button>
+          <button class="btn-v" onclick="ciCerrar()" style="flex:1">🔒 Cerrar caja</button>
+        </div>
+      </div>
+      
+      <div class="panel">
+        <div class="ptitle">Historial de cierres</div>
+        <div id="ci-historial"></div>
+      </div>
+    </div>
+
+    
+    <div id="cj-reportes" style="display:none">
+      <div class="panel">
+        <div class="ptitle">Turnos por servicio</div>
+        <div id="cj-rep-srv"></div>
+      </div>
+      <div class="panel">
+        <div class="ptitle">Ventas de productos</div>
+        <div id="cj-rep-prod"></div>
+      </div>
+      <div class="panel">
+        <div class="ptitle">Resumen por profesional</div>
+        <div id="cj-rep-prof"></div>
+      </div>
+      <div style="display:flex;gap:.5rem;margin-top:.5rem">
+        <button class="btn-v" onclick="exportarPDF()" style="flex:1">📄 PDF</button>
+        <button class="btn-v" onclick="exportarExcel()" style="flex:1;background:var(--gris)">📊 Excel</button>
+      </div>
+    </div>
+
+  </div></div>
+  </div>
+
+  
+  <div id="panel-prof" style="display:none">
+    <div class="top"><div><div class="top-brand" id="pr-brand">Mi agenda</div><div class="top-sub">Avelinas Azul</div></div><button class="out-btn" onclick="pLogout()">Salir</button></div>
+    <div class="pr-tabs">
+      <button class="pr-tab on" onclick="stPr(&#39;pr-h&#39;,this)">Hoy</button>
+      <button class="pr-tab" onclick="stPr(&#39;pr-s&#39;,this)">Semana</button>
+      <button class="pr-tab" onclick="stPr(&#39;pr-p&#39;,this)">Próximos</button>
+    </div>
+    <div style="padding:1rem">
+      <div id="pr-h" class="tsec on"><div style="padding:.8rem 1rem 0"><button class="btn-v full" onclick="irAgendaDesdePanel()">📅 Ver mi agenda visual</button>
+        <button class="btn-v full" onclick="irLaserBooking()" style="background:var(--gris)">💜 Agenda depilación</button></div><div class="panel"><div class="ptitle" id="pr-h-f"></div><div id="pr-h-l"></div></div></div>
+      <div id="pr-s" class="tsec"><div class="panel"><div class="cal-nav"><button class="cal-arr" onclick="prSA()">‹</button><span class="cal-tit" id="pr-s-t"></span><button class="cal-arr" onclick="prSS()">›</button></div><div class="sg" id="pr-s-g"></div><div id="pr-s-d" style="margin-top:.6rem"></div></div></div>
+      <div id="pr-p" class="tsec"><div class="panel"><div class="ptitle">Próximos turnos</div><div id="pr-p-l"></div></div></div>
+    </div>
   </div>
 </div>
 
@@ -737,43 +1013,7 @@ td.ag-slot-free{background:transparent}
 
   
   <div id="mc-login-equipo" style="display:none">
-    <button onclick="mcVolverTipo()" style="background:none;border:none;color:var(--gris);font-family:Raleway,sans-serif;font-size:12px;cursor:pointer;padding:0;margin-bottom:1rem">← Volver</button>
-    <div class="mc-title" style="margin-bottom:.3rem">Ingresá como equipo</div>
-    <div style="font-size:13px;color:var(--gris);margin-bottom:.8rem">Elegí tu nombre y escribí tu clave</div>
-    <div id="eq-login-err" class="er" style="margin-top:0;margin-bottom:.8rem">Clave incorrecta.</div>
-    <label class="flbl" style="margin-top:0">Soy</label>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px;margin:.4rem 0 .8rem" id="eq-pb-grid">
-        <div onclick="eqSelUser(&#39;martina&#39;,this)" style="padding: 8px 5px; background: var(--oliva); border-color: var(--oliva); border-top-style: ; border-top-width: ; border-right-style: ; border-right-width: ; border-bottom-style: ; border-bottom-width: ; border-left-style: ; border-left-width: ; border-image-source: ; border-image-slice: ; border-image-width: ; border-image-outset: ; border-image-repeat: ; border-radius: 3px; cursor: pointer; text-align: center; -webkit-tap-highlight-color: transparent; transition: 0.15s;" class="eq-pb">
-          <span style="font-family: Raleway, sans-serif; font-size: 12px; font-weight: 500; color: rgb(255, 255, 255); display: block;">Martina</span>
-          <span style="font-size: 9px; color: rgb(255, 255, 255); display: block; margin-top: 1px;">Admin</span>
-        </div>
-        <div onclick="eqSelUser(&#39;lucia&#39;,this)" style="padding: 8px 5px; background: var(--crema); border-color: var(--cd); border-top-style: ; border-top-width: ; border-right-style: ; border-right-width: ; border-bottom-style: ; border-bottom-width: ; border-left-style: ; border-left-width: ; border-image-source: ; border-image-slice: ; border-image-width: ; border-image-outset: ; border-image-repeat: ; border-radius: 3px; cursor: pointer; text-align: center; -webkit-tap-highlight-color: transparent; transition: 0.15s;" class="eq-pb">
-          <span style="font-family:Raleway,sans-serif;font-size:12px;font-weight:500;color:var(--texto);display:block">Lucía</span>
-          <span style="font-size:9px;color:var(--gc);display:block;margin-top:1px">Secretaria</span>
-        </div>
-        <div onclick="eqSelUser(&#39;emilia&#39;,this)" style="padding: 8px 5px; background: var(--crema); border-color: var(--cd); border-top-style: ; border-top-width: ; border-right-style: ; border-right-width: ; border-bottom-style: ; border-bottom-width: ; border-left-style: ; border-left-width: ; border-image-source: ; border-image-slice: ; border-image-width: ; border-image-outset: ; border-image-repeat: ; border-radius: 3px; cursor: pointer; text-align: center; -webkit-tap-highlight-color: transparent; transition: 0.15s;" class="eq-pb">
-          <span style="font-family:Raleway,sans-serif;font-size:12px;font-weight:500;color:var(--texto);display:block">Emilia</span>
-          <span style="font-size:9px;color:var(--gc);display:block;margin-top:1px">Profesional</span>
-        </div>
-        <div onclick="eqSelUser(&#39;camila&#39;,this)" style="padding: 8px 5px; background: var(--crema); border-color: var(--cd); border-top-style: ; border-top-width: ; border-right-style: ; border-right-width: ; border-bottom-style: ; border-bottom-width: ; border-left-style: ; border-left-width: ; border-image-source: ; border-image-slice: ; border-image-width: ; border-image-outset: ; border-image-repeat: ; border-radius: 3px; cursor: pointer; text-align: center; -webkit-tap-highlight-color: transparent; transition: 0.15s;" class="eq-pb">
-          <span style="font-family:Raleway,sans-serif;font-size:12px;font-weight:500;color:var(--texto);display:block">Camila</span>
-          <span style="font-size:9px;color:var(--gc);display:block;margin-top:1px">Profesional</span>
-        </div>
-        <div onclick="eqSelUser(&#39;ludovica&#39;,this)" style="padding: 8px 5px; background: var(--crema); border-color: var(--cd); border-top-style: ; border-top-width: ; border-right-style: ; border-right-width: ; border-bottom-style: ; border-bottom-width: ; border-left-style: ; border-left-width: ; border-image-source: ; border-image-slice: ; border-image-width: ; border-image-outset: ; border-image-repeat: ; border-radius: 3px; cursor: pointer; text-align: center; -webkit-tap-highlight-color: transparent; transition: 0.15s;" class="eq-pb">
-          <span style="font-family:Raleway,sans-serif;font-size:12px;font-weight:500;color:var(--texto);display:block">Ludovica</span>
-          <span style="font-size:9px;color:var(--gc);display:block;margin-top:1px">Profesional</span>
-        </div>
-        <div onclick="eqSelUser(&#39;rosario&#39;,this)" style="padding: 8px 5px; background: var(--crema); border-color: var(--cd); border-top-style: ; border-top-width: ; border-right-style: ; border-right-width: ; border-bottom-style: ; border-bottom-width: ; border-left-style: ; border-left-width: ; border-image-source: ; border-image-slice: ; border-image-width: ; border-image-outset: ; border-image-repeat: ; border-radius: 3px; cursor: pointer; text-align: center; -webkit-tap-highlight-color: transparent; transition: 0.15s;" class="eq-pb">
-          <span style="font-family:Raleway,sans-serif;font-size:12px;font-weight:500;color:var(--texto);display:block">Rosario</span>
-          <span style="font-size:9px;color:var(--gc);display:block;margin-top:1px">Profesional</span>
-        </div>
-        <div onclick="eqSelUser(&#39;virginia&#39;,this)" style="padding: 8px 5px; background: var(--crema); border-color: var(--cd); border-top-style: ; border-top-width: ; border-right-style: ; border-right-width: ; border-bottom-style: ; border-bottom-width: ; border-left-style: ; border-left-width: ; border-image-source: ; border-image-slice: ; border-image-width: ; border-image-outset: ; border-image-repeat: ; border-radius: 3px; cursor: pointer; text-align: center; -webkit-tap-highlight-color: transparent; transition: 0.15s;" class="eq-pb">
-          <span style="font-family:Raleway,sans-serif;font-size:12px;font-weight:500;color:var(--texto);display:block">Virginia</span>
-          <span style="font-size:9px;color:var(--gc);display:block;margin-top:1px">Profesional</span>
-        </div></div>
-    <label class="flbl">Clave</label>
-    <input class="finp" id="eq-clave" type="password" placeholder="Tu clave personal" onkeydown="if(event.key===&#39;Enter&#39;)doLoginEquipo()">
-    <button class="btn-v full" onclick="doLoginEquipo()" style="margin-top:.5rem">Entrar →</button>
+    
   </div>
 
 </div>
@@ -1448,7 +1688,6 @@ function actualizarNavBtn(){
     btn.style.background='var(--oliva)';
     btn.style.color='#fff';
   }else if(curCl){
-    // Clienta logueada — mostrar "Mi cuenta" (discreto)
     btn.textContent='Mi cuenta';
     btn.style.background='';
     btn.style.color='';
@@ -1582,8 +1821,8 @@ function mcSelTipo(tipo){
       document.getElementById('eq-clave').value='';
       // Build prof buttons
       const grid=document.getElementById('eq-pb-grid');
-      const users=['martina','lucia','emilia','camila','ludovica','rosario','virginia'];
-      const roles={martina:'Admin',lucia:'Secretaria',emilia:'Profesional',camila:'Profesional',ludovica:'Profesional',rosario:'Profesional',virginia:'Profesional'};
+      const users=['martina','lucia','emilia','camila','ludovica','rosario'];
+      const roles={martina:'Admin',lucia:'Secretaria',emilia:'Profesional',camila:'Profesional',ludovica:'Profesional',rosario:'Profesional'};
       grid.innerHTML=users.map(u=>`
         <div onclick="eqSelUser('${u}',this)" style="padding:8px 5px;background:var(--crema);border:1.5px solid var(--cd);border-radius:3px;cursor:pointer;text-align:center;-webkit-tap-highlight-color:transparent;transition:all .15s" class="eq-pb">
           <span style="font-family:Raleway,sans-serif;font-size:12px;font-weight:500;color:var(--texto);display:block">${NOMBRES_P[u]||u}</span>
@@ -5660,7 +5899,7 @@ function clsSetTab(tab,btn){
   <div class="mc-title" id="ag-mt-title">Nuevo turno</div>
   <input type="hidden" id="ag-mt-id" value="">
   <label class="flbl">Profesional</label>
-  <select class="fsel" id="ag-mt-prof"><option value="emilia">Emilia</option><option value="camila">Camila</option><option value="ludovica">Ludovica</option><option value="rosario">Rosario</option><option value="virginia">Virginia</option></select>
+  <select class="fsel" id="ag-mt-prof"><option value="emilia">Emilia</option><option value="camila">Camila</option><option value="ludovica">Ludovica</option><option value="rosario">Rosario</option></select>
   <label class="flbl">Fecha</label>
   <input class="finp" id="ag-mt-fecha" type="date">
   <label class="flbl">Hora inicio</label>
@@ -5747,383 +5986,6 @@ function clsSetTab(tab,btn){
   </div>
 </div></div>
 
-
-<div id="pg-panel" class="pg" style="padding-top:54px">
-  
-  <div id="panel-login" style="display: none;">
-    <div class="login-bg">
-      <div style="width:100%;max-width:340px">
-        <div style="text-align:center;margin-bottom:1.8rem">
-          <svg viewBox="0 0 60 60" fill="none" width="40" height="40" style="margin-bottom:8px"><ellipse cx="30" cy="14" rx="9" ry="11" stroke="#ece3db" stroke-width="2" fill="none"></ellipse><circle cx="30" cy="12" r="1.5" fill="#ece3db"></circle><ellipse cx="16" cy="30" rx="8" ry="10" stroke="#ece3db" stroke-width="2" fill="none" transform="rotate(-15 16 30)"></ellipse><circle cx="15" cy="28" r="1.5" fill="#ece3db"></circle><ellipse cx="44" cy="30" rx="8" ry="10" stroke="#ece3db" stroke-width="2" fill="none" transform="rotate(15 44 30)"></ellipse><circle cx="45" cy="28" r="1.5" fill="#ece3db"></circle><line x1="30" y1="25" x2="30" y2="52" stroke="#ece3db" stroke-width="2"></line></svg>
-          <div style="font-family:Raleway,sans-serif;font-size:20px;font-weight:600;color:var(--crema);letter-spacing:.08em">Avelinas Azul</div>
-          <span style="font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--op);display:block;margin-top:2px">Ingreso del equipo</span>
-        </div>
-        <div class="lcard">
-          <div class="ltitle">Ingresá</div>
-          <div class="lsub">Tocá tu nombre y escribí tu clave</div>
-          <div id="p-lerr" class="lerr"></div>
-          <label class="llbl">Soy</label>
-          <div class="pb-grid">
-            <div class="pb" onclick="pSelUser(&#39;martina&#39;,this)"><span class="pb-n">Martina</span><span class="pb-r">Admin</span></div>
-            <div class="pb" onclick="pSelUser(&#39;lucia&#39;,this)"><span class="pb-n">Lucía</span><span class="pb-r">Secretaria</span></div>
-            <div class="pb" onclick="pSelUser(&#39;emilia&#39;,this)"><span class="pb-n">Emilia</span><span class="pb-r">Profesional</span></div>
-            <div class="pb" onclick="pSelUser(&#39;camila&#39;,this)"><span class="pb-n">Camila</span><span class="pb-r">Profesional</span></div>
-            <div class="pb" onclick="pSelUser(&#39;ludovica&#39;,this)"><span class="pb-n">Ludovica</span><span class="pb-r">Profesional</span></div>
-            <div class="pb" onclick="pSelUser(&#39;rosario&#39;,this)"><span class="pb-n">Rosario</span><span class="pb-r">Profesional</span></div>
-            <div class="pb" onclick="pSelUser(&#39;virginia&#39;,this)"><span class="pb-n">Virginia</span><span class="pb-r">Profesional</span></div>
-          </div>
-          <label class="llbl">Clave</label>
-          <input class="linp" id="p-clave" type="password" placeholder="Tu clave personal">
-          <button class="lbtn" onclick="pLogin()">Entrar →</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  
-  <div id="panel-admin" style="display: block;">
-    <div class="top"><div><div class="top-brand" id="adm-brand">Panel Admin</div><div class="top-sub">Avelinas Azul</div></div><button class="out-btn" onclick="pLogout()">Salir</button></div>
-    <div class="adm-tabs" id="adm-tabs-el" style="grid-template-columns: repeat(6, 1fr);"><button class="adm-tab" onclick="stAdm(&#39;a-res&#39;,this)">Resumen</button><button class="adm-tab" onclick="stAdm(&#39;a-pro&#39;,this)">Profesionales</button><button class="adm-tab" onclick="stAdm(&#39;a-srv&#39;,this)">Servicios</button><button class="adm-tab on" onclick="stAdm(&#39;a-cls&#39;,this)">Clientas</button><button class="adm-tab" onclick="stAdm(&#39;a-caja&#39;,this)">💰 Caja</button><button class="adm-tab" onclick="stAdm(&#39;a-prod&#39;,this)">📦 Productos</button></div>
-    <div id="a-res" class="tsec">
-      <div style="padding:1rem">
-        <div class="stats"><div class="sc"><div class="sc-n" id="a-sh">0</div><div class="sc-l">Hoy</div></div><div class="sc"><div class="sc-n" id="a-ss">1</div><div class="sc-l">Semana</div></div><div class="sc"><div class="sc-n" id="a-sc">5</div><div class="sc-l">Clientas</div></div></div><div id="a-cumples" style="display:none;background:rgba(255,200,50,.1);border:1px solid rgba(255,200,50,.4);border-radius:3px;padding:.8rem;margin-bottom:.8rem"></div><button class="btn-v full" onclick="irAgendaDesdePanel()" style="margin-bottom:.8rem">📅 Ver agenda completa</button>
-        <button class="btn-v full" onclick="irLaserBooking()" style="margin-bottom:.8rem;background:var(--gris)">💜 Agenda depilación definitiva</button>
-        <div class="panel"><div class="ptitle">Turnos de hoy</div><div id="a-hoy"><div class="empty">Sin turnos hoy.</div></div></div>
-        <div class="panel"><div class="ptitle">Turnos de mañana <span style="font-size:10px;color:var(--gc);font-weight:400">— tocá 'Recordar' para avisar a cada clienta</span></div><div id="a-manana"><div class="empty">Sin turnos mañana.</div></div></div>
-        <div class="panel"><div class="ptitle">Próximos</div><div id="a-prox"><div class="ti"><div class="ti-h">10:00</div><div class="ti-i"><div class="ti-n">Lucia Estrebou · Jue 21 May</div><div class="ti-s">Rosario · Facial Premium</div></div><button class="ti-x" onclick="cancelarR(1779132562618)">✕</button></div></div></div>
-      </div>
-    </div>
-    <div id="a-pro" class="tsec"><div style="padding:1rem">
-    <div class="panel"><div class="ptitle">Equipo</div><div id="a-profs-l"></div><button class="btn-v full" onclick="abrirMP(null)">+ Agregar profesional</button></div>
-    <div class="panel">
-      <div class="ptitle">Jornadas de depilación definitiva — Camila</div>
-      <div style="font-size:12px;color:var(--gc);margin-bottom:.8rem;line-height:1.5">En estas fechas Camila <strong>solo atiende depilación definitiva</strong>. No aparece disponible para otros servicios.</div>
-      <div id="jornadas-lista" style="margin-bottom:.8rem"></div>
-      <div style="display:flex;gap:.5rem;align-items:center">
-        <input class="finp" type="date" id="nueva-jornada" style="flex:1;margin:0">
-        <button class="btn-v" onclick="agregarJornada()" style="flex-shrink:0;white-space:nowrap">+ Agregar</button>
-      </div>
-      <div id="ok-jornada" class="ok"></div>
-    </div>
-  </div></div>
-    <div id="a-srv" class="tsec"><div style="padding:1rem"><div class="cpills" id="a-srv-pills"></div><div class="panel"><div class="ptitle" id="a-srv-title">Servicios</div><div id="a-srv-l"></div><button class="btn-v full" onclick="abrirMS(null)">+ Agregar servicio</button></div></div></div>
-    <div id="a-cls" class="tsec on"><div style="padding:1rem"><div class="panel">
-  <div style="display:flex;gap:.4rem;margin-bottom:.8rem">
-    <button class="cpill on" id="cls-tab-lista" onclick="clsSetTab(&#39;lista&#39;,this)">👥 Clientas</button>
-    <button class="cpill" id="cls-tab-ranking" onclick="clsSetTab(&#39;ranking&#39;,this)">⭐ Ranking</button>
-  </div>
-  <div id="cls-lista-sec">
-    <input class="finp" id="a-cls-q" type="text" placeholder="Buscar clienta..." oninput="filtraCls(this.value)" style="margin-top:0">
-    <div id="a-cls-l"><div class="irow"><div class="iav" style="font-size:13px">LM</div><div class="iinfo"><div class="inombre">Laura Martínez</div><div class="isub">2494111222</div><div style="display:flex;align-items:center;gap:6px;margin-top:3px"><span class="pts-b">8 pts</span></div></div><div class="iacts" style="flex-direction:column;gap:4px;align-items:flex-end"><div style="display:flex;gap:4px"><button class="btn-v" style="padding:4px 8px;font-size:10px">📋 Ficha</button><button class="btn-e">Editar</button><button class="btn-r">✕</button></div><div style="display:flex;gap:4px"><button class="btn-v" style="padding:4px 8px;font-size:10px">+1</button><button class="btn-v" style="padding:4px 8px;font-size:10px;background:var(--gris)">-1</button></div></div></div><div class="irow"><div class="iav" style="font-size:13px">AG</div><div class="iinfo"><div class="inombre">Ana González</div><div class="isub">2494333444</div><div style="display:flex;align-items:center;gap:6px;margin-top:3px"><span class="pts-b">6 pts</span></div></div><div class="iacts" style="flex-direction:column;gap:4px;align-items:flex-end"><div style="display:flex;gap:4px"><button class="btn-v" style="padding:4px 8px;font-size:10px">📋 Ficha</button><button class="btn-e">Editar</button><button class="btn-r">✕</button></div><div style="display:flex;gap:4px"><button class="btn-v" style="padding:4px 8px;font-size:10px">+1</button><button class="btn-v" style="padding:4px 8px;font-size:10px;background:var(--gris)">-1</button></div></div></div><div class="irow"><div class="iav" style="font-size:13px">MC</div><div class="iinfo"><div class="inombre">María Castro</div><div class="isub">2494555666</div><div style="display:flex;align-items:center;gap:6px;margin-top:3px"><span class="pts-b">10 pts</span></div></div><div class="iacts" style="flex-direction:column;gap:4px;align-items:flex-end"><div style="display:flex;gap:4px"><button class="btn-v" style="padding:4px 8px;font-size:10px">📋 Ficha</button><button class="btn-e">Editar</button><button class="btn-r">✕</button></div><div style="display:flex;gap:4px"><button class="btn-v" style="padding:4px 8px;font-size:10px">+1</button><button class="btn-v" style="padding:4px 8px;font-size:10px;background:var(--gris)">-1</button></div></div></div></div>
-    <button class="btn-v full" onclick="abrirMC(null)">+ Nueva clienta</button>
-  </div>
-  <div id="cls-ranking-sec" style="display:none"><div id="cls-ranking-lista"></div></div>
-</div></div></div>
-
-  <div id="a-prod" class="tsec"><div style="padding:1rem">
-    
-    <div style="display:flex;gap:.4rem;margin-bottom:1rem;overflow-x:auto;scrollbar-width:none">
-      <button class="cpill on" id="prod-tab-stock" onclick="prodSetTab(&#39;stock&#39;,this)">📦 Stock</button>
-      <button class="cpill" id="prod-tab-ventas" onclick="prodSetTab(&#39;ventas&#39;,this)">💵 Ventas</button>
-      <button class="cpill" id="prod-tab-pedidos" onclick="prodSetTab(&#39;pedidos&#39;,this)">📋 Pedidos</button>
-      <button class="cpill" id="prod-tab-proveedores" onclick="prodSetTab(&#39;proveedores&#39;,this)">🏪 Proveedores</button>
-    </div>
-
-    
-    <div id="prod-stock">
-      
-      <div class="stats" style="grid-template-columns:repeat(3,1fr);margin-bottom:.8rem">
-        <div class="sc"><div class="sc-n" id="ps-total" style="font-size:16px">0</div><div class="sc-l">Productos</div></div>
-        <div class="sc"><div class="sc-n" id="ps-bajos" style="font-size:16px;color:#c07820">0</div><div class="sc-l">Stock bajo</div></div>
-        <div class="sc"><div class="sc-n" id="ps-agotados" style="font-size:16px;color:var(--rojo)">0</div><div class="sc-l">Sin stock</div></div>
-      </div>
-      
-      <div style="display:flex;gap:.5rem;margin-bottom:.8rem;flex-wrap:wrap">
-        <input class="finp" type="text" id="prod-buscar" placeholder="🔍 Buscar producto o código..." oninput="prodFiltrar(this.value)" style="flex:1;margin:0">
-        <select class="fsel" id="prod-filtro-prov" onchange="prodFiltrar()" style="flex:1;margin:0;max-width:160px">
-          <option value="">Todos los proveedores</option>
-        </select>
-        <select class="fsel" id="prod-filtro-estado" onchange="prodFiltrar()" style="margin:0;max-width:130px">
-          <option value="">Todos</option>
-          <option value="bajo">Stock bajo</option>
-          <option value="agotado">Sin stock</option>
-          <option value="ok">En stock</option>
-        </select>
-      </div>
-      <div class="panel" style="padding:.8rem">
-        <div id="prod-stock-lista"></div>
-        <button class="btn-v full" onclick="abrirModalProd(null)" style="margin-top:.5rem">+ Agregar producto</button>
-      </div>
-      
-      <div class="panel" style="padding:.8rem">
-        <div class="ptitle">Stock por proveedor</div>
-        <div id="prod-stock-por-prov"></div>
-      </div>
-    </div>
-
-    
-    <div id="prod-ventas" style="display:none">
-      <div style="display:flex;gap:.5rem;margin-bottom:.8rem;flex-wrap:wrap">
-        <button class="cpill on" id="pv-btn-hoy" onclick="prodVentasPeriodo(&#39;hoy&#39;,this)">Hoy</button>
-        <button class="cpill" id="pv-btn-sem" onclick="prodVentasPeriodo(&#39;semana&#39;,this)">Semana</button>
-        <button class="cpill" id="pv-btn-mes" onclick="prodVentasPeriodo(&#39;mes&#39;,this)">Mes</button>
-      </div>
-      <div class="stats">
-        <div class="sc"><div class="sc-n" id="pv-total">$0</div><div class="sc-l">Total ventas</div></div>
-        <div class="sc"><div class="sc-n" id="pv-ganancia">$0</div><div class="sc-l">Ganancia</div></div>
-        <div class="sc"><div class="sc-n" id="pv-com">$0</div><div class="sc-l">Comisión</div></div>
-      </div>
-      <div class="panel" style="padding:.8rem">
-        <div class="ptitle">Registros de venta</div>
-        <div id="prod-ventas-lista"></div>
-        <button class="btn-v full" onclick="abrirModalVentaProd(null)">+ Registrar venta</button>
-      </div>
-    </div>
-
-    
-    <div id="prod-pedidos" style="display:none">
-      <div class="panel" style="padding:.8rem">
-        <div class="ptitle">Productos a reponer <span style="font-size:10px;color:var(--gc);font-weight:400">— stock en 0 o bajo mínimo</span></div>
-        <div id="prod-pedidos-auto"></div>
-      </div>
-      <div class="panel" style="padding:.8rem">
-        <div class="ptitle">Generar pedido por proveedor</div>
-        <select class="fsel" id="pedido-prov-sel" style="margin-bottom:.8rem">
-          <option value="">Seleccioná proveedor</option>
-        </select>
-        <div id="prod-pedido-preview"></div>
-        
-      </div>
-      <div class="panel" style="padding:.8rem">
-        <div class="ptitle">Agregar producto manual al pedido</div>
-        <input class="finp" id="pedido-manual-nombre" placeholder="Nombre del producto" style="margin-bottom:.4rem">
-        <input class="finp" id="pedido-manual-cant" type="number" placeholder="Cantidad" style="margin-bottom:.4rem">
-        <button class="btn-v full" onclick="agregarPedidoManual()">+ Agregar</button>
-        <div id="pedido-manuales" style="margin-top:.8rem"></div>
-      </div>
-    </div>
-
-    
-    <div id="prod-proveedores" style="display:none">
-      <div class="panel" style="padding:.8rem">
-        <div class="ptitle">Proveedores</div>
-        <div id="proveedores-lista"></div>
-        <button class="btn-v full" onclick="abrirModalProv(null)">+ Agregar proveedor</button>
-      </div>
-      
-      <div id="prov-detalle" style="display:none">
-        <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.8rem">
-          <button onclick="cerrarProvDetalle()" style="background:transparent;border:none;color:var(--gris);font-family:Raleway,sans-serif;font-size:12px;cursor:pointer">← Volver</button>
-          <span id="prov-detalle-nombre" style="font-family:Raleway,sans-serif;font-size:14px;font-weight:600;color:var(--texto)"></span>
-        </div>
-        
-        <div style="display:flex;gap:.4rem;margin-bottom:.8rem">
-          <button class="cpill on" id="pd-tab-cc" onclick="pdSetTab(&#39;cc&#39;,this)">💳 Cuenta corriente</button>
-          <button class="cpill" id="pd-tab-prod" onclick="pdSetTab(&#39;prod&#39;,this)">📦 Productos</button>
-          <button class="cpill" id="pd-tab-compras" onclick="pdSetTab(&#39;compras&#39;,this)">🧾 Compras</button>
-        </div>
-        
-        <div id="pd-cc">
-          <div class="stats" style="grid-template-columns:1fr 1fr 1fr;margin-bottom:.8rem">
-            <div class="sc"><div class="sc-n" id="pd-cc-debe" style="font-size:16px;color:var(--rojo)">$0</div><div class="sc-l">Saldo</div></div>
-            <div class="sc"><div class="sc-n" id="pd-cc-compras" style="font-size:16px">$0</div><div class="sc-l">Compras</div></div>
-            <div class="sc"><div class="sc-n" id="pd-cc-pagado" style="font-size:16px;color:var(--oliva)">$0</div><div class="sc-l">Pagado</div></div>
-          </div>
-          <div class="panel" style="padding:.8rem">
-            <div class="ptitle">Movimientos</div>
-            <div id="pd-cc-lista"></div>
-            <button class="btn-v full" onclick="abrirModalCC()" style="margin-top:.8rem">+ Registrar movimiento</button>
-          </div>
-        </div>
-        
-        <div id="pd-prod" style="display:none">
-          <div class="panel" style="padding:.8rem">
-            <div class="ptitle">Productos de este proveedor</div>
-            <div id="pd-consig-alert" style="display:none;background:rgba(139,143,107,.08);border:1px solid rgba(139,143,107,.2);border-radius:3px;padding:.6rem .8rem;font-size:12px;color:var(--gris);margin-bottom:.6rem"></div>
-            <div id="pd-prod-lista"></div>
-          </div>
-        </div>
-        
-        <div id="pd-compras" style="display:none">
-          <div class="panel" style="padding:.8rem">
-            <div class="ptitle">Historial de compras</div>
-            <div id="pd-compras-lista"></div>
-            <button class="btn-v full" onclick="abrirModalCompra()" style="margin-top:.8rem">+ Registrar compra</button>
-          </div>
-        </div>
-      </div>
-      
-      <select id="cc-prov-sel" style="display:none"></select>
-    </div>
-
-  </div></div>
-  <div id="a-caja" class="tsec"><div style="padding:1rem">
-
-    
-    <div style="display:flex;gap:.4rem;margin-bottom:.8rem;flex-wrap:wrap">
-      <button class="cpill on" id="cj-p-hoy" onclick="cjSetPer(&#39;hoy&#39;,this)">Hoy</button>
-      <button class="cpill" id="cj-p-sem" onclick="cjSetPer(&#39;semana&#39;,this)">Semana</button>
-      <button class="cpill" id="cj-p-mes" onclick="cjSetPer(&#39;mes&#39;,this)">Este mes</button>
-      <button class="cpill" id="cj-p-todo" onclick="cjSetPer(&#39;todo&#39;,this)">Todo</button>
-      <input type="month" id="cj-mes-sel" onchange="cjSetMes(this.value)" style="padding:4px 8px;border:1px solid var(--cd);border-radius:20px;font-family:Raleway,sans-serif;font-size:10px;background:var(--crema);color:var(--gris);cursor:pointer">
-    </div>
-
-    
-    <div style="display:flex;gap:.4rem;margin-bottom:1rem;overflow-x:auto;scrollbar-width:none">
-      <button class="cpill on" id="cj-tab-resumen" onclick="cjSetTab(&#39;resumen&#39;,this)">📊 Resumen</button>
-      <button class="cpill" id="cj-tab-ingresos" onclick="cjSetTab(&#39;ingresos&#39;,this)">💰 Ingresos</button>
-      <button class="cpill" id="cj-tab-egresos" onclick="cjSetTab(&#39;egresos&#39;,this)">💸 Egresos</button>
-      <button class="cpill" id="cj-tab-comisiones" onclick="cjSetTab(&#39;comisiones&#39;,this)">👩 Comisiones</button>
-      <button class="cpill" id="cj-tab-reportes" onclick="cjSetTab(&#39;reportes&#39;,this)">📋 Reportes</button>
-      <button class="cpill" id="cj-tab-cierre" onclick="cjSetTab(&#39;cierre&#39;,this)">🔒 Cierre</button>
-    </div>
-
-    
-    <div id="cj-resumen">
-      <div class="stats" style="grid-template-columns:repeat(3,1fr)">
-        <div class="sc"><div class="sc-n" id="cj-r-ing" style="color:var(--oliva)">$0</div><div class="sc-l">Ingresos</div></div>
-        <div class="sc"><div class="sc-n" id="cj-r-eg" style="color:var(--rojo)">$0</div><div class="sc-l">Egresos</div></div>
-        <div class="sc"><div class="sc-n" id="cj-r-net">$0</div><div class="sc-l">Neto</div></div>
-      </div>
-      <div class="stats" style="grid-template-columns:repeat(3,1fr)">
-        <div class="sc"><div class="sc-n" id="cj-r-efec" style="font-size:14px">$0</div><div class="sc-l">Efectivo</div></div>
-        <div class="sc"><div class="sc-n" id="cj-r-transf" style="font-size:14px">$0</div><div class="sc-l">Transferencia</div></div>
-        <div class="sc"><div class="sc-n" id="cj-r-comi" style="font-size:14px">$0</div><div class="sc-l">A pagar comis.</div></div>
-      </div>
-      <div class="panel">
-        <div class="ptitle">Por categoría de egreso</div>
-        <div id="cj-r-cats"></div>
-      </div>
-      <div class="panel">
-        <div class="ptitle">Por profesional</div>
-        <div id="cj-r-profs"></div>
-      </div>
-      <div style="display:flex;gap:.5rem;margin-top:.5rem">
-        <button class="btn-v" onclick="exportarPDF()" style="flex:1">📄 Exportar PDF</button>
-        <button class="btn-v" onclick="exportarExcel()" style="flex:1;background:var(--gris)">📊 Exportar Excel</button>
-      </div>
-    </div>
-
-    
-    <div id="cj-ingresos" style="display:none">
-      <div class="stats" style="grid-template-columns:repeat(2,1fr)">
-        <div class="sc"><div class="sc-n" id="cj-i-total" style="color:var(--oliva)">$0</div><div class="sc-l">Total</div></div>
-        <div class="sc"><div class="sc-n" id="cj-i-cant" style="font-size:16px">0</div><div class="sc-l">Cobros</div></div>
-      </div>
-      <div class="panel">
-        <div class="ptitle">Registros</div>
-        <div id="cj-i-lista"></div>
-        <button class="btn-v full" id="btn-nuevo-cobro" style="margin-top:.8rem">+ Registrar cobro</button>
-      </div>
-    </div>
-
-    
-    <div id="cj-egresos" style="display:none">
-      <div class="stats" style="grid-template-columns:repeat(2,1fr)">
-        <div class="sc"><div class="sc-n" id="cj-e-total" style="color:var(--rojo)">$0</div><div class="sc-l">Total egresos</div></div>
-        <div class="sc"><div class="sc-n" id="cj-e-cant" style="font-size:16px">0</div><div class="sc-l">Movimientos</div></div>
-      </div>
-      <div class="panel">
-        <div class="ptitle">Registros</div>
-        <div id="cj-e-lista"></div>
-        <button class="btn-v full" id="btn-nuevo-egreso" style="margin-top:.8rem">+ Registrar egreso</button>
-      </div>
-    </div>
-
-    
-    <div id="cj-comisiones" style="display:none">
-      <div class="panel">
-        <div class="ptitle">Liquidación del período</div>
-        <div id="cj-com-lista"></div>
-      </div>
-      <div class="panel">
-        <div class="ptitle">Adelantos registrados</div>
-        <div id="cj-ade-lista"></div>
-        <button class="btn-v full" id="btn-nuevo-adelanto" style="margin-top:.8rem">+ Registrar adelanto</button>
-      </div>
-      <div class="panel">
-        <div class="ptitle">Retiro de productos (precio profesional)</div>
-        <div id="cj-ret-lista"></div>
-        <button class="btn-v full" id="btn-nuevo-retiro" style="margin-top:.8rem">+ Registrar retiro</button>
-      </div>
-    </div>
-
-    
-    <div id="cj-cierre" style="display:none">
-      
-      <div class="panel">
-        <div class="ptitle">Caja de hoy</div>
-        <div class="stats" style="grid-template-columns:repeat(3,1fr)">
-          <div class="sc"><div class="sc-n" id="ci-efec-hoy" style="color:var(--oliva)">$0</div><div class="sc-l">Efectivo</div></div>
-          <div class="sc"><div class="sc-n" id="ci-transf-hoy" style="color:var(--oliva)">$0</div><div class="sc-l">Transferencia</div></div>
-          <div class="sc"><div class="sc-n" id="ci-total-hoy">$0</div><div class="sc-l">Total cobrado</div></div>
-        </div>
-        <div class="stats" style="grid-template-columns:repeat(2,1fr)">
-          <div class="sc"><div class="sc-n" id="ci-eg-hoy" style="color:var(--rojo)">$0</div><div class="sc-l">Egresos del día</div></div>
-          <div class="sc"><div class="sc-n" id="ci-neto-hoy">$0</div><div class="sc-l">Neto del día</div></div>
-        </div>
-      </div>
-      
-      <div class="panel">
-        <div class="ptitle">Registrar cierre</div>
-        <label class="flbl">Efectivo en caja (contado físico)</label>
-        <input class="finp" id="ci-efectivo-real" type="number" min="0" placeholder="$0">
-        <label class="flbl">Transferencias recibidas</label>
-        <input class="finp" id="ci-transf-real" type="number" min="0" placeholder="$0">
-        <label class="flbl">Observaciones</label>
-        <input class="finp" id="ci-obs" placeholder="Notas del cierre...">
-        <div id="ci-diferencia" style="display:none;border-radius:3px;padding:.7rem;margin:.5rem 0;font-size:13px;font-family:Raleway,sans-serif"></div>
-        <div style="display:flex;gap:.5rem;margin-top:.5rem">
-          <button class="btn-v" onclick="ciCalcular()" style="flex:1;background:var(--gris)">Calcular diferencia</button>
-          <button class="btn-v" onclick="ciCerrar()" style="flex:1">🔒 Cerrar caja</button>
-        </div>
-      </div>
-      
-      <div class="panel">
-        <div class="ptitle">Historial de cierres</div>
-        <div id="ci-historial"></div>
-      </div>
-    </div>
-
-    
-    <div id="cj-reportes" style="display:none">
-      <div class="panel">
-        <div class="ptitle">Turnos por servicio</div>
-        <div id="cj-rep-srv"></div>
-      </div>
-      <div class="panel">
-        <div class="ptitle">Ventas de productos</div>
-        <div id="cj-rep-prod"></div>
-      </div>
-      <div class="panel">
-        <div class="ptitle">Resumen por profesional</div>
-        <div id="cj-rep-prof"></div>
-      </div>
-      <div style="display:flex;gap:.5rem;margin-top:.5rem">
-        <button class="btn-v" onclick="exportarPDF()" style="flex:1">📄 PDF</button>
-        <button class="btn-v" onclick="exportarExcel()" style="flex:1;background:var(--gris)">📊 Excel</button>
-      </div>
-    </div>
-
-  </div></div>
-  </div>
-
-  
-  <div id="panel-prof" style="display:none">
-    <div class="top"><div><div class="top-brand" id="pr-brand">Mi agenda</div><div class="top-sub">Avelinas Azul</div></div><button class="out-btn" onclick="pLogout()">Salir</button></div>
-    <div class="pr-tabs">
-      <button class="pr-tab on" onclick="stPr(&#39;pr-h&#39;,this)">Hoy</button>
-      <button class="pr-tab" onclick="stPr(&#39;pr-s&#39;,this)">Semana</button>
-      <button class="pr-tab" onclick="stPr(&#39;pr-p&#39;,this)">Próximos</button>
-    </div>
-    <div style="padding:1rem">
-      <div id="pr-h" class="tsec on"><div style="padding:.8rem 1rem 0"><button class="btn-v full" onclick="irAgendaDesdePanel()">📅 Ver mi agenda visual</button>
-        <button class="btn-v full" onclick="irLaserBooking()" style="background:var(--gris)">💜 Agenda depilación</button></div><div class="panel"><div class="ptitle" id="pr-h-f"></div><div id="pr-h-l"></div></div></div>
-      <div id="pr-s" class="tsec"><div class="panel"><div class="cal-nav"><button class="cal-arr" onclick="prSA()">‹</button><span class="cal-tit" id="pr-s-t"></span><button class="cal-arr" onclick="prSS()">›</button></div><div class="sg" id="pr-s-g"></div><div id="pr-s-d" style="margin-top:.6rem"></div></div></div>
-      <div id="pr-p" class="tsec"><div class="panel"><div class="ptitle">Próximos turnos</div><div id="pr-p-l"></div></div></div>
-    </div>
-  </div>
-</div>
 <div id="panel-prof" class="pg" style="display:none;padding-top:54px">
   <div style="background:var(--oliva);padding:1rem 1.5rem;margin-bottom:1rem">
     <div style="font-family:Raleway,sans-serif;font-size:16px;color:var(--crema)" id="prof-panel-title">Mi panel</div>
@@ -6140,8 +6002,8 @@ function clsSetTab(tab,btn){
   <div id="ag-toolbar" style="background:var(--texto);padding:.6rem 1rem;margin-top:54px;display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;position:sticky;top:0;z-index:10">
     <button class="ag-btn" onclick="agNavSem(-1)">◀</button>
     <div id="ag-titulo" style="font-family:Raleway,sans-serif;font-size:13px;color:var(--crema);flex:1;text-align:center">Mar 19 Mayo 2026</div>
-  <div id="ag-pf" style="display: flex; gap: 0.3rem; flex-wrap: wrap; padding: 0.3rem 1rem; background: var(--texto);"><button class="ag-pf-btn" onclick="agToggleAll(this)" id="ag-pf-all" style="background:var(--oliva);border-color:var(--oliva);color:#fff">Todas</button><button class="ag-pf-btn" onclick="agToggleProf(this.dataset.id,this)" data-id="emilia" id="ag-pf-emilia" style="background:#a8c5a0;border-color:#a8c5a0;color:#2d4a28">Emilia</button><button class="ag-pf-btn" onclick="agToggleProf(this.dataset.id,this)" data-id="camila" id="ag-pf-camila" style="background:#a8b8c5;border-color:#a8b8c5;color:#1e3040">Camila</button><button class="ag-pf-btn" onclick="agToggleProf(this.dataset.id,this)" data-id="ludovica" id="ag-pf-ludovica" style="background:#c5b8a8;border-color:#c5b8a8;color:#40301e">Ludovica</button><button class="ag-pf-btn" onclick="agToggleProf(this.dataset.id,this)" data-id="rosario" id="ag-pf-rosario" style="background:#c5a8b8;border-color:#c5a8b8;color:#40202e">Rosario</button><button class="ag-pf-btn" onclick="agToggleProf(this.dataset.id,this)" data-id="virginia" id="ag-pf-virginia" style="background:#b8c5a8;border-color:#b8c5a8;color:#2e4020">Virginia</button></div>
-  <div id="ag-legend" style="display: flex; gap: 0.8rem; flex-wrap: wrap; padding: 0.3rem 1rem; background: var(--texto);"><div class="ag-leg-item"><div class="ag-leg-dot" style="background:#a8c5a0"></div>Emilia</div><div class="ag-leg-item"><div class="ag-leg-dot" style="background:#a8b8c5"></div>Camila</div><div class="ag-leg-item"><div class="ag-leg-dot" style="background:#c5b8a8"></div>Ludovica</div><div class="ag-leg-item"><div class="ag-leg-dot" style="background:#c5a8b8"></div>Rosario</div><div class="ag-leg-item"><div class="ag-leg-dot" style="background:#b8c5a8"></div>Virginia</div><div class="ag-leg-item"><div class="ag-leg-dot" style="background:#d4c4a8"></div>Manual</div><div class="ag-leg-item"><div class="ag-leg-dot" style="background:#b8d4c8"></div>Online</div><div class="ag-leg-item"><div class="ag-leg-dot" style="background:#b0a8a0"></div>🔒 Bloqueado</div></div>
+  <div id="ag-pf" style="display: flex; gap: 0.3rem; flex-wrap: wrap; padding: 0.3rem 1rem; background: var(--texto);"><button class="ag-pf-btn" onclick="agToggleAll(this)" id="ag-pf-all" style="background:var(--oliva);border-color:var(--oliva);color:#fff">Todas</button><button class="ag-pf-btn" onclick="agToggleProf(this.dataset.id,this)" data-id="emilia" id="ag-pf-emilia" style="background:#a8c5a0;border-color:#a8c5a0;color:#2d4a28">Emilia</button><button class="ag-pf-btn" onclick="agToggleProf(this.dataset.id,this)" data-id="camila" id="ag-pf-camila" style="background:#a8b8c5;border-color:#a8b8c5;color:#1e3040">Camila</button><button class="ag-pf-btn" onclick="agToggleProf(this.dataset.id,this)" data-id="ludovica" id="ag-pf-ludovica" style="background:#c5b8a8;border-color:#c5b8a8;color:#40301e">Ludovica</button><button class="ag-pf-btn" onclick="agToggleProf(this.dataset.id,this)" data-id="rosario" id="ag-pf-rosario" style="background:#c5a8b8;border-color:#c5a8b8;color:#40202e">Rosario</button></div>
+  <div id="ag-legend" style="display: flex; gap: 0.8rem; flex-wrap: wrap; padding: 0.3rem 1rem; background: var(--texto);"><div class="ag-leg-item"><div class="ag-leg-dot" style="background:#a8c5a0"></div>Emilia</div><div class="ag-leg-item"><div class="ag-leg-dot" style="background:#a8b8c5"></div>Camila</div><div class="ag-leg-item"><div class="ag-leg-dot" style="background:#c5b8a8"></div>Ludovica</div><div class="ag-leg-item"><div class="ag-leg-dot" style="background:#c5a8b8"></div>Rosario</div>lass="ag-leg-item"><div class="ag-leg-dot" style="background:#d4c4a8"></div>Manual</div><div class="ag-leg-item"><div class="ag-leg-dot" style="background:#b8d4c8"></div>Online</div><div class="ag-leg-item"><div class="ag-leg-dot" style="background:#b0a8a0"></div>🔒 Bloqueado</div></div>
     <button class="ag-btn" onclick="agNavSem(1)">▶</button>
     <button class="ag-btn on" id="ag-v-dia" onclick="agSetVista(&#39;dia&#39;,this)">Día</button>
     <button class="ag-btn" id="ag-v-sem" onclick="agSetVista(&#39;semana&#39;,this)">Semana</button>
