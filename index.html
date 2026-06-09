@@ -1795,10 +1795,10 @@ function abrirMiCuenta(){
   // Si ya está logueada como clienta o equipo, ir directo
   if(curPUser){
     if(ROL_PANEL[curPUser]==='admin'){
-      goPage('panel');
+      document.querySelectorAll('.pg').forEach(function(p){p.classList.remove('on');p.style.display='none';});
       var _pl=document.getElementById('panel-login');if(_pl)_pl.style.display='none';
       var _pa=document.getElementById('panel-admin');if(_pa)_pa.style.display='block';
-      document.querySelectorAll('.pg').forEach(function(p){p.classList.remove('on');p.style.display='none';});
+      window.scrollTo(0,0);
       renderAdmRes();
     }else{
       goPage('agenda');
