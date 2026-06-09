@@ -642,7 +642,7 @@ td.ag-slot-free{background:transparent}
     <button class="cpill" id="cls-tab-ranking" onclick="clsSetTab(&#39;ranking&#39;,this)">⭐ Ranking</button>
   </div>
   <div id="cls-lista-sec">
-    <input class="finp" id="a-cls-q" type="text" placeholder="Buscar clienta..." oninput="filtraCls(this.value)" style="margin-top:0">
+    <input class="finp" id="a-cls-q" type="text" placeholder="Buscar clienta..." oninput="filtraCls(this.value)" style="margin-top:0" autocomplete="off">
     <div id="a-cls-l"><div class="irow"><div class="iav" style="font-size:13px">LM</div><div class="iinfo"><div class="inombre">Laura Martínez</div><div class="isub">2494111222</div><div style="display:flex;align-items:center;gap:6px;margin-top:3px"><span class="pts-b">8 pts</span></div></div><div class="iacts" style="flex-direction:column;gap:4px;align-items:flex-end"><div style="display:flex;gap:4px"><button class="btn-v" style="padding:4px 8px;font-size:10px">📋 Ficha</button><button class="btn-e">Editar</button><button class="btn-r">✕</button></div><div style="display:flex;gap:4px"><button class="btn-v" style="padding:4px 8px;font-size:10px">+1</button><button class="btn-v" style="padding:4px 8px;font-size:10px;background:var(--gris)">-1</button></div></div></div><div class="irow"><div class="iav" style="font-size:13px">AG</div><div class="iinfo"><div class="inombre">Ana González</div><div class="isub">2494333444</div><div style="display:flex;align-items:center;gap:6px;margin-top:3px"><span class="pts-b">6 pts</span></div></div><div class="iacts" style="flex-direction:column;gap:4px;align-items:flex-end"><div style="display:flex;gap:4px"><button class="btn-v" style="padding:4px 8px;font-size:10px">📋 Ficha</button><button class="btn-e">Editar</button><button class="btn-r">✕</button></div><div style="display:flex;gap:4px"><button class="btn-v" style="padding:4px 8px;font-size:10px">+1</button><button class="btn-v" style="padding:4px 8px;font-size:10px;background:var(--gris)">-1</button></div></div></div><div class="irow"><div class="iav" style="font-size:13px">MC</div><div class="iinfo"><div class="inombre">María Castro</div><div class="isub">2494555666</div><div style="display:flex;align-items:center;gap:6px;margin-top:3px"><span class="pts-b">10 pts</span></div></div><div class="iacts" style="flex-direction:column;gap:4px;align-items:flex-end"><div style="display:flex;gap:4px"><button class="btn-v" style="padding:4px 8px;font-size:10px">📋 Ficha</button><button class="btn-e">Editar</button><button class="btn-r">✕</button></div><div style="display:flex;gap:4px"><button class="btn-v" style="padding:4px 8px;font-size:10px">+1</button><button class="btn-v" style="padding:4px 8px;font-size:10px;background:var(--gris)">-1</button></div></div></div></div>
     <button class="btn-v full" onclick="abrirMC(null)">+ Nueva clienta</button>
   </div>
@@ -1998,11 +1998,14 @@ function pLogin(){
 
 function pLogout(){
   curPUser=null;pSelU=null;
-  document.getElementById('panel-login').style.display='block';
-  document.getElementById('panel-admin').style.display='none';
-  document.getElementById('panel-prof').style.display='none';
-  document.getElementById('p-clave').value='';
+  try{sessionStorage.removeItem('avPU');}catch(e){}
+  var _pl=document.getElementById('panel-login');if(_pl)_pl.style.display='block';
+  var _pa=document.getElementById('panel-admin');if(_pa)_pa.style.display='none';
+  var _pp=document.getElementById('panel-prof');if(_pp)_pp.style.display='none';
+  var _pc=document.getElementById('p-clave');if(_pc)_pc.value='';
   document.querySelectorAll('.pb').forEach(b=>b.classList.remove('on'));
+  goPage('inicio');
+  actualizarNavBtn();
 }
 
 function initAdmin(){
@@ -2278,12 +2281,11 @@ function borrarC(id){const c=D.clientas.find(x=>x.id===id);if(!confirm(`¿Elimin
 
 // PROF PANEL
 function initProfPanel(){
-  document.getElementById('panel-login').style.display='none';
-  document.getElementById('panel-admin').style.display='none';
-  document.getElementById('panel-prof').style.display='none';
-  // Professionals go directly to agenda
+  var _pl=document.getElementById('panel-login');if(_pl)_pl.style.display='none';
+  var _pa=document.getElementById('panel-admin');if(_pa)_pa.style.display='none';
+  var _pp=document.getElementById('panel-prof');if(_pp)_pp.style.display='none';
   goPage('agenda');
-  agInitVista();
+  setTimeout(function(){agInitVista();},100);
 }
 function stPr(id,btn){
   document.querySelectorAll('.pr-tab').forEach(t=>t.classList.remove('on'));btn.classList.add('on');
@@ -2990,10 +2992,12 @@ document.addEventListener('DOMContentLoaded', function(){
 // Also expose agenda from panel buttons
 function irAgendaDesdePanel(){
   if(!curPUser){goPage('panel');return;}
-  // Hide all panel sections
-  // pg-panel hides via the .pg class system (removes 'on')
-  // Also hide pg-panel if it exists as a pg
+  // Ocultar panel admin
+  var _pa=document.getElementById('panel-admin');if(_pa)_pa.style.display='none';
+  var _pl=document.getElementById('panel-login');if(_pl)_pl.style.display='none';
+  // Ocultar todas las páginas .pg
   document.querySelectorAll('.pg').forEach(function(p){p.classList.remove('on');p.style.display='none';});
+  // Mostrar agenda
   const agPg=document.getElementById('pg-agenda');
   if(agPg){agPg.classList.add('on');agPg.style.display='block';}
   agFecha=new Date();
