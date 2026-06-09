@@ -2029,7 +2029,7 @@ function stAdm(id,btn){
   if(id==='a-res')renderAdmRes();
   if(id==='a-pro'){renderAdmProfs();renderJornadas();}
   if(id==='a-srv')renderAdmSrvPills();
-  if(id==='a-cls')filtraCls('');
+  if(id==='a-cls'){filtraCls('');setTimeout(function(){var q=document.getElementById('a-cls-q');if(q&&q.value)q.value='';},300);}
   if(id==='a-caja'){cjTab='resumen';cjSetTab('resumen',document.getElementById('cj-tab-resumen'));renderCaja();}
   if(id==='a-prod')renderProductos();
   var _ag=document.getElementById('pg-agenda');if(_ag){_ag.classList.remove('on');_ag.style.display='';}
