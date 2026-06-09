@@ -1798,6 +1798,7 @@ function abrirMiCuenta(){
       goPage('panel');
       var _pl=document.getElementById('panel-login');if(_pl)_pl.style.display='none';
       var _pa=document.getElementById('panel-admin');if(_pa)_pa.style.display='block';
+      document.querySelectorAll('.pg').forEach(function(p){p.classList.remove('on');p.style.display='none';});
       renderAdmRes();
     }else{
       goPage('agenda');
@@ -3006,9 +3007,13 @@ function irAgendaDesdePanel(){
 }
 
 function irPanelDesdeAgenda(){
+  // Ocultar agendas
+  document.querySelectorAll('.pg').forEach(function(p){p.classList.remove('on');p.style.display='none';});
+  // Mostrar panel admin
   var _pl=document.getElementById('panel-login');if(_pl)_pl.style.display='none';
   var _pa=document.getElementById('panel-admin');if(_pa)_pa.style.display='block';
-  goPage('panel');
+  window.scrollTo(0,0);
+  if(typeof renderAdmRes==='function')renderAdmRes();
 }
 
 function agLogout(){
@@ -6169,12 +6174,12 @@ function clsSetTab(tab,btn){
 
 <div id="cal-modal-detalle" style="display:none"></div>
 
-<div id="pg-laser-agenda" class="pg" style="padding-top:0">
-  <div style="background:var(--oliva);padding:1rem 1.5rem;display:flex;align-items:center;gap:.8rem;position:fixed;top:54px;left:0;right:0;z-index:9">
-    <button onclick="goPage(&#39;panel&#39;)" style="background:rgba(255,255,255,.15);border:none;color:#fff;font-family:Raleway,sans-serif;font-size:12px;padding:4px 10px;border-radius:2px;cursor:pointer">← Panel</button>
+<div id="pg-laser-agenda" class="pg" style="padding-top:54px">
+  <div style="background:var(--oliva);padding:1rem 1.5rem;display:flex;align-items:center;gap:.8rem">
+    <button onclick="irPanelDesdeAgenda()" style="background:rgba(255,255,255,.15);border:none;color:#fff;font-family:Raleway,sans-serif;font-size:12px;padding:4px 10px;border-radius:2px;cursor:pointer">← Panel</button>
     <div style="font-family:Raleway,sans-serif;font-size:16px;font-weight:600;color:#fff;flex:1">Agenda Depilación Definitiva</div>
   </div>
-  <div style="padding:1rem;margin-top:118px">
+  <div style="padding:1rem">
     <div class="panel"><div class="ptitle">Jornadas</div><div id="laser-ag-jornadas" style="display:flex;flex-wrap:wrap;gap:.4rem"></div></div>
     <div class="panel" id="laser-ag-turnos-panel" style="display:none">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.8rem">
