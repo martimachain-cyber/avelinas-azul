@@ -2999,6 +2999,7 @@ function irAgendaDesdePanel(){
   // Ocultar todas las páginas .pg
   document.querySelectorAll('.pg').forEach(function(p){p.classList.remove('on');p.style.display='none';});
   // Mostrar agenda
+  var _ls=document.getElementById('laser-ag-slots');if(_ls)_ls.innerHTML='';
   const agPg=document.getElementById('pg-agenda');
   if(agPg){agPg.classList.add('on');agPg.style.display='block';}
   agFecha=new Date();
@@ -4813,6 +4814,7 @@ function irLaserBooking(){
     var _pa=document.getElementById('panel-admin');if(_pa)_pa.style.display='none';
     var _pl=document.getElementById('panel-login');if(_pl)_pl.style.display='none';
     document.querySelectorAll('.pg').forEach(function(p){p.classList.remove('on');p.style.display='none';});
+    var _ag=document.getElementById('ag-grid');if(_ag)_ag.innerHTML='';
     var laPg=document.getElementById('pg-laser-agenda');
     if(laPg){laPg.classList.add('on');laPg.style.display='block';}
     setTimeout(function(){if(typeof renderLaserAgenda==='function')renderLaserAgenda();},50);
