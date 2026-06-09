@@ -3006,10 +3006,9 @@ function irAgendaDesdePanel(){
 }
 
 function irPanelDesdeAgenda(){
+  var _pl=document.getElementById('panel-login');if(_pl)_pl.style.display='none';
+  var _pa=document.getElementById('panel-admin');if(_pa)_pa.style.display='block';
   goPage('panel');
-  // Re-show admin panel
-  document.getElementById('panel-login').style.display='none';
-  document.getElementById('panel-admin').style.display='block';
 }
 
 function agLogout(){
@@ -4806,8 +4805,8 @@ let lsSrv = null, lsSlot = null;
 function irLaserBooking(){
   if(curPUser){
     // Staff → go directly to admin laser agenda
-    var plPg=document.getElementById('pg-laser');
-    if(plPg){plPg.classList.remove('on');plPg.style.display='';}
+    var _pa=document.getElementById('panel-admin');if(_pa)_pa.style.display='none';
+    var _pl=document.getElementById('panel-login');if(_pl)_pl.style.display='none';
     document.querySelectorAll('.pg').forEach(function(p){p.classList.remove('on');p.style.display='none';});
     var laPg=document.getElementById('pg-laser-agenda');
     if(laPg){laPg.classList.add('on');laPg.style.display='block';}
