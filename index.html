@@ -1405,6 +1405,12 @@ function cerrarM(id){document.getElementById(id).classList.remove('on')}
 // ===== NAVIGATION =====
 function goPage(id){
   document.querySelectorAll('.pg').forEach(function(p){p.classList.remove('on');p.style.display='none';});
+  // Ocultar panel admin cuando se navega a páginas públicas
+  var _publicPages=['inicio','servicios','turnos','club','tienda','nosotras','contacto','laser'];
+  if(_publicPages.includes(id)){
+    var _pa=document.getElementById('panel-admin');if(_pa)_pa.style.display='none';
+    var _pl=document.getElementById('panel-login');if(_pl)_pl.style.display='none';
+  }
   const pg=document.getElementById('pg-'+id);
   if(pg){pg.classList.add('on');pg.style.display='block';}
   document.querySelectorAll('.nav-links a').forEach(function(a){a.classList.remove('on');});
@@ -3062,7 +3068,7 @@ function renderNosotras(){
 
     var fotoDiv=document.createElement('div');
     fotoDiv.className='eq-foto';
-    fotoDiv.style.cssText='background:var(--oliva);display:flex;align-items:center;justify-content:center';
+    fotoDiv.style.cssText='background:var(--oliva);display:flex;align-items:center;justify-content:center;width:120px;min-width:120px;min-height:160px;overflow:hidden;flex-shrink:0';
     fotoDiv.innerHTML=mkFotoHtml(p.foto,p.n[0]);
 
     var bodyDiv=document.createElement('div');
