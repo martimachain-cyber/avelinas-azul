@@ -612,10 +612,10 @@ td.ag-slot-free{background:transparent}
   
   <div id="panel-admin" style="display:none">
     <div class="top"><div><div class="top-brand" id="adm-brand">Panel Admin</div><div class="top-sub">Avelinas Azul</div></div><button class="out-btn" onclick="pLogout()">Salir</button></div>
-    <div class="adm-tabs" id="adm-tabs-el" style="grid-template-columns: repeat(6, 1fr);"><button class="adm-tab" onclick="stAdm(&#39;a-res&#39;,this)">Resumen</button><button class="adm-tab" onclick="stAdm(&#39;a-pro&#39;,this)">Profesionales</button><button class="adm-tab" onclick="stAdm(&#39;a-srv&#39;,this)">Servicios</button><button class="adm-tab on" onclick="stAdm(&#39;a-cls&#39;,this)">Clientas</button><button class="adm-tab" onclick="stAdm(&#39;a-caja&#39;,this)">💰 Caja</button><button class="adm-tab" onclick="stAdm(&#39;a-prod&#39;,this)">📦 Productos</button></div>
+    <div class="adm-tabs" id="adm-tabs-el" style="grid-template-columns: repeat(8, 1fr);"><button class="adm-tab" onclick="stAdm(&#39;a-res&#39;,this)">Resumen</button><button class="adm-tab" onclick="stAdm(&#39;a-pro&#39;,this)">Profesionales</button><button class="adm-tab" onclick="stAdm(&#39;a-srv&#39;,this)">Servicios</button><button class="adm-tab on" onclick="stAdm(&#39;a-cls&#39;,this)">Clientas</button><button class="adm-tab" onclick="stAdm(&#39;a-caja&#39;,this)">💰 Caja</button><button class="adm-tab" onclick="stAdm(&#39;a-prod&#39;,this)">📦 Productos</button><button class="adm-tab" onclick="stAdm(&#39;a-reportes&#39;,this)">📊 Reportes</button><button class="adm-tab" onclick="stAdm(&#39;a-insumos&#39;,this)">🧴 Insumos</button></div>
     <div id="a-res" class="tsec">
       <div style="padding:1rem">
-        <div class="stats"><div class="sc"><div class="sc-n" id="a-sh">0</div><div class="sc-l">Hoy</div></div><div class="sc"><div class="sc-n" id="a-ss">1</div><div class="sc-l">Semana</div></div><div class="sc"><div class="sc-n" id="a-sc">5</div><div class="sc-l">Clientas</div></div></div><div id="a-cumples" style="display:none;background:rgba(255,200,50,.1);border:1px solid rgba(255,200,50,.4);border-radius:3px;padding:.8rem;margin-bottom:.8rem"></div><button class="btn-v full" onclick="irAgendaDesdePanel()" style="margin-bottom:.8rem">📅 Ver agenda completa</button>
+        <div class="stats" style="grid-template-columns:repeat(4,1fr)"><div class="sc"><div class="sc-n" id="a-sh">0</div><div class="sc-l">Hoy</div></div><div class="sc"><div class="sc-n" id="a-ss">0</div><div class="sc-l">Semana</div></div><div class="sc"><div class="sc-n" id="a-sc-hoy" style="font-size:16px;color:#3B6D11">$0</div><div class="sc-l">Cobrado hoy</div></div><div class="sc"><div class="sc-n" id="a-sc">0</div><div class="sc-l">Clientas</div></div></div><div id="a-cumples" style="display:none;background:rgba(255,200,50,.1);border:1px solid rgba(255,200,50,.4);border-radius:3px;padding:.8rem;margin-bottom:.8rem"></div><button class="btn-v full" onclick="irAgendaDesdePanel()" style="margin-bottom:.8rem">📅 Ver agenda completa</button>
         <button class="btn-v full" onclick="irLaserBooking()" style="margin-bottom:.8rem;background:var(--gris)">💜 Agenda depilación definitiva</button>
         <div class="panel"><div class="ptitle">Turnos de hoy</div><div id="a-hoy"><div class="empty">Sin turnos hoy.</div></div></div>
         <div class="panel"><div class="ptitle">Turnos de mañana <span style="font-size:10px;color:var(--gc);font-weight:400">— tocá 'Recordar' para avisar a cada clienta</span></div><div id="a-manana"><div class="empty">Sin turnos mañana.</div></div></div>
@@ -937,6 +937,30 @@ td.ag-slot-free{background:transparent}
   </div></div>
   </div>
 
+    <div id="a-reportes" class="tsec" style="display:none"><div style="padding:1rem">
+      <div style="display:flex;gap:.4rem;margin-bottom:1rem;flex-wrap:wrap">
+        <button class="cpill on" id="rp-tab-cierre" onclick="rpSetTab('cierre',this)">📅 Cierre mensual</button>
+        <button class="cpill" id="rp-tab-profs" onclick="rpSetTab('profs',this)">👩 Por profesional</button>
+        <button class="cpill" id="rp-tab-servicios" onclick="rpSetTab('servicios',this)">✂️ Por servicio</button>
+      </div>
+      <input type="month" id="rp-mes-sel" onchange="rpRender()" style="font-size:12px;padding:4px 8px;border:1px solid var(--cd);border-radius:3px;margin-bottom:1rem">
+      <div id="rp-cierre"></div>
+      <div id="rp-profs" style="display:none"></div>
+      <div id="rp-servicios" style="display:none"></div>
+    </div></div>
+
+    <div id="a-insumos" class="tsec" style="display:none"><div style="padding:1rem">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
+        <div style="font-size:14px;font-weight:500;color:var(--texto)">Gestión de insumos</div>
+        <button class="btn-v" onclick="insModalNuevo()" style="font-size:12px;padding:5px 12px">+ Nueva compra</button>
+      </div>
+      <div style="display:flex;gap:.4rem;margin-bottom:1rem;flex-wrap:wrap">
+        <button class="cpill on" id="ins-tab-uso" onclick="insSetTab('uso',this)">En uso</button>
+        <button class="cpill" id="ins-tab-stock" onclick="insSetTab('stock',this)">En stock</button>
+        <button class="cpill" id="ins-tab-hist" onclick="insSetTab('hist',this)">Historial</button>
+      </div>
+      <div id="ins-lista"></div>
+    </div></div>
   
   <div id="panel-prof" style="display:none">
     <div class="top"><div><div class="top-brand" id="pr-brand">Mi agenda</div><div class="top-sub">Avelinas Azul</div></div><button class="out-btn" onclick="pLogout()">Salir</button></div>
@@ -2039,6 +2063,13 @@ function stAdm(id,btn){
   if(id==='a-cls'){filtraCls('');setTimeout(function(){var q=document.getElementById('a-cls-q');if(q&&q.value)q.value='';},300);}
   if(id==='a-caja'){cjTab='resumen';cjSetTab('resumen',document.getElementById('cj-tab-resumen'));renderCaja();}
   if(id==='a-prod')renderProductos();
+  if(id==='a-reportes'){
+    var mes=new Date();
+    var msel=document.getElementById('rp-mes-sel');
+    if(msel&&!msel.value)msel.value=mes.getFullYear()+'-'+String(mes.getMonth()+1).padStart(2,'0');
+    rpSetTab('cierre',document.getElementById('rp-tab-cierre'));
+  }
+  if(id==='a-insumos'){insSetTab('uso',document.getElementById('ins-tab-uso'));}
   var _ag=document.getElementById('pg-agenda');if(_ag){_ag.classList.remove('on');_ag.style.display='';}
   var _la=document.getElementById('pg-laser-agenda');if(_la){_la.classList.remove('on');_la.style.display='';}
 }
@@ -2078,6 +2109,8 @@ function renderAdmRes(){
   document.getElementById('a-sh').textContent=hR.length;
   document.getElementById('a-ss').textContent=D.reservas.filter(r=>r.f>=fk(l)&&r.f<=fk(fin)).length;
   document.getElementById('a-sc').textContent=D.clientas.length;
+  var cobradoHoy=cjD.cobros.filter(function(c){return c.fecha===hoy();}).reduce(function(s,c){return s+(c.monto||0);},0);
+  var elCH=document.getElementById('a-sc-hoy');if(elCH)elCH.textContent='$'+cobradoHoy.toLocaleString('es-AR');
   document.getElementById('a-hoy').innerHTML=hR.length?hR.sort((a,b)=>a.h.localeCompare(b.h)).map(function(r){
     const asistio=r.asistio;
     const profN=(D.profesionales.find(function(p){return p.id===r.prof;})||{}).n||'';
@@ -3295,9 +3328,148 @@ function cjLd(){
   }catch(e){return{cobros:[],egresos:[],adelantos:[],retiros:[],cierres:[]};}}
 function cjSv(){try{localStorage.setItem(CJ_KEY,JSON.stringify(cjD))}catch(e){}if(typeof sbSaveKey==='function')sbSaveKey('caja',cjD);}
 let cjD=cjLd();
+
+// ===== INSUMOS =====
+const INS_KEY='avIns';
+const INS_CATS={faciales:'Faciales',manos:'Manos',pies:'Pies',masajes:'Masajes',maquillaje:'Maquillaje',laser:'Laser'};
+
+function insLd(){
+  try{var d=localStorage.getItem(INS_KEY);return d?JSON.parse(d):{insumos:[]};}
+  catch(e){return{insumos:[]};}
+}
+function insSv(){
+  try{localStorage.setItem(INS_KEY,JSON.stringify(insD));}catch(e){}
+  if(typeof sbSaveKey==='function')sbSaveKey('insumos',insD);
+}
+var insD=insLd();
+
+function insSetTab(tab,btn){
+  document.querySelectorAll('[id^="ins-tab-"]').forEach(b=>b.classList.remove('on'));
+  if(btn)btn.classList.add('on');
+  insRender(tab);
+}
+
+function insModalNuevo(){
+  // Se usa el modal de egreso con cat=insumos
+  document.getElementById('egreso-cat').value='insumos';
+  egCatChange();
+  document.getElementById('egreso-desc').value='';
+  document.getElementById('egreso-monto').value='';
+  var hoy=new Date();
+  document.getElementById('egreso-fecha').value=hoy.toISOString().split('T')[0];
+  abrirM('modal-egreso');
+}
+
+function insAbrir(id){
+  var ins=insD.insumos.find(function(i){return i.id===id;});
+  if(!ins)return;
+  ins.estado='uso';
+  ins.fechaApertura=new Date().toISOString().split('T')[0];
+  ins.turnosUsados=0;
+  insSv();insRender('stock');insSetTab('uso',document.getElementById('ins-tab-uso'));
+}
+
+function insAlerta(id){
+  var ins=insD.insumos.find(function(i){return i.id===id;});
+  if(!ins)return;
+  ins.alerta=!ins.alerta;
+  insSv();insRender('uso');
+}
+
+function insCerrar(id){
+  var ins=insD.insumos.find(function(i){return i.id===id;});
+  if(!ins)return;
+  ins.estado='terminado';
+  ins.fechaCierre=new Date().toISOString().split('T')[0];
+  // Contar turnos realizados desde apertura
+  var turnosReales=contarTurnosCat(ins.cat,ins.fechaApertura,ins.fechaCierre);
+  ins.turnosUsados=turnosReales||ins.turnosUsados||1;
+  ins.costoPorTurno=Math.round(ins.costo/ins.turnosUsados);
+  insSv();insRender('uso');
+}
+
+function contarTurnosCat(cat,desde,hasta){
+  // Contar turnos de agD que caen en la categoría y rango de fechas
+  if(!agD||!agD.turnos)return 0;
+  var catMap={faciales:['facial'],manos:['manos','unas'],pies:['pedi'],masajes:['masajes'],maquillaje:['maquillaje'],laser:['laser']};
+  var cats=catMap[cat]||[cat];
+  return agD.turnos.filter(function(t){
+    if(!t.fecha)return false;
+    if(desde&&t.fecha<desde)return false;
+    if(hasta&&t.fecha>hasta)return false;
+    return cats.some(function(c){return (t.cat||'').toLowerCase().includes(c)||(t.srv||'').toLowerCase().includes(c);});
+  }).length;
+}
+
+function insRender(tab){
+  tab=tab||'uso';
+  var lista=document.getElementById('ins-lista');
+  if(!lista)return;
+  var insumos=insD.insumos||[];
+  var filtrados=insumos.filter(function(i){
+    if(tab==='uso')return i.estado==='uso';
+    if(tab==='stock')return i.estado==='stock';
+    return i.estado==='terminado';
+  });
+  
+  // Actualizar turnos para insumos en uso
+  if(tab==='uso'){
+    filtrados.forEach(function(ins){
+      var t=contarTurnosCat(ins.cat,ins.fechaApertura,null);
+      if(t>0)ins.turnosUsados=t;
+    });
+  }
+
+  if(!filtrados.length){
+    lista.innerHTML='<div class="empty">Sin insumos en esta sección.</div>';
+    return;
+  }
+
+  lista.innerHTML=filtrados.map(function(ins){
+    var catLabel=INS_CATS[ins.cat]||ins.cat;
+    var cpt=ins.turnosUsados>0?Math.round(ins.costo/ins.turnosUsados):null;
+    var estadoBadge=ins.alerta?
+      '<span style="font-size:10px;padding:2px 7px;border-radius:10px;background:#FAEEDA;color:#854F0B">⚠ casi terminado</span>':
+      ins.estado==='uso'?'<span style="font-size:10px;padding:2px 7px;border-radius:10px;background:#EAF3DE;color:#3B6D11">en uso</span>':
+      ins.estado==='stock'?'<span style="font-size:10px;padding:2px 7px;border-radius:10px;background:#E6F1FB;color:#185FA5">en stock</span>':
+      '<span style="font-size:10px;padding:2px 7px;border-radius:10px;background:#F1EFE8;color:#5F5E5A">terminado</span>';
+    
+    var acciones='';
+    if(tab==='uso'){
+      acciones='<button onclick="insAlerta(''+ins.id+'')" style="font-size:11px;padding:3px 8px;border-radius:3px;border:1px solid var(--cd);background:none;color:var(--gris);cursor:pointer;margin-right:4px">'+(ins.alerta?'✓ Normal':'⚠ Casi terminado')+'</button>'+
+               '<button onclick="insCerrar(''+ins.id+'')" style="font-size:11px;padding:3px 8px;border-radius:3px;border:1px solid #A32D2D;background:none;color:#A32D2D;cursor:pointer">Terminado</button>';
+    } else if(tab==='stock'){
+      acciones='<button onclick="insAbrir(''+ins.id+'')" style="font-size:11px;padding:3px 8px;border-radius:3px;border:1px solid #3B6D11;background:none;color:#3B6D11;cursor:pointer">Abrir</button>';
+    }
+
+    var detalle='';
+    if(tab==='uso'){
+      detalle='<div style="font-size:11px;color:var(--gc);margin-top:2px">'+catLabel+' · Abierto '+( ins.fechaApertura||'?')+' · '+ins.turnosUsados+' turnos'+(cpt?' · $'+cpt+'/turno':'')+'</div>';
+    } else if(tab==='hist'){
+      detalle='<div style="font-size:11px;color:var(--gc);margin-top:2px">'+catLabel+' · '+(ins.fechaApertura||'?')+' → '+(ins.fechaCierre||'?')+' · '+ins.turnosUsados+' turnos · $'+( ins.costoPorTurno||'?')+'/turno</div>';
+    } else {
+      detalle='<div style="font-size:11px;color:var(--gc);margin-top:2px">'+catLabel+' · Comprado '+(ins.fechaCompra||'?')+'</div>';
+    }
+
+    return '<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:.5px solid var(--cd)">'+
+      '<div style="flex:1;min-width:0">'+
+        '<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">'+
+          '<span style="font-size:13px;font-weight:500;color:var(--texto)">'+ins.nombre+'</span>'+
+          estadoBadge+
+        '</div>'+
+        detalle+
+      '</div>'+
+      '<div style="display:flex;gap:4px;flex-shrink:0;align-items:center">'+
+        (tab==='hist'?'<span style="font-size:13px;color:var(--gc)">$'+ins.costo+'</span>':'')+
+        acciones+
+      '</div>'+
+    '</div>';
+  }).join('');
+}
+
 let cjPer='mes', cjTab='resumen', cjMesSel='';
 
-const CJ_CATS={alquiler:'🏠 Alquiler',servicios:'⚡ Servicios',proveedor:'🏪 Proveedor',insumos:'🧴 Insumos',sueldo:'👩 Sueldo',marketing:'📱 Marketing',otros:'📌 Otros'};
+const CJ_CATS={alquiler:'🏠 Alquiler',servicios:'⚡ Servicios',proveedor:'🏪 Proveedor',insumos:'🧴 Insumos',productos:'🛍 Productos',sueldo:'👩 Sueldo',marketing:'📱 Marketing',otros:'📌 Otros'};
 const CJ_METODOS={efectivo:'💵 Efectivo',transferencia:'📲 Transf.',debito:'💳 Débito',credito:'💳 Crédito'};
 
 function cjFecha1(){
@@ -3781,6 +3953,12 @@ function abrirModalEgreso(id){
   document.getElementById('modal-egreso').classList.add('on');
 }
 
+function egCatChange(){
+  var cat=document.getElementById('egreso-cat').value;
+  var extra=document.getElementById('egreso-insumo-extra');
+  if(extra)extra.style.display=(cat==='insumos')?'block':'none';
+}
+
 function cjGuardarEgreso(){
   const cat=document.getElementById('egreso-cat').value;
   const desc=document.getElementById('egreso-desc').value.trim();
@@ -3793,7 +3971,27 @@ function cjGuardarEgreso(){
   if(!desc||!monto||!fecha){er.textContent='Completá descripción, monto y fecha.';er.classList.add('on');return;}
   const id=document.getElementById('egreso-id').value;
   if(id){const idx=cjD.egresos.findIndex(function(x){return x.id===id;});if(idx>=0)cjD.egresos[idx]=Object.assign(cjD.egresos[idx],{cat,desc,monto,metodo,fecha,notas});}
-  else cjD.egresos.push({id:'eg_'+Date.now(),cat,desc,monto,metodo,fecha,notas});
+  else cjD.egresos.push({id:'eg_'+Date.now(),cat,desc,monto,metodo,fecha,notas,
+    insCat: cat==='insumos'?(document.getElementById('egreso-ins-cat')?.value||''):'',
+    insCant: cat==='insumos'?parseInt(document.getElementById('egreso-ins-cant')?.value||'1'):0,
+    insEstado: cat==='insumos'?(document.getElementById('egreso-ins-estado')?.value||'stock'):''
+  });
+  // Si es insumo, crear el insumo en insD
+  if(cat==='insumos'){
+    var insCat=document.getElementById('egreso-ins-cat')?.value||'faciales';
+    var insCant=parseInt(document.getElementById('egreso-ins-cant')?.value||'1');
+    var insEst=document.getElementById('egreso-ins-estado')?.value||'stock';
+    var costoPorU=Math.round(monto/insCant);
+    for(var i=0;i<insCant;i++){
+      var ins={id:'ins_'+Date.now()+'_'+i,nombre:desc,costo:costoPorU,cat:insCat,
+        estado:insEst==='uso'&&i===0?'uso':'stock',
+        fechaCompra:fecha,fechaApertura:insEst==='uso'&&i===0?fecha:null,
+        turnosUsados:0,fechaCierre:null,costoPorTurno:null,alerta:false};
+      if(!insD.insumos)insD.insumos=[];
+      insD.insumos.push(ins);
+    }
+    insSv();
+  }
   cjSv();renderCaja();
   ok.textContent='Guardado ✓';ok.classList.add('on');
   setTimeout(function(){cerrarM('modal-egreso');},1500);
@@ -5067,6 +5265,9 @@ async function sbSync(){
           } else if(row.key==='caja'){
             cjD = parsed;
             localStorage.setItem(CJ_KEY, JSON.stringify(cjD));
+          } else if(row.key==='insumos'){
+            insD = parsed;
+            try{localStorage.setItem(INS_KEY, JSON.stringify(insD));}catch(e){}
           } else if(row.key==='agenda'){
             agD = parsed;
             localStorage.setItem(AG_KEY, JSON.stringify(agD));
@@ -5794,6 +5995,175 @@ function clsSetTab(tab,btn){
   if(r)r.style.display=tab==='ranking'?'block':'none';
   if(tab==='ranking')renderRankingPuntos();
 }
+
+// ===== REPORTES =====
+function rpSetTab(tab,btn){
+  document.querySelectorAll('[id^="rp-tab-"]').forEach(b=>b.classList.remove('on'));
+  if(btn)btn.classList.add('on');
+  ['cierre','profs','servicios'].forEach(function(t){
+    var el=document.getElementById('rp-'+t);
+    if(el)el.style.display=t===tab?'block':'none';
+  });
+  rpRender(tab);
+}
+
+function rpGetMes(){
+  var sel=document.getElementById('rp-mes-sel');
+  if(sel&&sel.value)return sel.value; // YYYY-MM
+  var d=new Date();
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
+}
+
+function rpEnMes(fecha,mes){
+  if(!fecha)return false;
+  return fecha.startsWith(mes);
+}
+
+function rpRender(tab){
+  tab=tab||'cierre';
+  var mes=rpGetMes();
+  var mesLabel=(function(){
+    var meses=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+    var parts=mes.split('-');
+    return meses[parseInt(parts[1])-1]+' '+parts[0];
+  })();
+
+  var cobros=cjD.cobros.filter(function(c){return rpEnMes(c.fecha,mes);});
+  var egresos=cjD.egresos.filter(function(e){return rpEnMes(e.fecha,mes);});
+  var adelantos=cjD.adelantos.filter(function(a){return rpEnMes(a.fecha,mes);});
+  var retiros=cjD.retiros.filter(function(r){return rpEnMes(r.fecha,mes);});
+
+  var totalIng=cobros.reduce(function(s,c){return s+(c.monto||0);},0);
+  var totalEg=egresos.reduce(function(s,e){return s+(e.monto||0);},0);
+  var totalAde=adelantos.reduce(function(s,a){return s+(a.monto||0);},0);
+  var totalRet=retiros.reduce(function(s,r){return s+(r.monto||0);},0);
+  var neto=totalIng-totalEg-totalAde-totalRet;
+
+  var egInsumos=egresos.filter(function(e){return e.cat==='insumos';}).reduce(function(s,e){return s+(e.monto||0);},0);
+  var egProductos=egresos.filter(function(e){return e.cat==='productos';}).reduce(function(s,e){return s+(e.monto||0);},0);
+  var egOtros=totalEg-egInsumos-egProductos;
+
+  var turnos=agD?agD.turnos.filter(function(t){return rpEnMes(t.fecha,mes);}):[];
+
+  if(tab==='cierre'){
+    var el=document.getElementById('rp-cierre');
+    if(!el)return;
+    
+    // Cobros por profesional
+    var porProf={};
+    cobros.forEach(function(c){
+      if(!porProf[c.prof])porProf[c.prof]={n:c.prof,monto:0,turnos:0};
+      porProf[c.prof].monto+=(c.monto||0);
+      porProf[c.prof].turnos++;
+    });
+
+    // Cobros por servicio
+    var porSrv={};
+    cobros.forEach(function(c){
+      var k=c.srv||'Otros';
+      if(!porSrv[k])porSrv[k]={n:k,monto:0,cant:0};
+      porSrv[k].monto+=(c.monto||0);
+      porSrv[k].cant++;
+    });
+    var topSrv=Object.values(porSrv).sort(function(a,b){return b.monto-a.monto;}).slice(0,5);
+    var maxSrv=topSrv[0]?topSrv[0].monto:1;
+
+    el.innerHTML='<div style="font-size:14px;font-weight:500;color:var(--texto);margin-bottom:1rem">'+mesLabel+'</div>'+
+      '<div class="stats" style="grid-template-columns:repeat(2,1fr)">'+
+        '<div class="sc"><div class="sc-n" style="color:#3B6D11">$'+totalIng.toLocaleString('es-AR')+'</div><div class="sc-l">Ingresos</div></div>'+
+        '<div class="sc"><div class="sc-n" style="color:#A32D2D">$'+(totalEg+totalAde+totalRet).toLocaleString('es-AR')+'</div><div class="sc-l">Egresos</div></div>'+
+        '<div class="sc"><div class="sc-n" style="color:'+(neto>=0?'#3B6D11':'#A32D2D')+'">$'+neto.toLocaleString('es-AR')+'</div><div class="sc-l">Ganancia neta</div></div>'+
+        '<div class="sc"><div class="sc-n">'+cobros.length+'</div><div class="sc-l">Turnos cobrados</div></div>'+
+      '</div>'+
+      '<div class="panel"><div class="ptitle">Egresos detallados</div>'+
+        '<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:.5px solid var(--cd);font-size:13px"><span>Insumos</span><span>$'+egInsumos.toLocaleString('es-AR')+'</span></div>'+
+        '<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:.5px solid var(--cd);font-size:13px"><span>Productos para reventa</span><span>$'+egProductos.toLocaleString('es-AR')+'</span></div>'+
+        '<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:.5px solid var(--cd);font-size:13px"><span>Adelantos</span><span>$'+totalAde.toLocaleString('es-AR')+'</span></div>'+
+        '<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:.5px solid var(--cd);font-size:13px"><span>Retiros</span><span>$'+totalRet.toLocaleString('es-AR')+'</span></div>'+
+        '<div style="display:flex;justify-content:space-between;padding:6px 0;font-size:13px"><span>Otros</span><span>$'+egOtros.toLocaleString('es-AR')+'</span></div>'+
+      '</div>'+
+      (topSrv.length?'<div class="panel"><div class="ptitle">Top servicios</div>'+
+        topSrv.map(function(s){return '<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:.5px solid var(--cd)">'+
+          '<div style="font-size:12px;min-width:120px;color:var(--texto)">'+s.n+'</div>'+
+          '<div style="flex:1;height:5px;background:var(--cd);border-radius:3px;overflow:hidden"><div style="width:'+Math.round(s.monto/maxSrv*100)+'%;height:100%;background:var(--oliva);border-radius:3px"></div></div>'+
+          '<div style="font-size:12px;font-weight:500;min-width:70px;text-align:right">$'+s.monto.toLocaleString('es-AR')+'</div>'+
+          '<div style="font-size:11px;color:var(--gc);min-width:40px;text-align:right">'+s.cant+'x</div>'+
+        '</div>';}).join('')+'</div>':'');
+
+  } else if(tab==='profs'){
+    var el=document.getElementById('rp-profs');
+    if(!el)return;
+    
+    var profs=D.profesionales.filter(function(p){return p.id!=='lucia';});
+    var rows=profs.map(function(p){
+      var cb=cobros.filter(function(c){return c.prof===p.id;});
+      var ing=cb.reduce(function(s,c){return s+(c.monto||0);},0);
+      var com=Math.round(ing*(p.comision||50)/100);
+      // Ver comisiones pagadas
+      var comPagadas=egresos.filter(function(e){return e.cat==='sueldo'&&e.desc&&e.desc.toLowerCase().includes(p.n.toLowerCase());}).reduce(function(s,e){return s+(e.monto||0);},0);
+      var comPend=Math.max(0,com-comPagadas);
+      return {p:p,ing:ing,turnos:cb.length,com:com,comPend:comPend,comPag:comPagadas};
+    }).sort(function(a,b){return b.ing-a.ing;});
+
+    el.innerHTML='<div class="panel"><div class="ptitle">Resumen equipo — '+mesLabel+'</div>'+
+      rows.map(function(r){
+        return '<div style="padding:10px 0;border-bottom:.5px solid var(--cd)">'+
+          '<div style="display:flex;justify-content:space-between;align-items:center">'+
+            '<div>'+
+              '<div style="font-size:13px;font-weight:500;color:var(--texto)">'+r.p.n+'</div>'+
+              '<div style="font-size:11px;color:var(--gc)">'+r.turnos+' turnos · '+r.p.comision+'% comisión</div>'+
+            '</div>'+
+            '<div style="text-align:right">'+
+              '<div style="font-size:14px;font-weight:500;color:#3B6D11">$'+r.ing.toLocaleString('es-AR')+'</div>'+
+              '<div style="font-size:11px;color:'+(r.comPend>0?'#A32D2D':'#3B6D11')+'">Com: $'+r.com.toLocaleString('es-AR')+' · '+(r.comPend>0?'$'+r.comPend.toLocaleString('es-AR')+' pendiente':'pagada')+'</div>'+
+            '</div>'+
+          '</div>'+
+          '<div style="margin-top:6px">'+
+            '<button onclick="rpPagarCom(''+r.p.id+'',''+r.p.n+'','+r.comPend+')" style="font-size:11px;padding:3px 10px;border-radius:3px;border:1px solid var(--oliva);background:none;color:var(--oliva);cursor:pointer"'+(r.comPend<=0?' disabled style="opacity:.4;cursor:default"':'')+(r.comPend<=0?'>Comisión al día':'>Registrar pago</button>')+
+          '</div>'+
+        '</div>';
+      }).join('')+
+      '</div>';
+
+  } else if(tab==='servicios'){
+    var el=document.getElementById('rp-servicios');
+    if(!el)return;
+    
+    var porSrv2={};
+    cobros.forEach(function(c){
+      var k=c.srv||'Otros';
+      if(!porSrv2[k])porSrv2[k]={n:k,monto:0,cant:0,cat:c.cat||''};
+      porSrv2[k].monto+=(c.monto||0);
+      porSrv2[k].cant++;
+    });
+    var srvs=Object.values(porSrv2).sort(function(a,b){return b.monto-a.monto;});
+    var maxM=srvs[0]?srvs[0].monto:1;
+
+    el.innerHTML='<div style="font-size:14px;font-weight:500;color:var(--texto);margin-bottom:1rem">Servicios — '+mesLabel+'</div>'+
+      (srvs.length?'<div class="panel">'+
+        srvs.map(function(s){
+          return '<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:.5px solid var(--cd)">'+
+            '<div style="min-width:130px">'+
+              '<div style="font-size:13px;color:var(--texto)">'+s.n+'</div>'+
+              '<div style="font-size:11px;color:var(--gc)">'+s.cant+' turno'+( s.cant===1?'':'s')+'</div>'+
+            '</div>'+
+            '<div style="flex:1;height:5px;background:var(--cd);border-radius:3px;overflow:hidden"><div style="width:'+Math.round(s.monto/maxM*100)+'%;height:100%;background:var(--oliva);border-radius:3px"></div></div>'+
+            '<div style="font-size:13px;font-weight:500;min-width:80px;text-align:right;color:#3B6D11">$'+s.monto.toLocaleString('es-AR')+'</div>'+
+          '</div>';
+        }).join('')+
+      '</div>':'<div class="empty">Sin cobros este mes.</div>');
+  }
+}
+
+function rpPagarCom(profId,profNombre,monto){
+  if(monto<=0)return;
+  if(!confirm('¿Registrar pago de comisión a '+profNombre+' por $'+monto.toLocaleString('es-AR')+'?'))return;
+  var fecha=new Date().toISOString().split('T')[0];
+  cjD.egresos.push({id:'eg_'+Date.now(),cat:'sueldo',desc:'Comisión '+profNombre,monto:monto,metodo:'efectivo',fecha:fecha,notas:''});
+  cjSv();
+  rpRender('profs');
+}
+
 </script>
 
 <div id="modal-prov" class="modal"><div class="mc">
@@ -5949,15 +6319,34 @@ function clsSetTab(tab,btn){
   <div class="mc-title" id="egreso-title">Registrar egreso</div>
   <input type="hidden" id="egreso-id">
   <label class="flbl">Categoría</label>
-  <select class="fsel" id="egreso-cat">
+  <select class="fsel" id="egreso-cat" onchange="egCatChange()">
     <option value="alquiler">Alquiler</option>
     <option value="servicios">Servicios (luz, agua, etc.)</option>
     <option value="proveedor">Pago a proveedor</option>
-    <option value="insumos">Insumos / materiales</option>
+    <option value="insumos">🧴 Insumos (para servicios)</option>
+    <option value="productos">🛍 Productos (para reventa)</option>
     <option value="sueldo">Sueldo fijo</option>
     <option value="marketing">Marketing / publicidad</option>
     <option value="otros">Otros</option>
   </select>
+  <div id="egreso-insumo-extra" style="display:none;background:var(--crema);border-radius:3px;padding:.8rem;margin-bottom:.5rem">
+    <label class="flbl">Categoría de servicio</label>
+    <select class="fsel" id="egreso-ins-cat">
+      <option value="faciales">Faciales</option>
+      <option value="manos">Manos</option>
+      <option value="pies">Pies</option>
+      <option value="masajes">Masajes</option>
+      <option value="maquillaje">Maquillaje</option>
+      <option value="laser">Laser</option>
+    </select>
+    <label class="flbl" style="margin-top:.5rem">Cantidad de unidades</label>
+    <input class="finp" id="egreso-ins-cant" type="number" min="1" value="1" placeholder="1">
+    <label class="flbl" style="margin-top:.5rem">Estado</label>
+    <select class="fsel" id="egreso-ins-estado">
+      <option value="stock">Agregar a stock (sin abrir)</option>
+      <option value="uso">Abrir ahora</option>
+    </select>
+  </div>
   <label class="flbl">Descripción</label><input class="finp" id="egreso-desc" placeholder="Ej: Alquiler mayo">
   <label class="flbl">Monto ($)</label><input class="finp" id="egreso-monto" type="number" min="0" placeholder="0">
   <label class="flbl">Método de pago</label>
