@@ -2049,14 +2049,14 @@ function initAdmin(){
   const nav=document.getElementById('adm-tabs-el');
   nav.style.gridTemplateColumns=`repeat(${tabs.length},1fr)`;
   nav.innerHTML=tabs.map((t,i)=>`<button class="adm-tab${i===0?' on':''}" onclick="stAdm('${t.id}',this)">${t.l}</button>`).join('');
-  document.querySelectorAll('#panel-admin .tsec').forEach(s=>s.classList.remove('on'));
+  document.querySelectorAll('.tsec').forEach(s=>s.classList.remove('on'));
   document.getElementById('a-res').classList.add('on');
   renderAdmRes();
 }
 
 function stAdm(id,btn){
   document.querySelectorAll('#adm-tabs-el .adm-tab').forEach(t=>t.classList.remove('on'));btn.classList.add('on');
-  document.querySelectorAll('#panel-admin .tsec').forEach(s=>s.classList.remove('on'));
+  document.querySelectorAll('.tsec').forEach(s=>s.classList.remove('on'));
   document.getElementById(id).classList.add('on');
   if(id==='a-res')renderAdmRes();
   if(id==='a-pro'){renderAdmProfs();renderJornadas();}
