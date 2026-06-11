@@ -6119,7 +6119,7 @@ function rpRender(tab){
             '</div>'+
           '</div>'+
           '<div style="margin-top:6px">'+
-            '<button onclick="rpPagarCom(''+r.p.id+'',''+r.p.n+'','+r.comPend+')" style="font-size:11px;padding:3px 10px;border-radius:3px;border:1px solid var(--oliva);background:none;color:var(--oliva);cursor:pointer"'+(r.comPend<=0?' disabled style="opacity:.4;cursor:default"':'')+(r.comPend<=0?'>Comisión al día':'>Registrar pago</button>')+
+            rpBtnCom(r.p.id,r.p.n,r.comPend)+
           '</div>'+
         '</div>';
       }).join('')+
@@ -6153,6 +6153,11 @@ function rpRender(tab){
         }).join('')+
       '</div>':'<div class="empty">Sin cobros este mes.</div>');
   }
+}
+
+function rpBtnCom(profId,profNombre,monto){
+  if(monto<=0)return '<button disabled style="font-size:11px;padding:3px 10px;border-radius:3px;border:1px solid var(--cd);background:none;color:var(--gc);opacity:.5">Comisión al día</button>';
+  return '<button onclick="rpPagarCom(\'' + profId + '\',\'' + profNombre + '\',' + monto + ')" style="font-size:11px;padding:3px 10px;border-radius:3px;border:1px solid var(--oliva);background:none;color:var(--oliva);cursor:pointer">Registrar pago</button>';
 }
 
 function rpPagarCom(profId,profNombre,monto){
