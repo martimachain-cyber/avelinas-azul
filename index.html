@@ -1418,6 +1418,7 @@ let eIds={p:null,s:null,c:null};
 function fk(d){return`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`}
 function pk(k){const[y,m,d]=k.split('-');return new Date(y,m-1,d)}
 function ff(d){return`${DS[d.getDay()]} ${d.getDate()} ${MSC[d.getMonth()]}`}
+function fmtPeso(n){return '$'+Math.round(n||0).toLocaleString('es-AR');}
 function hoy(){return fk(new Date())}
 function lun(d){const x=new Date(d),dw=x.getDay();x.setDate(x.getDate()-(dw===0?6:dw-1));return x}
 function fnow(){const n=new Date();return`${n.getDate()} ${MSC[n.getMonth()]}`}
