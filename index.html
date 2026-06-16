@@ -2988,7 +2988,7 @@ function agVerTurno(id){
   const waMsg=encodeURIComponent('Hola '+t.cliente+'! Te recordamos tu turno en Avelinas Azul 🌿\n\n✦ '+t.servicio+'\n👩 '+(profN2?profN2.n:t.prof)+'\n📅 '+agFf(agPk(t.fecha))+' a las '+t.hora+'hs\n📍 Olavarría 529, Azul\n\n¿Confirmás tu turno?\n✅ Confirmo\n❌ No puedo asistir');
   const waTel=clTel.replace(/[^0-9]/g,'');
   const waBtn=clTel?"<button class=\"btn-v\" style=\"background:#25d366\" onclick=\"window.open('https://wa.me/549"+waTel+"?text="+waMsg+"','_blank')\">📱 WhatsApp</button>":"";
-  const agMvCobrarBtn="<button class=\\"btn-v\\" style=\\"background:#3B6D11\\" onclick=\\"agCobrarDesdeVer()\\">💰 Cobrar</button>";
+  const agMvCobrarBtn="<button class=\"btn-v\" style=\"background:#3B6D11\" onclick=\"agCobrarDesdeVer()\">💰 Cobrar</button>";
   document.getElementById("ag-mv-acts").innerHTML=agMvFichaBtn+agMvCobrarBtn+waBtn+agMvEditBtn+agMvCancelBtn+agMvDelBtn;
   document.getElementById('modal-ag-ver').classList.add('on');
 }
