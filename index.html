@@ -3466,6 +3466,16 @@ function insRender(tab){
       '</div>'+
     '</div>';
   }).join('');
+  // Event delegation para botones de insumos
+  lista.querySelectorAll('[data-ins-act]').forEach(function(btn){
+    btn.addEventListener('click',function(){
+      var id=this.dataset.insId;
+      var act=this.dataset.insAct;
+      if(act==='alerta')insAlerta(id);
+      else if(act==='cerrar')insCerrar(id);
+      else if(act==='abrir')insAbrir(id);
+    });
+  });
 }
 
 let cjPer='mes', cjTab='resumen', cjMesSel='';
@@ -5820,16 +5830,18 @@ function agMtCatChange(){
   const sel=document.getElementById('ag-mt-srv-sel');if(!sel)return;
   const svs=cat?D.servicios[cat]||[]:[];
   sel.innerHTML='<option value="">— Elegí un servicio —</option>'+svs.map(function(s){return'<option value="'+s.n+'|'+(s.dur||30)+'">'+s.n+'</option>';}).join('');
-  // Event delegation para botones de insumos
-  lista.querySelectorAll('[data-ins-act]').forEach(function(btn){
-    btn.addEventListener('click',function(){
-      var id=this.dataset.insId;
-      var act=this.dataset.insAct;
-      if(act==='alerta')insAlerta(id);
-      else if(act==='cerrar')insCerrar(id);
-      else if(act==='abrir')insAbrir(id);
-    });
-  });
+}
+
+function agMtSrvChange(){
+  const val=document.getElementById('ag-mt-srv-sel').value;
+  if(!val)return;
+  const parts=val.split('|');
+  const srvEl=document.getElementById('ag-mt-servicio');if(srvEl)srvEl.value=parts[0];
+  const dur=parseInt(parts[1])||30;
+  const durSel=document.getElementById('ag-mt-dur');
+  if(durSel){durSel.value=dur;}
+  const precio=parseInt(parts[2])||0;
+  const prEl=document.getElementById('ag-mt-precio');if(prEl)prEl.value=precio>0?precio:'';
 }
 
 function rpSetTab(tab,btn){
