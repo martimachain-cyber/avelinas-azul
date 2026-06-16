@@ -1605,7 +1605,7 @@ function selTSrv(i){
   // render srv sel
   document.getElementById('t-srv-sel').innerHTML=tSrv.n+' · <strong>'+tSrv.p+'</strong>';
   // render profs
-  const profKeys=D.profesionales.filter(p=>p.cats&&p.cats.includes(tCat)).map(p=>p.id);
+  const profKeys=D.profesionales.filter(p=>p.cats&&(p.cats.includes(tSrv.id)||p.cats.includes(tCat))).map(p=>p.id);
   const profs=D.profesionales.filter(p=>profKeys.includes(p.id));
   document.getElementById('t-profs').innerHTML=profs.map(p=>`
     <div class="pc${tProf===p.id?' sel':''}" onclick="selTProf('${p.id}')">
@@ -2209,19 +2209,24 @@ function abrirMP(id){
 var MP_CAT_NOMBRES={facial:'Faciales',mani:'Manicura',pedi:'Pedicura',masajes:'Masajes',pestañas:'Pestañas & Cejas',maquillaje:'Maquillaje',laser:'Depilación definitiva'};
 var mpServiciosTemp=[];
 
-function mpRenderServicios(catsActuales){
-  mpServiciosTemp=[...catsActuales];
+function mpRenderServicios(srvIdsActuales){
+  mpServiciosTemp=[...srvIdsActuales];
   var el=document.getElementById('mp-servicios-cat');
   if(!el)return;
   el.innerHTML=Object.entries(MP_CAT_NOMBRES).map(function(entry){
-    var key=entry[0],nombre=entry[1];
-    var on=mpServiciosTemp.includes(key);
-    return '<button type="button" data-cat="'+key+'" onclick="mpToggleServicio(this)" style="padding:5px 11px;margin:0 5px 5px 0;background:'+(on?'var(--oliva)':'var(--crema)')+';border:1.5px solid '+(on?'var(--oliva)':'var(--cd)')+';border-radius:20px;cursor:pointer;font-family:Raleway,sans-serif;font-size:11.5px;color:'+(on?'#fff':'var(--gris)')+'">'+nombre+'</button>';
+    var catKey=entry[0],catNombre=entry[1];
+    var svs=(D.servicios&&D.servicios[catKey])||[];
+    if(!svs.length)return'';
+    var chips=svs.map(function(s){
+      var on=mpServiciosTemp.includes(s.id);
+      return '<button type="button" data-srv="'+s.id+'" onclick="mpToggleServicio(this)" style="padding:5px 11px;margin:0 5px 5px 0;background:'+(on?'var(--oliva)':'var(--crema)')+';border:1.5px solid '+(on?'var(--oliva)':'var(--cd)')+';border-radius:20px;cursor:pointer;font-family:Raleway,sans-serif;font-size:11.5px;color:'+(on?'#fff':'var(--gris)')+'">'+s.n+'</button>';
+    }).join('');
+    return '<div style="margin-bottom:.6rem"><div style="font-size:11px;color:var(--gc);text-transform:uppercase;letter-spacing:.04em;margin-bottom:.3rem">'+catNombre+'</div><div style="display:flex;flex-wrap:wrap">'+chips+'</div></div>';
   }).join('');
 }
 
 function mpToggleServicio(btn){
-  var key=btn.dataset.cat;
+  var key=btn.dataset.srv;
   var idx=mpServiciosTemp.indexOf(key);
   if(idx>=0){mpServiciosTemp.splice(idx,1);}
   else{mpServiciosTemp.push(key);}
@@ -2924,10 +2929,11 @@ function agMtCargarServicios(forzarProfId){
   if(!srvSel)return;
   function buildOpts(pId){
     var pr=D.profesionales.find(function(p){return p.id===pId;});
-    var cats=pr&&pr.cats&&pr.cats.length?pr.cats:Object.keys(D.servicios||{});
+    var srvIds=pr&&pr.cats&&pr.cats.length?pr.cats:null;
     var o='<option value="">— Elegí un servicio —</option>';
-    cats.forEach(function(cat){
-      var svs=(D.servicios||{})[cat]||[];
+    Object.keys(D.servicios||{}).forEach(function(cat){
+      var svsAll=(D.servicios||{})[cat]||[];
+      var svs=srvIds?svsAll.filter(function(sv){return srvIds.includes(sv.id)||srvIds.includes(cat);}):svsAll;
       if(!svs.length)return;
       o+='<optgroup label="'+(CATS_LABELS[cat]||cat)+'">';
       svs.forEach(function(sv){
@@ -5840,11 +5846,6 @@ function agNuevoDesdeSlot(el){
     const fdEl=document.getElementById('ag-mt-fecha');if(fdEl&&fecha)fdEl.value=fecha;
     const prEl=document.getElementById('ag-mt-prof');if(prEl&&profId)prEl.value=profId;
     const horaSel=document.getElementById('ag-mt-hora');if(horaSel&&hora)horaSel.value=hora;
-    const prof=D.profesionales.find(function(p){return p.id===profId;});
-    if(prof&&prof.cats&&prof.cats.length){
-      const catSel=document.getElementById('ag-mt-cat');
-      if(catSel){catSel.value=prof.cats[0];if(typeof agMtCatChange==='function')agMtCatChange();}
-    }
   }, 80);
 }
 
