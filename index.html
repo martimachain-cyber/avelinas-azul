@@ -1330,23 +1330,24 @@ function defD(){return{
       {id:'mq5',n:'Peinado',p:'$50.000',d:'1 hora',desc:'Peinado profesional para eventos especiales.'}
     ],
     laser:[
-      {id:'l1',n:'Pierna completa + cavado c/tc + axilas + línea de alba',p:'$34.000',d:'Combo',dur:90,desc:'El combo más completo.'},
-      {id:'l2',n:'Pierna completa + cavado c/tc + axilas',p:'$32.000',d:'Combo',dur:75,desc:'El combo más elegido.'},
-      {id:'l3',n:'Pierna completa + cavado bikini + axilas',p:'$29.000',d:'Combo',dur:70,desc:'Pierna entera, bikini y axilas.'},
-      {id:'l4',n:'Media pierna + cavado c/tc + axilas',p:'$26.000',d:'Combo',dur:55,desc:'De la rodilla para abajo más zonas íntimas.'},
-      {id:'l5',n:'Cavado completo c/tc + axilas',p:'$20.000',d:'Combo',dur:40,desc:'Zona íntima completa y axilas.'},
-      {id:'l6',n:'Cavado completo + axilas',p:'$18.000',d:'Combo',dur:35,desc:'Zona íntima sin tira central más axilas.'},
-      {id:'l7',n:'Pierna completa',p:'$15.000',d:'Zona',dur:45,desc:'Depilación de muslo y pantorrilla.'},
-      {id:'l8',n:'Media pierna',p:'$12.000',d:'Zona',dur:25,desc:'De la rodilla para abajo.'},
-      {id:'l9',n:'Axilas',p:'$9.000',d:'Zona',dur:15,desc:'Una de las zonas más agradecidas.'},
+      {id:'l1',n:'Pierna completa + cavado c/tc + axilas + línea de alba',p:'$34.000',d:'Combo',dur:50,desc:'El combo más completo.'},
+      {id:'l2',n:'Pierna completa + cavado completo + axilas',p:'$32.000',d:'Combo',dur:50,desc:'El combo más elegido.'},
+      {id:'l3',n:'Pierna completa + cavado bikini + axilas',p:'$29.000',d:'Combo',dur:45,desc:'Pierna entera, bikini y axilas.'},
+      {id:'l4',n:'Media pierna + cavado completo + axilas',p:'$26.000',d:'Combo',dur:35,desc:'De la rodilla para abajo más zonas íntimas.'},
+      {id:'l5',n:'Cavado completo c/tc + axilas',p:'$20.000',d:'Combo',dur:15,desc:'Zona íntima completa y axilas.'},
+      {id:'l6',n:'Cavado completo + axilas',p:'$18.000',d:'Combo',dur:15,desc:'Zona íntima sin tira central más axilas.'},
+      {id:'l7',n:'Pierna completa',p:'$15.000',d:'Zona',dur:28,desc:'Depilación de muslo y pantorrilla.'},
+      {id:'l8',n:'Media pierna',p:'$12.000',d:'Zona',dur:15,desc:'De la rodilla para abajo.'},
+      {id:'l9',n:'Axilas',p:'$9.000',d:'Zona',dur:5,desc:'Una de las zonas más agradecidas.'},
       {id:'l10',n:'Cavado bikini',p:'$8.500',d:'Zona',dur:10,desc:'Línea de bikini clásica.'},
-      {id:'l11',n:'Cavado completo C/tc',p:'$11.500',d:'Zona',dur:20,desc:'Brasilero completo.'},
-      {id:'l12',n:'Bozo',p:'$7.000',d:'Zona',dur:10,desc:'Labio superior.'},
-      {id:'l13',n:'Mentón',p:'$7.000',d:'Zona',dur:10,desc:'Mentón y cuello.'},
-      {id:'l14',n:'Línea de alba',p:'$7.000',d:'Zona',dur:10,desc:'Entre ombligo y zona íntima.'},
-      {id:'l15',n:'Glúteos',p:'$10.500',d:'Zona',dur:15,desc:'Zona de glúteos.'},
-      {id:'l16',n:'Brazos',p:'$11.500',d:'Zona',dur:20,desc:'Brazos completos.'},
-      {id:'l17',n:'Espalda',p:'$12.000',d:'Zona',dur:20,desc:'Espalda completa.'}
+      {id:'l18',n:'Cavado completo',p:'$9.500',d:'Zona',dur:10,desc:'Zona íntima completa.'},
+      {id:'l11',n:'Cavado completo C/tc',p:'$11.500',d:'Zona',dur:10,desc:'Brasilero completo.'},
+      {id:'l12',n:'Bozo',p:'$7.000',d:'Zona',dur:3,desc:'Labio superior.'},
+      {id:'l13',n:'Mentón',p:'$7.000',d:'Zona',dur:5,desc:'Mentón y cuello.'},
+      {id:'l14',n:'Línea de alba',p:'$7.000',d:'Zona',dur:5,desc:'Entre ombligo y zona íntima.'},
+      {id:'l15',n:'Glúteos',p:'$10.500',d:'Zona',dur:10,desc:'Zona de glúteos.'},
+      {id:'l16',n:'Brazos',p:'$11.500',d:'Zona',dur:18,desc:'Brazos completos.'},
+      {id:'l17',n:'Espalda',p:'$12.000',d:'Zona',dur:15,desc:'Espalda completa.'}
     ]
   },
   clientas:[
@@ -4105,6 +4106,8 @@ function abrirModalCobro(id){
   document.getElementById('cobro-metodo').value=c?c.metodo:'efectivo';
   document.getElementById('cobro-fecha').value=c?c.fecha:hoy();
   document.getElementById('cobro-notas').value=c?c.notas||'':'';
+  var descEl=document.getElementById('cobro-desc-pct');if(descEl)descEl.value='';
+  var totalEl=document.getElementById('cobro-total-final');if(totalEl)totalEl.value='';
   document.getElementById('ok-cobro').classList.remove('on');
   document.getElementById('er-cobro').classList.remove('on');
   document.getElementById('modal-cobro').classList.add('on');
@@ -4141,11 +4144,24 @@ function cjActualizarInfoCC(){
 }
 
 
+function cjCalcularDescuento(){
+  var montoEl=document.getElementById('cobro-monto');
+  var pctEl=document.getElementById('cobro-desc-pct');
+  var totalEl=document.getElementById('cobro-total-final');
+  if(!montoEl||!pctEl||!totalEl)return;
+  var monto=parseFloat(montoEl.value)||0;
+  var pct=parseFloat(pctEl.value)||0;
+  var total=monto-(monto*pct/100);
+  totalEl.value=pct>0?fmtPeso(total):'';
+}
+
 function cjGuardarCobro(){
   const prof=document.getElementById('cobro-prof').value;
   const cliente=document.getElementById('cobro-cliente').value.trim();
   const srv=document.getElementById('cobro-srv').value.trim();
-  const monto=parseFloat(document.getElementById('cobro-monto').value)||0;
+  const montoBase=parseFloat(document.getElementById('cobro-monto').value)||0;
+  const descPct=parseFloat(document.getElementById('cobro-desc-pct')?document.getElementById('cobro-desc-pct').value:0)||0;
+  const monto=montoBase-(montoBase*descPct/100);
   const metodo=document.getElementById('cobro-metodo').value;
   const fecha=document.getElementById('cobro-fecha').value;
   const notas=document.getElementById('cobro-notas').value.trim();
@@ -6372,7 +6388,11 @@ function rpPagarCom(profId,profNombre,monto){
   <label class="flbl">Profesional</label><select class="fsel" id="cobro-prof"></select>
   <label class="flbl">Clienta</label><input class="finp" id="cobro-cliente" placeholder="Nombre de la clienta" oninput="cjActualizarInfoCC()">
   <label class="flbl">Servicio</label><input class="finp" id="cobro-srv" placeholder="Ej: Facial GLOW">
-  <label class="flbl">Monto ($)</label><input class="finp" id="cobro-monto" type="number" min="0" placeholder="0">
+  <label class="flbl">Monto ($)</label><input class="finp" id="cobro-monto" type="number" min="0" placeholder="0" oninput="cjCalcularDescuento()">
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:.6rem">
+    <div><label class="flbl">Descuento (%)</label><input class="finp" id="cobro-desc-pct" type="number" min="0" max="100" placeholder="0" oninput="cjCalcularDescuento()"></div>
+    <div><label class="flbl">Total con descuento</label><input class="finp" id="cobro-total-final" type="text" disabled style="background:var(--crema);color:var(--gris)"></div>
+  </div>
   <label class="flbl">Método de pago</label>
   <select class="fsel" id="cobro-metodo">
     <option value="efectivo">Efectivo</option>
