@@ -1209,17 +1209,15 @@ td.ag-slot-free{background:transparent}
     <input class="finp" id="mp-titulo-nuevo" placeholder="Agregar título o certificado..." style="margin:0;flex:1" onkeydown="if(event.key===&#39;Enter&#39;){event.preventDefault();mpAgregarTitulo()}">
     <button class="btn-v" onclick="mpAgregarTitulo()" style="flex-shrink:0;padding:9px 10px;font-size:11px">+</button>
   </div>
-  <label class="flbl">Días disponibles</label>
-  <div id="mp-dias" style="display:flex;gap:5px;flex-wrap:wrap;margin-top:.4rem"></div>
-  <label class="flbl" style="margin-top:.8rem">💰 Comisión general (%)</label>
+  <label class="flbl">✂️ Servicios que realiza</label>
+  <div id="mp-servicios-cat" style="margin-top:.4rem;margin-bottom:.6rem"></div>
+  <label class="flbl">💰 Comisión general (%)</label>
   <input class="finp" id="mp-comision" type="number" min="0" max="100" placeholder="Ej: 50">
   <div style="font-size:11px;color:var(--gc);margin-bottom:.5rem">Podés sobreescribir por categoría abajo</div>
   <label class="flbl">Comisión por categoría (opcional)</label>
   <div id="mp-comisiones-cat" style="margin-top:.4rem"></div>
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:.6rem;margin-top:.8rem">
-    <div><label class="flbl" style="margin-top:0">Desde</label><input class="finp" id="mp-d" type="time" value="09:00" style="margin-top:.3rem"></div>
-    <div><label class="flbl" style="margin-top:0">Hasta</label><input class="finp" id="mp-h" type="time" value="17:00" style="margin-top:.3rem"></div>
-  </div>
+  <label class="flbl" style="margin-top:.8rem">📅 Horarios por día</label>
+  <div id="mp-horarios-dia" style="margin-top:.4rem"></div>
   <div id="ok-mp" class="ok"></div><div id="er-mp" class="er"></div>
   <div class="mc-acts"><button class="btn-cancel" onclick="cerrarM(&#39;m-prof&#39;)">Cancelar</button><button class="btn-v" style="flex:1" onclick="guardarP()">Guardar</button></div>
 </div></div>
@@ -2187,7 +2185,6 @@ function abrirMP(id){
   eIds.p=id;const p=id?D.profesionales.find(x=>x.id===id):null;
   document.getElementById('mp-t').textContent=p?`Editar — ${p.n}`:'Nueva profesional';
   document.getElementById('mp-n').value=p?.n||'';document.getElementById('mp-e').value=p?.esp||'';document.getElementById('mp-p').value=p?.pass||'';
-  document.getElementById('mp-d').value=p?`${String(Object.values(p.h||{})[0]?.[0]||9).padStart(2,'0')}:00`:'09:00';
   const fotoUrl=p?.foto||'';
   document.getElementById('mp-foto').value=fotoUrl;
   prevFoto(fotoUrl, p?.n?.[0]||'?');
@@ -2204,21 +2201,99 @@ function abrirMP(id){
   mpRenderTitulos();
   document.getElementById('mp-comision').value=p?.comision||50;
   mpRenderComisionesCat(p?.comisionesCat||{});
-  document.getElementById('mp-h').value=p?`${String(Object.values(p.h||{})[0]?.[1]||17).padStart(2,'0')}:00`:'17:00';
-  const dNs=['Lun','Mar','Mié','Jue','Vie','Sáb'];
-  document.getElementById('mp-dias').innerHTML=[1,2,3,4,5,6].map((d,i)=>{const on=p?.h?.[d];return`<span style="padding:5px 10px;background:${on?'var(--oliva)':'var(--crema)'};border:1.5px solid ${on?'var(--oliva)':'var(--cd)'};border-radius:20px;cursor:pointer;font-family:Raleway,sans-serif;font-size:11px;color:${on?'#fff':'var(--gris)'};-webkit-tap-highlight-color:transparent" data-dia="${d}" data-on="${on?'1':'0'}" onclick="tgD(this)">${dNs[i]}</span>`}).join('');
+  mpRenderServicios(p?.cats||[]);
+  mpRenderHorarios(p?.h||{});
   document.getElementById('ok-mp').classList.remove('on');document.getElementById('er-mp').classList.remove('on');
   document.getElementById('m-prof').classList.add('on');
 }
-function tgD(el){const on=el.dataset.on==='1';el.dataset.on=on?'0':'1';el.style.background=on?'var(--crema)':'var(--oliva)';el.style.borderColor=on?'var(--cd)':'var(--oliva)';el.style.color=on?'var(--gris)':'#fff'}
+var MP_CAT_NOMBRES={facial:'Faciales',mani:'Manicura',pedi:'Pedicura',masajes:'Masajes',pestañas:'Pestañas & Cejas',maquillaje:'Maquillaje',laser:'Depilación definitiva'};
+var mpServiciosTemp=[];
+
+function mpRenderServicios(catsActuales){
+  mpServiciosTemp=[...catsActuales];
+  var el=document.getElementById('mp-servicios-cat');
+  if(!el)return;
+  el.innerHTML=Object.entries(MP_CAT_NOMBRES).map(function(entry){
+    var key=entry[0],nombre=entry[1];
+    var on=mpServiciosTemp.includes(key);
+    return '<button type="button" data-cat="'+key+'" onclick="mpToggleServicio(this)" style="padding:5px 11px;margin:0 5px 5px 0;background:'+(on?'var(--oliva)':'var(--crema)')+';border:1.5px solid '+(on?'var(--oliva)':'var(--cd)')+';border-radius:20px;cursor:pointer;font-family:Raleway,sans-serif;font-size:11.5px;color:'+(on?'#fff':'var(--gris)')+'">'+nombre+'</button>';
+  }).join('');
+}
+
+function mpToggleServicio(btn){
+  var key=btn.dataset.cat;
+  var idx=mpServiciosTemp.indexOf(key);
+  if(idx>=0){mpServiciosTemp.splice(idx,1);}
+  else{mpServiciosTemp.push(key);}
+  var on=mpServiciosTemp.includes(key);
+  btn.style.background=on?'var(--oliva)':'var(--crema)';
+  btn.style.borderColor=on?'var(--oliva)':'var(--cd)';
+  btn.style.color=on?'#fff':'var(--gris)';
+}
+
+var MP_DIAS_NOMBRES=['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+var mpHorariosTemp={};
+
+function mpRenderHorarios(hActual){
+  mpHorariosTemp=JSON.parse(JSON.stringify(hActual||{}));
+  var el=document.getElementById('mp-horarios-dia');
+  if(!el)return;
+  el.innerHTML=[1,2,3,4,5,6,0].map(function(d){
+    var rango=mpHorariosTemp[d];
+    var on=!!rango;
+    var desde=on?String(rango[0]).padStart(2,'0')+':00':'09:00';
+    var hasta=on?String(rango[1]).padStart(2,'0')+':00':'17:00';
+    return '<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--cd)" data-dia-row="'+d+'">'+
+      '<div onclick="mpToggleDia('+d+')" data-dia-tog="'+d+'" style="width:34px;height:20px;border-radius:11px;background:'+(on?'var(--oliva)':'var(--cd)')+';position:relative;cursor:pointer;flex-shrink:0">'+
+        '<div style="position:absolute;top:1px;left:'+(on?'15px':'1px')+';width:18px;height:18px;border-radius:50%;background:#fff;transition:.15s"></div>'+
+      '</div>'+
+      '<div style="font-size:12px;font-weight:600;width:34px;flex-shrink:0;color:'+(on?'var(--texto)':'var(--gc)')+'">'+MP_DIAS_NOMBRES[d]+'</div>'+
+      '<input type="time" value="'+desde+'" data-dia-desde="'+d+'" onchange="mpHorarioChange('+d+')" style="font-size:11.5px;padding:4px 6px;width:78px;'+(on?'':'opacity:.35;pointer-events:none')+'">'+
+      '<span style="font-size:11px;color:var(--gc)">a</span>'+
+      '<input type="time" value="'+hasta+'" data-dia-hasta="'+d+'" onchange="mpHorarioChange('+d+')" style="font-size:11.5px;padding:4px 6px;width:78px;'+(on?'':'opacity:.35;pointer-events:none')+'">'+
+    '</div>';
+  }).join('');
+}
+
+function mpToggleDia(d){
+  var on=!!mpHorariosTemp[d];
+  var row=document.querySelector('[data-dia-row="'+d+'"]');
+  var tog=row.querySelector('[data-dia-tog]');
+  var desdeInp=row.querySelector('[data-dia-desde]');
+  var hastaInp=row.querySelector('[data-dia-hasta]');
+  if(on){
+    delete mpHorariosTemp[d];
+    tog.style.background='var(--cd)';
+    tog.firstElementChild.style.left='1px';
+    row.querySelector('div[style*="width:34px;flex-shrink:0"]').style.color='var(--gc)';
+    desdeInp.style.opacity='.35';desdeInp.style.pointerEvents='none';
+    hastaInp.style.opacity='.35';hastaInp.style.pointerEvents='none';
+  }else{
+    var desde=parseInt(desdeInp.value.split(':')[0])||9;
+    var hasta=parseInt(hastaInp.value.split(':')[0])||17;
+    mpHorariosTemp[d]=[desde,hasta];
+    tog.style.background='var(--oliva)';
+    tog.firstElementChild.style.left='15px';
+    row.querySelector('div[style*="width:34px;flex-shrink:0"]').style.color='var(--texto)';
+    desdeInp.style.opacity='1';desdeInp.style.pointerEvents='auto';
+    hastaInp.style.opacity='1';hastaInp.style.pointerEvents='auto';
+  }
+}
+
+function mpHorarioChange(d){
+  if(!mpHorariosTemp[d])return;
+  var row=document.querySelector('[data-dia-row="'+d+'"]');
+  var desde=parseInt(row.querySelector('[data-dia-desde]').value.split(':')[0])||9;
+  var hasta=parseInt(row.querySelector('[data-dia-hasta]').value.split(':')[0])||17;
+  mpHorariosTemp[d]=[desde,hasta];
+}
 
 function guardarP(){
   const n=document.getElementById('mp-n').value.trim(),e=document.getElementById('mp-e').value.trim(),p=document.getElementById('mp-p').value.trim();
   const ok=document.getElementById('ok-mp'),er=document.getElementById('er-mp');ok.classList.remove('on');er.classList.remove('on');
   if(!n){er.textContent='Ingresá el nombre.';er.classList.add('on');return}
-  const desde=parseInt(document.getElementById('mp-d').value.split(':')[0]);
-  const hasta=parseInt(document.getElementById('mp-h').value.split(':')[0]);
-  const h={};[...document.querySelectorAll('#mp-dias [data-dia]')].filter(el=>el.dataset.on==='1').forEach(el=>{h[el.dataset.dia]=[desde,hasta]});
+  const h=JSON.parse(JSON.stringify(mpHorariosTemp));
+  const cats=[...mpServiciosTemp];
   const foto=document.getElementById('mp-foto').value.trim();
   const frase=document.getElementById('mp-frase').value.trim();
   const bio=document.getElementById('mp-bio').value.trim();
@@ -2226,8 +2301,8 @@ function guardarP(){
   const comision=parseFloat(document.getElementById('mp-comision').value)||50;
   const comisionesCat={};
   Object.entries(mpComisionesCatTemp).forEach(([k,v])=>{if(v!==undefined&&v!=='')comisionesCat[k]=parseFloat(v)});
-  if(eIds.p){const idx=D.profesionales.findIndex(x=>x.id===eIds.p);if(idx>=0)D.profesionales[idx]={...D.profesionales[idx],n,esp:e,pass:p||D.profesionales[idx].pass,h,foto:foto||D.profesionales[idx].foto,frase,bio,titulos,comision,comisionesCat}}
-  else D.profesionales.push({id:'p_'+Date.now(),n,esp:e,pass:p||n.toLowerCase()+'123',cats:[],h,foto,frase,bio,titulos,comision,comisionesCat});
+  if(eIds.p){const idx=D.profesionales.findIndex(x=>x.id===eIds.p);if(idx>=0)D.profesionales[idx]={...D.profesionales[idx],n,esp:e,pass:p||D.profesionales[idx].pass,h,cats,foto:foto||D.profesionales[idx].foto,frase,bio,titulos,comision,comisionesCat}}
+  else D.profesionales.push({id:'p_'+Date.now(),n,esp:e,pass:p||n.toLowerCase()+'123',cats,h,foto,frase,bio,titulos,comision,comisionesCat});
   sv();renderAdmProfs();ok.textContent=eIds.p?'Actualizada ✓':'Agregada ✓';ok.classList.add('on');setTimeout(()=>cerrarM('m-prof'),1500);
 }
 function borrarP(id){const p=D.profesionales.find(x=>x.id===id);if(!confirm(`¿Eliminar a ${p?.n}?`))return;D.profesionales=D.profesionales.filter(x=>x.id!==id);sv();renderAdmProfs()}
