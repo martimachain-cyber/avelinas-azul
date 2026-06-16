@@ -544,7 +544,8 @@ td.ag-slot-free{background:transparent}
             <div>💰 <span id="t-conf-precio"></span></div>
           </div>
           <div id="ok-t" class="ok"></div><div id="er-t" class="er"></div>
-          <button class="btn-v full" onclick="tConfirmar()">Confirmar turno</button>
+          <button class="btn-v full" style="background:#009ee3;margin-bottom:.5rem" onclick="iniciarPagoSenia('general')">💳 Pagar seña ($5.000) y reservar</button>
+          <button class="btn-cancel full" onclick="tConfirmar()">Reservar sin pagar seña</button>
         </div>
         <div class="panel"><div class="ptitle">Mis turnos</div><div id="t-mis"></div></div>
       </div>
@@ -1808,7 +1809,46 @@ function selTSlot(h){
   renderTMis();tGoStep(4);
 }
 
-function tConfirmar(){
+async function iniciarPagoSenia(tipo){
+  var ok,er,cliente,servicio,profesional,fecha,hora;
+  if(tipo==='general'){
+    ok=document.getElementById('ok-t');er=document.getElementById('er-t');
+    if(!tSrv||!tProf||!tDia||!tSlot){er.textContent='Elegí servicio, profesional, fecha y horario.';er.classList.add('on');return;}
+    cliente=curCl.n;servicio=tSrv.n;profesional=tProf;fecha=tDia;hora=tSlot;
+  }else{
+    ok=document.getElementById('ok-ls');er=document.getElementById('er-ls');
+    if(!lsSrv||!lsSlot){er.textContent='Elegí un servicio y un horario.';er.classList.add('on');return;}
+    cliente=curCl.n;servicio=lsSrv.n;profesional='camila';fecha='';hora=lsSlot;
+  }
+  er.classList.remove('on');
+  var refId=tipo+'_'+Date.now()+'_'+(curCl.id||curCl.tel);
+  // Guardar todo lo necesario para retomar la reserva al volver de Mercado Pago
+  var datosReserva={tipo,refId,fecha:new Date().toISOString()};
+  if(tipo==='general'){
+    datosReserva.tSrvId=tSrv.id;datosReserva.tCat=tCat;datosReserva.tProf=tProf;datosReserva.tDia=tDia;datosReserva.tSlot=tSlot;
+  }else{
+    datosReserva.lsSrvId=lsSrv.id;datosReserva.lsSlot=lsSlot;
+  }
+  try{localStorage.setItem('avPagoPendiente',JSON.stringify(datosReserva));}catch(e){}
+  try{
+    var resp=await fetch('/api/crear-pago',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({cliente,servicio,profesional,fecha,hora,refId})
+    });
+    var data=await resp.json();
+    if(data.init_point){
+      window.location.href=data.init_point;
+    }else{
+      er.textContent='No se pudo generar el link de pago. Probá reservar sin seña.';er.classList.add('on');
+    }
+  }catch(e){
+    er.textContent='Error de conexión con Mercado Pago. Probá reservar sin seña.';er.classList.add('on');
+  }
+}
+
+function tConfirmar(seniaMonto){
+  seniaMonto=seniaMonto||0;
   const ok=document.getElementById('ok-t'),er=document.getElementById('er-t');
   ok.classList.remove('on');er.classList.remove('on');
   if(D.reservas.find(r=>r.prof===tProf&&r.f===tDia&&r.h===tSlot)){er.textContent='Ese turno ya fue tomado.';er.classList.add('on');return}
@@ -1827,6 +1867,7 @@ function tConfirmar(){
     tel: curCl.tel,
     servicio: tSrv.n,
     precio: parseInt((tSrv.p||'0').replace(/[^0-9]/g,''))||0,
+    senia: seniaMonto,
     online: true
   });
   agSv();
@@ -2974,6 +3015,7 @@ function agVerTurno(id){
       <div>📅 ${agFf(d)}</div>
       <div>🕐 ${t.hora} — ${agMh(agHm(t.hora)+(t.duracion||60))}</div>
       <div>⏱ ${t.duracion||60} min</div>
+      ${t.senia?'<div>💵 Seña pagada: '+fmtPeso(t.senia)+'</div>':''}
       ${t.notas?'<div>📝 '+t.notas+'</div>':''}
       <div style="font-size:11px;color:var(--gc);margin-top:4px">${t.manual||!t.online?'Cargado manualmente':'Reserva online'}</div>
     </div>`;
@@ -3023,18 +3065,25 @@ function agCobrarDesdeVer(){
     var mEl=document.getElementById('cobro-monto');
     if(mEl)mEl.value=(t.precio&&t.senia)?(t.precio-t.senia):(t.precio||'');
     var fEl=document.getElementById('cobro-fecha');if(fEl)fEl.value=fecha||hoy();
+    var nEl=document.getElementById('cobro-notas');
+    if(nEl&&t.senia>0)nEl.value='Saldo restante (seña de '+fmtPeso(t.senia)+' ya cobrada)';
   },80);
 }
 
 function agEliminarDesdeVer(){
   if(!confirm('¿Eliminar este turno?'))return;
+  var fueLaser=false;
   if(typeof agVerTurnoId==='string'&&agVerTurnoId.startsWith('r_')){
     const rId=parseInt(agVerTurnoId.replace('r_',''));
     D.reservas=(D.reservas||[]).filter(r=>r.id!==rId);sv();
   }else{
+    var tBorrado=agD.turnos.find(function(t){return t.id===agVerTurnoId;});
+    if(tBorrado&&tBorrado.prof==='camila')fueLaser=true;
     agD.turnos=agD.turnos.filter(t=>t.id!==agVerTurnoId);agSv();
   }
-  cerrarM('modal-ag-ver');agRender();
+  cerrarM('modal-ag-ver');
+  if(fueLaser&&typeof laserJornadaSel!=='undefined'&&laserJornadaSel){renderLaserTimeline(laserJornadaSel);}
+  else{agRender();}
 }
 
 function agAbrirNuevo(t=null){
@@ -3049,6 +3098,7 @@ function agAbrirNuevo(t=null){
   document.getElementById('ag-mt-cliente').value=t&&!esBloqueo?t.cliente:'';
   document.getElementById('ag-mt-motivo').value=t&&esBloqueo?(t.cliente||'').replace('🔒 ',''):'';
   document.getElementById('ag-mt-servicio').value=t?t.servicio:'';
+  var seEl=document.getElementById('ag-mt-senia');if(seEl)seEl.value=t&&t.senia?t.senia:'';
   document.getElementById('ag-mt-notas').value=t?t.notas||'':'';
   const sel=document.getElementById('ag-mt-prof');
   sel.innerHTML=AG_PROFS.map(p=>`<option value="${p.id}">${p.n}</option>`).join('');
@@ -3119,6 +3169,7 @@ function agGuardarTurno(){
   const hora=document.getElementById('ag-mt-hora').value;
   const dur=parseInt(document.getElementById('ag-mt-dur').value);
   const notas=document.getElementById('ag-mt-notas').value.trim();
+  const senia=parseFloat((document.getElementById('ag-mt-senia')||{}).value)||0;
   const ok=document.getElementById('ok-ag-mt'),er=document.getElementById('er-ag-mt');
   ok.classList.remove('on');er.classList.remove('on');
   const esBloqueo = agTipoActual === 'bloqueo';
@@ -3129,7 +3180,7 @@ function agGuardarTurno(){
   const editId=document.getElementById('ag-mt-id').value;
   if(editId){
     const idx=agD.turnos.findIndex(t=>t.id==editId);
-    if(idx>=0)agD.turnos[idx]={...agD.turnos[idx],prof,fecha,hora,duracion:dur,cliente,servicio,notas,manual:true,bloqueo:esBloqueo};
+    if(idx>=0)agD.turnos[idx]={...agD.turnos[idx],prof,fecha,hora,duracion:dur,cliente,servicio,notas,senia,manual:true,bloqueo:esBloqueo};
   }else{
     // Evitar duplicados: verificar que no existe ya este turno
     const yaExiste=agD.turnos.find(function(t){return t.prof===prof&&t.fecha===fecha&&t.hora===hora&&!t.bloqueo;});
@@ -3147,7 +3198,7 @@ function agGuardarTurno(){
         agD.bloqueos.push({id:'blq_'+Date.now()+'_'+bm,prof,fecha,h:bh,motivo:motivo||'Bloqueado',horaIni:hora,horaFin:String(Math.floor(blqFin/60)).padStart(2,'0')+':'+String(blqFin%60).padStart(2,'0')});
       }
     }else{
-      agD.turnos.push({id:Date.now(),prof,fecha,hora,duracion:dur,cliente,servicio,notas,precio:precioT,manual:true,bloqueo:false});
+      agD.turnos.push({id:Date.now(),prof,fecha,hora,duracion:dur,cliente,servicio,notas,senia,precio:precioT,manual:true,bloqueo:false});
     }
   }
   agSv();ok.textContent=editId?'Actualizado ✓':(esBloqueo?'Bloqueo agregado ✓':'Turno agregado ✓');ok.classList.add('on');
@@ -3239,6 +3290,50 @@ document.addEventListener('DOMContentLoaded', function(){
   }catch(e){
     goPage('inicio');
   }
+
+  // Detectar vuelta de Mercado Pago tras pagar la seña
+  (function(){
+    try{
+      var params=new URLSearchParams(window.location.search);
+      var pagoEstado=params.get('pago');
+      var refId=params.get('ref');
+      if(pagoEstado==='exito'&&refId){
+        var pend=null;
+        try{pend=JSON.parse(localStorage.getItem('avPagoPendiente')||'null');}catch(e2){}
+        if(pend&&pend.refId===refId){
+          fetch('https://ctfyibkqlxyolrknoznh.supabase.co/rest/v1/avelinas_data?key=eq.senias_pagadas&select=value', {
+            headers:{
+              apikey:'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN0ZnlpYmtxbHh5b2xya25vem5oIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg3NzE0OTYsImV4cCI6MjA5NDM0NzQ5Nn0.-MEXcvUg_8UnSzLeBvB01uFaPbCgOBQfYLKaYhe_-vk',
+              Authorization:'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN0ZnlpYmtxbHh5b2xya25vem5oIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg3NzE0OTYsImV4cCI6MjA5NDM0NzQ5Nn0.-MEXcvUg_8UnSzLeBvB01uFaPbCgOBQfYLKaYhe_-vk'
+            }
+          }).then(function(r){return r.json();}).then(function(rows){
+            var senias={};
+            if(rows&&rows.length>0){try{senias=JSON.parse(rows[0].value);}catch(eP){}}
+            if(senias&&senias[refId]){
+              var montoConfirmado=senias[refId].monto||5000;
+              if(pend.tipo==='general'&&curCl){
+                // Reconstruir las variables de la reserva general
+                tCat=pend.tCat;
+                tSrv=(D.servicios[pend.tCat]||[]).find(function(s){return s.id===pend.tSrvId;})||null;
+                tProf=pend.tProf;tDia=pend.tDia;tSlot=pend.tSlot;
+                if(tSrv&&typeof tConfirmar==='function')tConfirmar(montoConfirmado);
+              }else if(pend.tipo==='laser'&&curCl){
+                lsSrv=(D.servicios.laser||[]).find(function(s){return s.id===pend.lsSrvId;})||null;
+                lsSlot=pend.lsSlot;
+                if(lsSrv&&typeof lsConfirmar==='function')lsConfirmar(montoConfirmado);
+              }
+              try{localStorage.removeItem('avPagoPendiente');}catch(e3){}
+            }
+            window.history.replaceState({},'',window.location.pathname);
+          }).catch(function(){
+            window.history.replaceState({},'',window.location.pathname);
+          });
+        }
+      } else if(pagoEstado){
+        window.history.replaceState({},'',window.location.pathname);
+      }
+    }catch(eOuter){}
+  })();
 
   // Event delegation for dynamically shown buttons
   document.addEventListener('click', function(e){
@@ -5426,7 +5521,8 @@ function lsGoStep(n){
   window.scrollTo(0,0);
 }
 
-function lsConfirmar(){
+function lsConfirmar(seniaMonto){
+  seniaMonto=seniaMonto||0;
   const ok=document.getElementById('ok-ls'),er=document.getElementById('er-ls');
   ok.classList.remove('on');er.classList.remove('on');
   if(!lsSrv||!lsSlot){er.textContent='Elegí un servicio y un horario.';er.classList.add('on');return}
@@ -5436,7 +5532,7 @@ function lsConfirmar(){
   if(D.reservas.find(r=>r.prof==='camila'&&r.f===proxima&&r.h===lsSlot)){
     er.textContent='Ese horario ya fue tomado. Elegí otro.';er.classList.add('on');return;
   }
-  D.reservas.push({id:Date.now(),prof:'camila',f:proxima,h:lsSlot,tel:curCl.tel,cl:curCl.n,srv:lsSrv.n,dur:60});
+  D.reservas.push({id:Date.now(),prof:'camila',f:proxima,h:lsSlot,tel:curCl.tel,cl:curCl.n,srv:lsSrv.n,dur:60,senia:seniaMonto});
   sv();
   renderLaserMis();
   renderLaserSlots();
@@ -5902,9 +5998,7 @@ function laserAgregarDesdeSlot(fecha, hora){
 }
 
 function laserEditarTurno(id){
-  var t=agD.turnos.find(function(x){return String(x.id)===String(id);});
-  if(!t)return;
-  agAbrirNuevo(t);
+  agVerTurno(id);
 }
 
 function laserCobrarTurno(id, fecha){
@@ -6562,6 +6656,8 @@ function rpPagarCom(profId,profNombre,monto){
   </div>
   <div id="ag-campos-turno" style="display: block;"></div>
   <div id="ag-campos-bloqueo" style="display: none;"></div>
+  <label class="flbl">Seña ($)</label>
+  <input class="finp" id="ag-mt-senia" type="number" min="0" placeholder="0 (opcional)">
   <label class="flbl">Notas</label>
   <input class="finp" id="ag-mt-notas" placeholder="Notas del turno...">
   <input type="hidden" id="ag-mt-motivo" value="">
@@ -6666,7 +6762,8 @@ function rpPagarCom(profId,profNombre,monto){
             <div>💰 <span id="ls-conf-precio" style="color:var(--gris)"></span></div>
           </div>
           <div id="ok-ls" class="ok"></div><div id="er-ls" class="er"></div>
-          <button class="btn-v full" onclick="lsConfirmar()">Confirmar turno</button>
+          <button class="btn-v full" style="background:#009ee3;margin-bottom:.5rem" onclick="iniciarPagoSenia('laser')">💳 Pagar seña ($5.000) y reservar</button>
+          <button class="btn-cancel full" onclick="lsConfirmar()">Reservar sin pagar seña</button>
         </div>
         <div class="panel"><div class="ptitle">Mis turnos de depilación</div><div id="ls-mis"></div></div>
       </div>
