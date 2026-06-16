@@ -2988,7 +2988,8 @@ function agVerTurno(id){
   const waMsg=encodeURIComponent('Hola '+t.cliente+'! Te recordamos tu turno en Avelinas Azul 🌿\n\n✦ '+t.servicio+'\n👩 '+(profN2?profN2.n:t.prof)+'\n📅 '+agFf(agPk(t.fecha))+' a las '+t.hora+'hs\n📍 Olavarría 529, Azul\n\n¿Confirmás tu turno?\n✅ Confirmo\n❌ No puedo asistir');
   const waTel=clTel.replace(/[^0-9]/g,'');
   const waBtn=clTel?"<button class=\"btn-v\" style=\"background:#25d366\" onclick=\"window.open('https://wa.me/549"+waTel+"?text="+waMsg+"','_blank')\">📱 WhatsApp</button>":"";
-  document.getElementById("ag-mv-acts").innerHTML=agMvFichaBtn+waBtn+agMvEditBtn+agMvCancelBtn+agMvDelBtn;
+  const agMvCobrarBtn="<button class=\\"btn-v\\" style=\\"background:#3B6D11\\" onclick=\\"agCobrarDesdeVer()\\">💰 Cobrar</button>";
+  document.getElementById("ag-mv-acts").innerHTML=agMvFichaBtn+agMvCobrarBtn+waBtn+agMvEditBtn+agMvCancelBtn+agMvDelBtn;
   document.getElementById('modal-ag-ver').classList.add('on');
 }
 
@@ -2997,6 +2998,30 @@ function agEditarDesdeVer(){
   const t=agD.turnos.find(x=>x.id===agVerTurnoId);
   if(!t)return;
   agAbrirNuevo(t);
+}
+
+function agCobrarDesdeVer(){
+  var id=agVerTurnoId;
+  var t=null,fecha=null;
+  if(typeof id==='string'&&id.startsWith('r_')){
+    var rId=parseInt(id.replace('r_',''));
+    var r=(D.reservas||[]).find(function(x){return x.id===rId;});
+    if(r){t={cliente:r.cl||r.cliente||'',servicio:r.srv,prof:r.prof,precio:0,senia:0};fecha=r.f;}
+  }else{
+    t=agD.turnos.find(function(x){return String(x.id)===String(id);});
+    if(t)fecha=t.fecha;
+  }
+  if(!t)return;
+  cerrarM('modal-ag-ver');
+  abrirModalCobro(null);
+  setTimeout(function(){
+    var profSel=document.getElementById('cobro-prof');if(profSel&&t.prof)profSel.value=t.prof;
+    var clEl=document.getElementById('cobro-cliente');if(clEl)clEl.value=t.cliente||'';
+    var srvEl=document.getElementById('cobro-srv');if(srvEl)srvEl.value=t.servicio||'';
+    var mEl=document.getElementById('cobro-monto');
+    if(mEl)mEl.value=(t.precio&&t.senia)?(t.precio-t.senia):(t.precio||'');
+    var fEl=document.getElementById('cobro-fecha');if(fEl)fEl.value=fecha||hoy();
+  },80);
 }
 
 function agEliminarDesdeVer(){
