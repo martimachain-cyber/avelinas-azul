@@ -544,8 +544,9 @@ td.ag-slot-free{background:transparent}
             <div>💰 <span id="t-conf-precio"></span></div>
           </div>
           <div id="ok-t" class="ok"></div><div id="er-t" class="er"></div>
-          <button class="btn-v full" style="background:#009ee3;margin-bottom:.5rem" onclick="iniciarPagoSenia('general')">💳 Pagar seña ($5.000) y reservar</button>
-          <button class="btn-cancel full" onclick="tConfirmar()">Reservar sin pagar seña</button>
+          <button class="btn-v full" style="background:#009ee3" id="t-btn-senia" onclick="iniciarPagoSenia('general')">💳 Pagar seña ($5.000) y reservar</button>
+          <button class="btn-cancel full" id="t-btn-sinsenia" style="margin-top:.5rem" onclick="tConfirmar()">Reservar sin pagar seña</button>
+          <div id="t-msg-senia-oblig" style="display:none;font-size:11px;color:var(--gc);text-align:center;margin-top:.5rem">Para depilación definitiva es necesario pagar la seña para reservar.</div>
         </div>
         <div class="panel"><div class="ptitle">Mis turnos</div><div id="t-mis"></div></div>
       </div>
@@ -1806,6 +1807,12 @@ function selTSlot(h){
   document.getElementById('t-conf-hora').textContent=h;
   document.getElementById('t-conf-precio').textContent=tSrv.p;
   document.getElementById('ok-t').classList.remove('on');document.getElementById('er-t').classList.remove('on');
+  // Si el servicio elegido es de depilación definitiva, la seña es obligatoria
+  var esLaser=(tCat==='laser');
+  var btnSinSenia=document.getElementById('t-btn-sinsenia');
+  var msgOblig=document.getElementById('t-msg-senia-oblig');
+  if(btnSinSenia)btnSinSenia.style.display=esLaser?'none':'block';
+  if(msgOblig)msgOblig.style.display=esLaser?'block':'none';
   renderTMis();tGoStep(4);
 }
 
