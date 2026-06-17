@@ -1757,7 +1757,21 @@ function selTProf(id){
     const isSel=el.getAttribute('onclick')===`selTProf('${id}')`;
     el.classList.toggle('sel',isSel);
   });
-  tSem=new Date();renderTCal();tGoStep(3);
+  if(tCat==='laser'&&D.jornadasLaser&&D.jornadasLaser.length){
+    // Para depilación definitiva, saltar directo a la próxima jornada disponible
+    const h=hoy();
+    const proxima=D.jornadasLaser.filter(f=>f>=h).sort()[0];
+    if(proxima){
+      const pd=pk(proxima);
+      tSem=new Date(pd);
+      tDia=proxima;
+    }else{
+      tSem=new Date();
+    }
+  }else{
+    tSem=new Date();
+  }
+  renderTCal();tGoStep(3);
 }
 
 function renderTCal(){
