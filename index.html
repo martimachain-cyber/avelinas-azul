@@ -1844,13 +1844,20 @@ function renderTSlots(){
   const esJornadaLaser=tCat==='laser'&&D.jornadasLaser&&D.jornadasLaser.includes(tDia);
   const h=esJornadaLaser?[8,17]:(p&&p.h[d.getDay()]);
   if(!h)return;
-  const ocup=[
-    ...D.reservas.filter(r=>r.prof===tProf&&r.f===tDia).map(r=>r.h),
-    ...(agD.turnos||[]).filter(t=>t.prof===tProf&&t.fecha===tDia).map(t=>t.hora)
+  const durMin=(tSrv&&tSrv.dur)||30;
+  // Construir lista de intervalos ocupados [inicio,fin] en minutos: turnos existentes + bloqueos
+  const ocupIntervalos=[
+    ...D.reservas.filter(r=>r.prof===tProf&&r.f===tDia).map(r=>{const ini=agHm(r.h);return[ini,ini+(r.dur||30)];}),
+    ...(agD.turnos||[]).filter(t=>t.prof===tProf&&t.fecha===tDia).map(t=>{const ini=agHm(t.hora);return[ini,ini+(t.duracion||30)];}),
+    ...(agD.bloqueos||[]).filter(b=>b.prof===tProf&&b.fecha===tDia).map(b=>{const ini=agHm(b.h);return[ini,ini+30];})
   ];
+  function seSolapa(slotIni){
+    const slotFin=slotIni+durMin;
+    return ocupIntervalos.some(function(iv){return slotIni<iv[1]&&slotFin>iv[0];});
+  }
   let slots=[];let m=h[0]*60;while(m<h[1]*60){slots.push(String(Math.floor(m/60)).padStart(2,'0')+':'+String(m%60).padStart(2,'0'));m+=30;}
   document.getElementById('t-slots-tit').textContent=ff(d);
-  document.getElementById('t-slots').innerHTML=slots.map(s=>{const o=ocup.includes(s);return`<div class="sl ${o?'ocp':tSlot===s?'slc':'lib'}" onclick="${o?'':'selTSlot(\''+s+'\')'}"><div class="sl-h">${s}</div><div class="sl-e">${o?'Ocp':'Libre'}</div></div>`}).join('');
+  document.getElementById('t-slots').innerHTML=slots.map(s=>{const o=seSolapa(agHm(s));return`<div class="sl ${o?'ocp':tSlot===s?'slc':'lib'}" onclick="${o?'':'selTSlot(\''+s+'\')'}"><div class="sl-h">${s}</div><div class="sl-e">${o?'Ocp':'Libre'}</div></div>`}).join('');
   document.getElementById('t-slots-wrap').style.display='block';
 }
 
@@ -5540,14 +5547,23 @@ function renderLaserSlots(){
   document.getElementById('ls-slots-tit').textContent=DS2[d.getDay()]+' '+d.getDate()+' '+MSC2[d.getMonth()];
   
   // Generate slots 8:00 - 17:00 every 30 min
-  const ocup=D.reservas.filter(r=>r.prof==='camila'&&r.f===proxima).map(r=>r.h);
+  const durMin=(lsSrv&&lsSrv.dur)||30;
+  const ocupIntervalos=[
+    ...D.reservas.filter(r=>r.prof==='camila'&&r.f===proxima).map(r=>{const ini=agHm(r.h);return[ini,ini+(r.dur||30)];}),
+    ...(agD.turnos||[]).filter(t=>t.prof==='camila'&&t.fecha===proxima).map(t=>{const ini=agHm(t.hora);return[ini,ini+(t.duracion||30)];}),
+    ...(agD.bloqueos||[]).filter(b=>b.prof==='camila'&&b.fecha===proxima).map(b=>{const ini=agHm(b.h);return[ini,ini+30];})
+  ];
+  function lsSeSolapa(slotIni){
+    const slotFin=slotIni+durMin;
+    return ocupIntervalos.some(function(iv){return slotIni<iv[1]&&slotFin>iv[0];});
+  }
   let slots=[], m=8*60;
   while(m<17*60){
     slots.push(String(Math.floor(m/60)).padStart(2,'0')+':'+String(m%60).padStart(2,'0'));
     m+=30;
   }
   document.getElementById('ls-slots').innerHTML=slots.map(s=>{
-    const o=ocup.includes(s);
+    const o=lsSeSolapa(agHm(s));
     const slotOnclick = o ? '' : 'selLaserSlot(\''+s+'\',\''+proxima+'\')';
     return '<div class="sl '+(o?'ocp':lsSlot===s?'slc':'lib')+'" onclick="'+slotOnclick+'">'
       +'<div class="sl-h">'+s+'</div>'
