@@ -3064,12 +3064,18 @@ function agUpdateNow(){
 function agVerTurno(id){
   agVerTurnoId=id;
   let t=null;
-  if(typeof id==='string'&&id.startsWith('r_')){
-    const rId=parseInt(id.replace('r_',''));
-    const r=(D.reservas||[]).find(x=>x.id===rId);
-    if(r)t={id,prof:r.prof,fecha:r.f,hora:r.h,duracion:60,cliente:r.cl||r.cliente||'Clienta',servicio:r.srv,manual:false,online:true};
+  // Buscar primero en agD.turnos (manuales), luego en D.reservas (online)
+  // sin depender del formato del id, porque reservas viejas pueden no tener el prefijo 'r_'
+  const tManual=agD.turnos.find(x=>x.id===id);
+  if(tManual){
+    t=tManual;
   }else{
-    t=agD.turnos.find(x=>x.id===id);
+    let rId=id;
+    if(typeof id==='string'&&id.startsWith('r_'))rId=parseInt(id.replace('r_',''));
+    const r=(D.reservas||[]).find(x=>x.id===rId||x.id===id);
+    if(r){
+      t={id,prof:r.prof,fecha:r.f,hora:r.h,duracion:r.dur||60,cliente:r.cl||r.cliente||'Clienta',servicio:r.srv,manual:false,online:true,_esReserva:true,_reservaId:r.id};
+    }
   }
   if(!t)return;
   const prof=AG_PROFS.find(p=>p.id===t.prof);
@@ -3117,13 +3123,14 @@ function agEditarDesdeVer(){
 function agCobrarDesdeVer(){
   var id=agVerTurnoId;
   var t=null,fecha=null;
-  if(typeof id==='string'&&id.startsWith('r_')){
-    var rId=parseInt(id.replace('r_',''));
-    var r=(D.reservas||[]).find(function(x){return x.id===rId;});
-    if(r){t={cliente:r.cl||r.cliente||'',servicio:r.srv,prof:r.prof,precio:0,senia:0};fecha=r.f;}
+  var tManual=agD.turnos.find(function(x){return String(x.id)===String(id);});
+  if(tManual){
+    t=tManual;fecha=t.fecha;
   }else{
-    t=agD.turnos.find(function(x){return String(x.id)===String(id);});
-    if(t)fecha=t.fecha;
+    var rId=id;
+    if(typeof id==='string'&&id.startsWith('r_'))rId=parseInt(id.replace('r_',''));
+    var r=(D.reservas||[]).find(function(x){return x.id===rId||x.id===id;});
+    if(r){t={cliente:r.cl||r.cliente||'',servicio:r.srv,prof:r.prof,precio:0,senia:0,duracion:r.dur||60};fecha=r.f;}
   }
   if(!t)return;
   cerrarM('modal-ag-ver');
@@ -3143,13 +3150,19 @@ function agCobrarDesdeVer(){
 function agEliminarDesdeVer(){
   if(!confirm('¿Eliminar este turno?'))return;
   var fueLaser=false;
-  if(typeof agVerTurnoId==='string'&&agVerTurnoId.startsWith('r_')){
-    const rId=parseInt(agVerTurnoId.replace('r_',''));
-    D.reservas=(D.reservas||[]).filter(r=>r.id!==rId);sv();
-  }else{
-    var tBorrado=agD.turnos.find(function(t){return t.id===agVerTurnoId;});
-    if(tBorrado&&tBorrado.prof==='camila')fueLaser=true;
+  // Buscar primero si es un turno manual real (existe con ese id exacto en agD.turnos)
+  var tManual=agD.turnos.find(function(t){return t.id===agVerTurnoId;});
+  if(tManual){
+    if(tManual.prof==='camila')fueLaser=true;
     agD.turnos=agD.turnos.filter(t=>t.id!==agVerTurnoId);agSv();
+  }else{
+    // Si no está en turnos manuales, debe ser una reserva online — buscar por id exacto
+    // o por id numérico (reservas viejas pueden no tener el prefijo 'r_')
+    var rId=agVerTurnoId;
+    if(typeof agVerTurnoId==='string'&&agVerTurnoId.startsWith('r_'))rId=parseInt(agVerTurnoId.replace('r_',''));
+    var rBorrada=(D.reservas||[]).find(function(r){return r.id===rId||r.id===agVerTurnoId;});
+    if(rBorrada&&rBorrada.prof==='camila')fueLaser=true;
+    D.reservas=(D.reservas||[]).filter(r=>r.id!==rId&&r.id!==agVerTurnoId);sv();
   }
   cerrarM('modal-ag-ver');
   if(fueLaser&&typeof laserJornadaSel!=='undefined'&&laserJornadaSel){renderLaserTimeline(laserJornadaSel);}
