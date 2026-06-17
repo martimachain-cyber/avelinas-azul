@@ -3263,11 +3263,34 @@ function agGuardarTurno(){
   const editId=document.getElementById('ag-mt-id').value;
   if(editId){
     const idx=agD.turnos.findIndex(t=>t.id==editId);
-    if(idx>=0)agD.turnos[idx]={...agD.turnos[idx],prof,fecha,hora,duracion:dur,cliente,servicio,notas,senia,manual:true,bloqueo:esBloqueo};
+    if(idx>=0){
+      if(!esBloqueo){
+        const iniNuevo=agHm(hora);
+        const finNuevo=iniNuevo+(dur||30);
+        const intervalosOcupados=[
+          ...agD.turnos.filter((t,i)=>i!==idx&&t.prof===prof&&t.fecha===fecha&&!t.bloqueo).map(t=>{const ini=agHm(t.hora);return[ini,ini+(t.duracion||30)];}),
+          ...(D.reservas||[]).filter(r=>r.prof===prof&&r.f===fecha).map(r=>{const ini=agHm(r.h);return[ini,ini+(r.dur||30)];}),
+          ...(agD.bloqueos||[]).filter(b=>b.prof===prof&&b.fecha===fecha).map(b=>{const ini=agHm(b.h);return[ini,ini+30];})
+        ];
+        const haySolape=intervalosOcupados.some(function(iv){return iniNuevo<iv[1]&&finNuevo>iv[0];});
+        if(haySolape){er.textContent='Ya hay un turno o bloqueo que se superpone con ese horario.';er.classList.add('on');_agGuardando=false;return;}
+      }
+      agD.turnos[idx]={...agD.turnos[idx],prof,fecha,hora,duracion:dur,cliente,servicio,notas,senia,manual:true,bloqueo:esBloqueo};
+    }
   }else{
-    // Evitar duplicados: verificar que no existe ya este turno
-    const yaExiste=agD.turnos.find(function(t){return t.prof===prof&&t.fecha===fecha&&t.hora===hora&&!t.bloqueo;});
-    if(yaExiste&&!esBloqueo){er.textContent='Ya hay un turno en ese horario.';er.classList.add('on');return;}
+    // Evitar superposiciones: chequear contra turnos manuales, reservas online y bloqueos
+    // considerando la duración real de cada uno, no solo si arrancan a la misma hora
+    if(!esBloqueo){
+      const iniNuevo=agHm(hora);
+      const finNuevo=iniNuevo+(dur||30);
+      const intervalosOcupados=[
+        ...agD.turnos.filter(t=>t.prof===prof&&t.fecha===fecha&&!t.bloqueo).map(t=>{const ini=agHm(t.hora);return[ini,ini+(t.duracion||30)];}),
+        ...(D.reservas||[]).filter(r=>r.prof===prof&&r.f===fecha).map(r=>{const ini=agHm(r.h);return[ini,ini+(r.dur||30)];}),
+        ...(agD.bloqueos||[]).filter(b=>b.prof===prof&&b.fecha===fecha).map(b=>{const ini=agHm(b.h);return[ini,ini+30];})
+      ];
+      const haySolape=intervalosOcupados.some(function(iv){return iniNuevo<iv[1]&&finNuevo>iv[0];});
+      if(haySolape){er.textContent='Ya hay un turno o bloqueo que se superpone con ese horario.';er.classList.add('on');_agGuardando=false;return;}
+    }
     const precioT=parseFloat((document.getElementById('ag-mt-precio')||{}).value)||0;
     if(esBloqueo){
       // Guardar bloqueo en agD.bloqueos con rango de horas
