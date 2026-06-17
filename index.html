@@ -523,10 +523,14 @@ td.ag-slot-free{background:transparent}
       </div>
       <div id="t-s3" style="display:none">
         <button onclick="tGoStep(2)" style="background:transparent;color:var(--gris);font-family:Raleway,sans-serif;font-size:12px;padding:6px 0;border:none;cursor:pointer;margin-bottom:1rem">← Cambiar profesional</button>
-        <div class="panel">
+        <div class="panel" id="t-cal-wrap">
           <div class="ptitle">Elegí el día</div>
           <div class="cal-nav"><button class="cal-arr" onclick="tSemA()">‹</button><span class="cal-tit" id="t-cal-tit"></span><button class="cal-arr" onclick="tSemS()">›</button></div>
           <div class="sg" id="t-cal"></div>
+        </div>
+        <div class="panel" id="t-laser-jornadas-wrap" style="display:none">
+          <div class="ptitle">Elegí la fecha</div>
+          <div id="t-laser-jornadas" style="display:flex;flex-direction:column;gap:8px"></div>
         </div>
         <div id="t-slots-wrap" style="display:none">
           <div class="panel"><div class="ptitle" id="t-slots-tit"></div><div class="slots-g" id="t-slots"></div></div>
@@ -1757,21 +1761,56 @@ function selTProf(id){
     const isSel=el.getAttribute('onclick')===`selTProf('${id}')`;
     el.classList.toggle('sel',isSel);
   });
+  const calWrap=document.getElementById('t-cal-wrap');
+  const laserWrap=document.getElementById('t-laser-jornadas-wrap');
   if(tCat==='laser'&&D.jornadasLaser&&D.jornadasLaser.length){
-    // Para depilación definitiva, saltar directo a la próxima jornada disponible
+    // Para depilación definitiva, mostrar solo las jornadas disponibles
+    if(calWrap)calWrap.style.display='none';
+    if(laserWrap)laserWrap.style.display='block';
     const h=hoy();
     const proxima=D.jornadasLaser.filter(f=>f>=h).sort()[0];
-    if(proxima){
-      const pd=pk(proxima);
-      tSem=new Date(pd);
-      tDia=proxima;
-    }else{
-      tSem=new Date();
-    }
-  }else{
-    tSem=new Date();
+    if(proxima)tDia=proxima;
+    renderTLaserJornadas();
+    if(tDia)renderTSlots();
+    tGoStep(3);
+    return;
   }
+  if(calWrap)calWrap.style.display='block';
+  if(laserWrap)laserWrap.style.display='none';
+  tSem=new Date();
   renderTCal();tGoStep(3);
+}
+
+function renderTLaserJornadas(){
+  const cont=document.getElementById('t-laser-jornadas');
+  if(!cont)return;
+  const h=hoy();
+  const DS=['Dom','Lun','Mar','Mie','Jue','Vie','Sab'];
+  const MSC=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+  const jornadas=(D.jornadasLaser||[]).filter(f=>f>=h).sort();
+  const proxima=jornadas[0];
+  if(!jornadas.length){
+    cont.innerHTML='<div style="font-size:13px;color:var(--gris)">No hay jornadas disponibles por el momento.</div>';
+    return;
+  }
+  cont.innerHTML=jornadas.map(function(f){
+    const d=pk(f);
+    const esProxima=f===proxima;
+    const sel=tDia===f;
+    const bg=sel?'var(--oliva)':(esProxima?'var(--crema)':'transparent');
+    const border=sel?'var(--oliva)':(esProxima?'var(--oliva)':'var(--cd)');
+    const color=sel?'#fff':'var(--texto)';
+    return '<button onclick="selTDiaLaser(\''+f+'\')" style="display:flex;align-items:center;justify-content:space-between;width:100%;padding:.7rem .9rem;border-radius:3px;border:1px solid '+border+';background:'+bg+';color:'+color+';font-family:Raleway,sans-serif;font-size:13px;font-weight:500;cursor:pointer;text-align:left">'
+      +'<span>'+DS[d.getDay()]+' '+d.getDate()+' de '+MSC[d.getMonth()]+'</span>'
+      +(esProxima&&!sel?'<span style="font-size:10px;color:var(--oliva);background:#fff;padding:2px 8px;border-radius:3px">Próxima</span>':'')
+      +'</button>';
+  }).join('');
+}
+
+function selTDiaLaser(f){
+  tDia=f;tSlot=null;
+  renderTLaserJornadas();
+  renderTSlots();
 }
 
 function renderTCal(){
@@ -1801,7 +1840,10 @@ function selTDia(f){tDia=f;tSlot=null;renderTCal();renderTSlots()}
 
 function renderTSlots(){
   const p=D.profesionales.find(x=>x.id===tProf);
-  const d=pk(tDia),h=p&&p.h[d.getDay()];if(!h)return;
+  const d=pk(tDia);
+  const esJornadaLaser=tCat==='laser'&&D.jornadasLaser&&D.jornadasLaser.includes(tDia);
+  const h=esJornadaLaser?[8,17]:(p&&p.h[d.getDay()]);
+  if(!h)return;
   const ocup=[
     ...D.reservas.filter(r=>r.prof===tProf&&r.f===tDia).map(r=>r.h),
     ...(agD.turnos||[]).filter(t=>t.prof===tProf&&t.fecha===tDia).map(t=>t.hora)
