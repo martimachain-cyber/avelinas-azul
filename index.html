@@ -1161,6 +1161,9 @@ td.ag-slot-free{background:transparent}
     <div style="flex:1;background:var(--crema);border-radius:3px;padding:.5rem;text-align:center"><div style="font-family:Raleway,sans-serif;font-size:16px;font-weight:600;color:var(--texto)" id="ficha-turnos">0</div><div style="font-size:10px;color:var(--gc)">Visitas</div></div>
     <div style="flex:1;background:var(--crema);border-radius:3px;padding:.5rem;text-align:center"><div style="font-family:Raleway,sans-serif;font-size:13px;font-weight:600;color:var(--texto)" id="ficha-ultima">—</div><div style="font-size:10px;color:var(--gc)">Última visita</div></div>
   </div>
+  <div style="display:flex;gap:.5rem;margin-bottom:.8rem">
+    <div style="flex:1;background:var(--crema);border-radius:3px;padding:.5rem;text-align:center"><div style="font-family:Raleway,sans-serif;font-size:13px;font-weight:600;color:var(--oliva)" id="ficha-gasto">$0</div><div style="font-size:10px;color:var(--gc)">Total gastado</div></div>
+  </div>
   <div style="display:flex;gap:.3rem;margin-bottom:.8rem;border-bottom:1px solid var(--cd);padding-bottom:.5rem">
     <button class="cpill on" id="ficha-tab-obs" onclick="fichaSetTab(&#39;obs&#39;,this)" style="font-size:11px;padding:4px 10px">📝 Observaciones</button>
     <button class="cpill" id="ficha-tab-hist" onclick="fichaSetTab(&#39;hist&#39;,this)" style="font-size:11px;padding:4px 10px">📋 Historial</button>
@@ -5946,17 +5949,39 @@ function abrirFicha(clId, soloLectura){
   const cl = D.clientas.find(function(c){return c.id===clId;});
   if(!cl)return;
   fichaClId = clId;
+  const esAdmin = ROL_PANEL[curPUser]==='admin';
 
   // Header
   document.getElementById('ficha-nombre').textContent = cl.n;
   document.getElementById('ficha-sub').textContent = cl.tel + (cl.cumple?' · 🎂 '+cl.cumple.split('-').slice(1).reverse().join('/'):'');
 
-  // Stats
+  // Stats — profesionales solo ven visitas y última fecha
   const turnos = D.reservas.filter(function(r){return r.tel===cl.tel||r.cl===cl.n;});
+  const turnosManuales = (agD.turnos||[]).filter(function(t){return t.cliente===cl.n&&!t.bloqueo;});
+  const totalVisitas = turnos.length + turnosManuales.filter(function(t){return !turnos.find(function(r){return r.f===t.fecha&&r.h===t.hora;});}).length;
   document.getElementById('ficha-pts').textContent = cl.pts||0;
-  document.getElementById('ficha-turnos').textContent = turnos.length;
-  const ultima = turnos.filter(function(r){return r.f<=hoy();}).sort(function(a,b){return b.f.localeCompare(a.f);})[0];
-  document.getElementById('ficha-ultima').textContent = ultima ? ff(pk(ultima.f)) : '—';
+  document.getElementById('ficha-turnos').textContent = totalVisitas;
+  const todasFechas = [
+    ...turnos.map(function(r){return r.f;}),
+    ...turnosManuales.map(function(t){return t.fecha;})
+  ].filter(Boolean).filter(function(f){return f<=hoy();}).sort().reverse();
+  const ultimaFecha = todasFechas[0];
+  document.getElementById('ficha-ultima').textContent = ultimaFecha ? ff(pk(ultimaFecha)) : '—';
+
+  // Gasto total — solo admin
+  const cobrosCliente = (cjD.cobros||[]).filter(function(c){return c.cliente&&c.cliente.toLowerCase()===cl.n.toLowerCase();});
+  const gastoTotal = cobrosCliente.reduce(function(s,c){return s+(c.monto||0);},0);
+  var gastoEl = document.getElementById('ficha-gasto');
+  if(gastoEl){
+    gastoEl.parentElement.style.display = esAdmin ? 'flex' : 'none';
+    gastoEl.textContent = fmtPeso(gastoTotal);
+  }
+
+  // Show/hide tabs según rol
+  var tabCC = document.getElementById('ficha-tab-cc');
+  var tabInfo = document.getElementById('ficha-tab-info');
+  if(tabCC) tabCC.style.display = esAdmin ? '' : 'none';
+  if(tabInfo) tabInfo.style.display = esAdmin ? '' : 'none';
 
   // Show/hide add obs based on role
   const nuevaObsSec = document.getElementById('ficha-nueva-obs-sec');
@@ -6117,35 +6142,66 @@ function fichaRenderHist(){
   if(!cl)return;
   const lista = document.getElementById('ficha-hist-lista');
   if(!lista)return;
-  // Combine reservas + cobros historial
-  const turnos = D.reservas.filter(function(r){return r.tel===cl.tel||r.cl===cl.n;})
+  const esAdmin = ROL_PANEL[curPUser]==='admin';
+
+  // Combinar todas las fuentes de historial
+  const reservas = D.reservas.filter(function(r){return r.tel===cl.tel||r.cl===cl.n;})
     .sort(function(a,b){return b.f.localeCompare(a.f);});
-  const cobros = (cjD.cobros||[]).filter(function(c){return c.cliente&&c.cliente.toLowerCase()===cl.n.toLowerCase();})
+  const turnosManuales = (agD.turnos||[]).filter(function(t){return t.cliente===cl.n&&!t.bloqueo;})
     .sort(function(a,b){return b.fecha.localeCompare(a.fecha);});
-  
-  if(!turnos.length&&!cobros.length){
+  const cobros = esAdmin ? (cjD.cobros||[]).filter(function(c){return c.cliente&&c.cliente.toLowerCase()===cl.n.toLowerCase();})
+    .sort(function(a,b){return b.fecha.localeCompare(a.fecha);}) : [];
+  const ventasProductos = esAdmin ? (prodD.ventas||[]).filter(function(v){return v.cliente&&v.cliente.toLowerCase()===cl.n.toLowerCase();})
+    .sort(function(a,b){return b.fecha.localeCompare(a.fecha);}) : [];
+
+  // Combinar todo en una sola lista ordenada por fecha
+  var items = [];
+  reservas.forEach(function(r){
+    const prof = D.profesionales.find(function(p){return p.id===r.prof;});
+    items.push({fecha:r.f, tipo:'turno', srv:r.srv, prof:prof?prof.n:'', monto:null});
+  });
+  turnosManuales.forEach(function(t){
+    // Evitar duplicados con reservas
+    const yaEsta = reservas.find(function(r){return r.f===t.fecha&&r.h===t.hora;});
+    if(yaEsta)return;
+    const prof = D.profesionales.find(function(p){return p.id===t.prof;});
+    const cobro = cobros.find(function(c){return c.fecha===t.fecha&&c.srv===t.servicio;});
+    items.push({fecha:t.fecha, tipo:'turno', srv:t.servicio, prof:prof?prof.n:'', monto:esAdmin&&cobro?cobro.monto:null});
+  });
+  if(esAdmin){
+    cobros.forEach(function(c){
+      const yaEsta = items.find(function(i){return i.fecha===c.fecha&&i.srv===c.srv;});
+      if(yaEsta){if(!yaEsta.monto)yaEsta.monto=c.monto;return;}
+      const prof = D.profesionales.find(function(p){return p.id===c.prof;});
+      items.push({fecha:c.fecha, tipo:'cobro', srv:c.srv, prof:prof?prof.n:'', monto:c.monto});
+    });
+    ventasProductos.forEach(function(v){
+      const prod = prodD.productos.find(function(p){return p.id===v.prodId;});
+      items.push({fecha:v.fecha, tipo:'producto', srv:prod?prod.nombre:'Producto', prof:'', monto:(v.precio||0)*(v.cant||1), cant:v.cant});
+    });
+  }
+
+  // Ordenar por fecha descendente
+  items.sort(function(a,b){return (b.fecha||'').localeCompare(a.fecha||'');});
+
+  if(!items.length){
     lista.innerHTML='<div class="empty" style="font-size:12px">Sin historial registrado.</div>';
     return;
   }
+
   lista.innerHTML='';
-  turnos.forEach(function(r){
-    const prof = D.profesionales.find(function(p){return p.id===r.prof;});
+  items.forEach(function(item){
     const d=document.createElement('div');
-    d.style.cssText='display:flex;gap:.5rem;padding:6px 0;border-bottom:1px solid var(--cd);align-items:flex-start';
-    d.innerHTML='<div style="font-size:10px;color:var(--gc);min-width:55px;padding-top:2px">'+r.f+'</div>'
-      +'<div><div style="font-size:12px;font-weight:500;color:var(--texto)">'+r.srv+'</div>'
-      +'<div style="font-size:11px;color:var(--gc)">'+(prof?prof.n:'')+'</div></div>';
-    lista.appendChild(d);
-  });
-  // Add cobros not in turnos
-  cobros.forEach(function(c){
-    const yaEsta = turnos.find(function(r){return r.f===c.fecha&&r.srv===c.srv;});
-    if(yaEsta)return;
-    const d=document.createElement('div');
-    d.style.cssText='display:flex;gap:.5rem;padding:6px 0;border-bottom:1px solid var(--cd);align-items:flex-start';
-    d.innerHTML='<div style="font-size:10px;color:var(--gc);min-width:55px;padding-top:2px">'+c.fecha+'</div>'
-      +'<div><div style="font-size:12px;font-weight:500;color:var(--texto)">'+c.srv+'</div>'
-      +'<div style="font-size:11px;color:var(--oliva)">'+fmtPeso(c.monto)+'</div></div>';
+    d.style.cssText='display:flex;gap:.5rem;padding:7px 0;border-bottom:1px solid var(--cd);align-items:flex-start';
+    var icono = item.tipo==='producto'?'🛍':'✦';
+    var colorIcono = item.tipo==='producto'?'var(--gris)':'var(--oliva)';
+    d.innerHTML='<div style="font-size:10px;color:var(--gc);min-width:55px;padding-top:2px">'+(item.fecha||'')+'</div>'
+      +'<div style="font-size:13px;color:'+colorIcono+';padding-top:1px;flex-shrink:0">'+icono+'</div>'
+      +'<div style="flex:1;min-width:0">'
+        +'<div style="font-size:12px;font-weight:500;color:var(--texto);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+(item.cant&&item.cant>1?item.cant+' × ':'')+item.srv+'</div>'
+        +(item.prof?'<div style="font-size:11px;color:var(--gc)">'+item.prof+'</div>':'')
+      +'</div>'
+      +(esAdmin&&item.monto?'<div style="font-size:12px;font-weight:600;color:var(--oliva);white-space:nowrap;flex-shrink:0">'+fmtPeso(item.monto)+'</div>':'');
     lista.appendChild(d);
   });
 }
