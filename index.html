@@ -646,6 +646,7 @@ td.ag-slot-free{background:transparent}
   <div style="display:flex;gap:.4rem;margin-bottom:.8rem">
     <button class="cpill on" id="cls-tab-lista" onclick="clsSetTab(&#39;lista&#39;,this)">👥 Clientas</button>
     <button class="cpill" id="cls-tab-ranking" onclick="clsSetTab(&#39;ranking&#39;,this)">⭐ Ranking</button>
+    <button class="cpill" id="cls-tab-recordatorios" onclick="clsSetTab(&#39;recordatorios&#39;,this)">📲 Recordatorios</button>
   </div>
   <div id="cls-lista-sec">
     <input class="finp" id="a-cls-q" type="text" placeholder="Buscar clienta..." oninput="filtraCls(this.value)" style="margin-top:0" autocomplete="off">
@@ -653,6 +654,14 @@ td.ag-slot-free{background:transparent}
     <button class="btn-v full" onclick="abrirMC(null)">+ Nueva clienta</button>
   </div>
   <div id="cls-ranking-sec" style="display:none"><div id="cls-ranking-lista"></div></div>
+<div id="cls-recordatorios-sec" style="display:none">
+  <div style="display:flex;gap:.5rem;margin-bottom:.8rem;flex-wrap:wrap">
+    <button class="cpill on" id="rec-tab-30" onclick="recSetFiltro(30,this)">+30 días</button>
+    <button class="cpill" id="rec-tab-60" onclick="recSetFiltro(60,this)">+60 días</button>
+    <button class="cpill" id="rec-tab-90" onclick="recSetFiltro(90,this)">+90 días</button>
+  </div>
+  <div id="cls-rec-lista" style="display:flex;flex-direction:column;gap:.5rem"></div>
+</div>
 </div></div></div>
 
   <div id="a-prod" class="tsec"><div style="padding:1rem">
@@ -2584,6 +2593,103 @@ function guardarS(){
   sv();renderAdmSrvPills();ok.textContent=eIds.s?'Actualizado ✓':'Agregado ✓';ok.classList.add('on');setTimeout(()=>cerrarM('m-srv'),1500);
 }
 function borrarS(id){if(!confirm('¿Eliminar?'))return;Object.keys(D.servicios).forEach(k=>{D.servicios[k]=D.servicios[k].filter(s=>s.id!==id)});sv();renderAdmSrvPills()}
+
+function clsSetTab(tab,btn){
+  ['lista','ranking','recordatorios'].forEach(function(t){
+    var sec=document.getElementById('cls-'+t+'-sec');
+    var tabBtn=document.getElementById('cls-tab-'+t);
+    if(sec)sec.style.display=t===tab?'block':'none';
+    if(tabBtn)tabBtn.classList.toggle('on',t===tab);
+  });
+  if(tab==='ranking')renderClsRanking();
+  if(tab==='recordatorios'){recDias=30;renderRecordatorios();}
+}
+
+var recDias=30;
+
+function renderClsRanking(){
+  var cont=document.getElementById('cls-ranking-lista');
+  if(!cont)return;
+  var ordenadas=[...D.clientas].sort(function(a,b){return (b.pts||0)-(a.pts||0);}).slice(0,20);
+  if(!ordenadas.length){cont.innerHTML='<div style="font-size:13px;color:var(--gc)">Sin clientas cargadas.</div>';return;}
+  var medallas=['🥇','🥈','🥉'];
+  cont.innerHTML=ordenadas.map(function(cl,i){
+    var ini=cl.n.split(' ').slice(0,2).map(function(p){return p[0]||'';}).join('').toUpperCase();
+    return '<div style="display:flex;align-items:center;gap:.7rem;padding:.5rem .8rem;background:var(--blanco);border-radius:4px;border:0.5px solid var(--cd);margin-bottom:.4rem">'
+      +'<div style="font-size:16px;width:24px;text-align:center">'+(medallas[i]||'#'+(i+1))+'</div>'
+      +'<div style="width:32px;height:32px;border-radius:50%;background:var(--oliva);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:#fff">'+ini+'</div>'
+      +'<div style="flex:1">'
+        +'<div style="font-size:13px;font-weight:600">'+cl.n+'</div>'
+        +'<div style="font-size:11px;color:var(--gc)">'+(cl.pts||0)+' puntos</div>'
+      +'</div>'
+      +'</div>';
+  }).join('');
+}
+
+function recSetFiltro(dias,btn){
+  recDias=dias;
+  ['30','60','90'].forEach(function(d){
+    var b=document.getElementById('rec-tab-'+d);
+    if(b)b.classList.toggle('on',parseInt(d)===dias);
+  });
+  renderRecordatorios();
+}
+
+function renderRecordatorios(){
+  var cont=document.getElementById('cls-rec-lista');
+  if(!cont)return;
+  var hoyStr=hoy();
+  var limite=new Date();
+  limite.setDate(limite.getDate()-recDias);
+  var limStr=limite.toISOString().slice(0,10);
+
+  // Calcular última visita de cada clienta combinando turnos manuales y reservas
+  var clientasConFecha=D.clientas.map(function(cl){
+    var turnosCl=[
+      ...(agD.turnos||[]).filter(function(t){return t.cliente===cl.n&&t.fecha<=hoyStr&&!t.bloqueo;}),
+      ...(D.reservas||[]).filter(function(r){return (r.cl===cl.n||r.cliente===cl.n)&&r.f<=hoyStr;}).map(function(r){return{fecha:r.f};})
+    ];
+    var ultima=turnosCl.map(function(t){return t.fecha||t.f;}).filter(Boolean).sort().reverse()[0]||null;
+    return{cl:cl,ultima:ultima};
+  });
+
+  // Filtrar las que no vienen desde hace `recDias` días (o nunca vinieron)
+  var resultado=clientasConFecha.filter(function(x){
+    if(!x.ultima)return true; // nunca vinieron
+    return x.ultima<limStr;
+  }).sort(function(a,b){
+    if(!a.ultima)return -1;
+    if(!b.ultima)return 1;
+    return a.ultima.localeCompare(b.ultima);
+  });
+
+  if(!resultado.length){
+    cont.innerHTML='<div style="font-size:13px;color:var(--gc);padding:.5rem 0">No hay clientas sin visita en este período 🎉</div>';
+    return;
+  }
+
+  const DS=['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+  const MSC=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+
+  cont.innerHTML=resultado.map(function(x){
+    var cl=x.cl;
+    var ultimaStr=x.ultima?'Última visita: '+x.ultima:'Nunca vino';
+    var diasSin=x.ultima?Math.floor((new Date()-new Date(x.ultima))/(1000*60*60*24)):null;
+    var diasStr=diasSin!==null?diasSin+' días sin venir':'Sin registros';
+    var tel=(cl.tel||'').replace(/[^0-9]/g,'');
+    var msg=encodeURIComponent('Hola '+cl.n.split(' ')[0]+'! 🌿 Te extrañamos en Avelinas Azul. ¿Cuándo te agendamos tu próximo turno?\n\nPodés reservar en: avelinas-azul.vercel.app');
+    var waLink='https://wa.me/549'+tel+'?text='+msg;
+    var ini=cl.n.split(' ').slice(0,2).map(function(p){return p[0]||'';}).join('').toUpperCase();
+    return '<div style="display:flex;align-items:center;gap:.7rem;padding:.6rem .8rem;background:var(--blanco);border-radius:4px;border:0.5px solid var(--cd)">'
+      +'<div style="width:36px;height:36px;border-radius:50%;background:var(--oliva);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:#fff;flex-shrink:0">'+ini+'</div>'
+      +'<div style="flex:1;min-width:0">'
+        +'<div style="font-size:13px;font-weight:600;color:var(--texto);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+cl.n+'</div>'
+        +'<div style="font-size:11px;color:var(--gc)">'+diasStr+'</div>'
+      +'</div>'
+      +(tel?'<a href="'+waLink+'" target="_blank" style="background:#25d366;color:#fff;border:none;padding:.35rem .7rem;border-radius:3px;font-size:11px;font-family:Raleway,sans-serif;font-weight:600;text-decoration:none;white-space:nowrap;flex-shrink:0">📱 WhatsApp</a>':'')
+      +'</div>';
+  }).join('');
+}
 
 function filtraCls(q){
   const f=q?D.clientas.filter(function(c){return c.n.toLowerCase().includes(q.toLowerCase())||c.tel.includes(q);}):D.clientas;
