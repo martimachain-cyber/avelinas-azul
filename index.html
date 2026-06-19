@@ -4237,6 +4237,20 @@ function renderCjComisiones(cobros,adelantos,retiros){
   const retLista=document.getElementById('cj-ret-lista');
   if(!comLista) return;
 
+  // Botón exportar resumen general
+  var exportBtn=document.getElementById('cj-com-export-btn');
+  if(!exportBtn){
+    exportBtn=document.createElement('button');
+    exportBtn.id='cj-com-export-btn';
+    exportBtn.className='btn-v';
+    exportBtn.style.cssText='margin-bottom:.8rem;font-size:11px;padding:6px 12px';
+    exportBtn.textContent='📄 Exportar resumen del período';
+    exportBtn.onclick=function(){exportarLiquidacion(cobros,adelantos,retiros);};
+    comLista.parentNode.insertBefore(exportBtn,comLista);
+  }else{
+    exportBtn.onclick=function(){exportarLiquidacion(cobros,adelantos,retiros);};
+  }
+
   // Comisiones por profesional
   comLista.innerHTML='';
   let hayComis=false;
@@ -4250,6 +4264,7 @@ function renderCjComisiones(cobros,adelantos,retiros){
     const ade=adelantos.filter(function(a){return a.prof===p.id;}).reduce(function(s,a){return s+(a.monto||0);},0);
     const ret=retiros.filter(function(r){return r.prof===p.id;}).reduce(function(s,r){return s+(r.precio||0)*(r.cant||1);},0);
     const neto=Math.max(0,comision-ade-ret);
+    const detId='cj-det-'+p.id;
     const d=document.createElement('div');
     d.style.cssText='background:#fff;border:1px solid var(--cd);border-radius:3px;padding:.8rem 1rem;margin-bottom:.5rem';
     d.innerHTML='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.4rem">'
@@ -4260,6 +4275,19 @@ function renderCjComisiones(cobros,adelantos,retiros){
       +'Servicios: '+fmtPeso(total)+' · Comisión '+p.comision+'%: '+fmtPeso(comision)
       +(ade?'<br>Adelantos: -'+fmtPeso(ade):'')
       +(ret?'<br>Retiros: -'+fmtPeso(ret):'')
+      +'</div>'
+      +'<div style="display:flex;gap:6px;margin-top:.6rem">'
+      +'<button class="btn-v" style="font-size:10px;padding:4px 8px" onclick="cjToggleDetalle(''+detId+'')">Ver detalle</button>'
+      +'<button class="btn-v" style="font-size:10px;padding:4px 8px;background:var(--gris)" onclick="imprimirRecibo(''+p.id+'',''+p.n+'','+total+','+comision+','+ade+','+ret+','+neto+')">🖨 Recibo</button>'
+      +'</div>'
+      +'<div id="'+detId+'" style="display:none;margin-top:.7rem;border-top:1px solid var(--cd);padding-top:.6rem">'
+      +mis.sort(function(a,b){return b.fecha.localeCompare(a.fecha);}).map(function(c){
+        return '<div style="display:flex;justify-content:space-between;align-items:flex-start;padding:4px 0;border-bottom:.5px solid var(--cd)">'
+          +'<div><div style="font-size:12px;color:var(--texto)">'+c.srv+'</div>'
+          +'<div style="font-size:10px;color:var(--gc)">'+c.cliente+' · '+ff(pk(c.fecha))+'</div></div>'
+          +'<div style="font-size:12px;font-weight:500;color:var(--oliva);white-space:nowrap;margin-left:8px">'+fmtPeso(c.monto)+'</div>'
+          +'</div>';
+      }).join('')
       +'</div>';
     comLista.appendChild(d);
   });
@@ -4394,6 +4422,133 @@ function renderCjReportes(cobros,retiros){
     });
     if(!profEl.children.length) profEl.innerHTML='<div class="empty">Sin datos.</div>';
   }
+}
+
+function cjToggleDetalle(id){
+  var el=document.getElementById(id);
+  if(!el)return;
+  el.style.display=el.style.display==='none'?'block':'none';
+  var btn=el.previousElementSibling&&el.previousElementSibling.querySelector('button');
+  var btns=el.parentNode.querySelectorAll('button');
+  btns.forEach(function(b){if(b.textContent.startsWith('Ver')||b.textContent.startsWith('Ocultar')){
+    b.textContent=el.style.display==='none'?'Ver detalle':'Ocultar detalle';
+  }});
+}
+
+function imprimirRecibo(profId,profNombre,total,comision,adelantos,retiros,neto){
+  var periodo=cjPer==='mes'?(cjMesSel||new Date().toISOString().slice(0,7)):cjPer;
+  var periodoLabel=periodo;
+  if(periodo.length===7){
+    var meses=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+    var parts=periodo.split('-');
+    periodoLabel=meses[parseInt(parts[1])-1]+' '+parts[0];
+  }
+  var cobrosP=cjD.cobros.filter(function(c){return c.prof===profId&&cjEnRango(c.fecha);});
+  var fecha=new Date().toLocaleDateString('es-AR');
+
+  var html='<!DOCTYPE html><html><head><meta charset="UTF-8">'
+    +'<style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:Arial,sans-serif;padding:30px;color:#333;max-width:600px;margin:0 auto}'
+    +'h1{font-size:20px;color:#8b8f6b;margin-bottom:4px}h2{font-size:14px;color:#666;font-weight:400;margin-bottom:20px}'
+    +'.header{border-bottom:2px solid #8b8f6b;padding-bottom:16px;margin-bottom:20px}'
+    +'.row{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #eee;font-size:13px}'
+    +'.row.total{border-bottom:2px solid #8b8f6b;font-weight:600;font-size:14px;margin-top:4px}'
+    +'.row.neto{background:#f5f9f0;padding:10px 8px;border-radius:4px;font-size:16px;font-weight:700;color:#3b6d11;margin-top:8px;border:none}'
+    +'.servicios{margin:16px 0;border:1px solid #eee;border-radius:4px;overflow:hidden}'
+    +'.srv-row{display:flex;justify-content:space-between;padding:7px 12px;border-bottom:1px solid #f5f5f5;font-size:12px}'
+    +'.srv-row:last-child{border-bottom:none}'
+    +'.srv-row:nth-child(odd){background:#fafafa}'
+    +'.footer{margin-top:24px;padding-top:16px;border-top:1px solid #eee;font-size:11px;color:#999;text-align:center}'
+    +'@media print{body{padding:15px}.no-print{display:none}}</style>'
+    +'</head><body>'
+    +'<div class="no-print" style="margin-bottom:16px"><button onclick="window.print()" style="background:#8b8f6b;color:#fff;border:none;padding:8px 16px;border-radius:4px;cursor:pointer;font-size:13px">🖨 Imprimir</button></div>'
+    +'<div class="header">'
+    +'<h1>Avelinas Azul</h1>'
+    +'<h2>Liquidación de comisiones — '+profNombre+'</h2>'
+    +'<div style="font-size:12px;color:#999">Período: '+periodoLabel+' · Emitido: '+fecha+'</div>'
+    +'</div>'
+    +'<div class="row"><span>Servicios realizados ('+cobrosP.length+')</span><span>'+fmtPeso(total)+'</span></div>'
+    +'<div class="row"><span>Comisión ('+D.profesionales.find(function(p){return p.id===profId;})?D.profesionales.find(function(p){return p.id===profId;}).comision:50+'%)</span><span>'+fmtPeso(comision)+'</span></div>'
+    +(adelantos>0?'<div class="row"><span>Adelantos descontados</span><span>- '+fmtPeso(adelantos)+'</span></div>':'')
+    +(retiros>0?'<div class="row"><span>Retiros descontados</span><span>- '+fmtPeso(retiros)+'</span></div>':'')
+    +'<div class="row neto"><span>Total a cobrar</span><span>'+fmtPeso(neto)+'</span></div>';
+
+  if(cobrosP.length){
+    html+='<div style="font-size:12px;font-weight:600;color:#666;margin:16px 0 6px">Detalle de servicios</div>'
+      +'<div class="servicios">';
+    cobrosP.sort(function(a,b){return a.fecha.localeCompare(b.fecha);}).forEach(function(c){
+      html+='<div class="srv-row">'
+        +'<div><div style="font-weight:500">'+c.srv+'</div>'
+        +'<div style="color:#999;font-size:11px">'+c.cliente+' · '+c.fecha+'</div></div>'
+        +'<div style="font-weight:500;color:#3b6d11">'+fmtPeso(c.monto)+'</div>'
+        +'</div>';
+    });
+    html+='</div>';
+  }
+
+  html+='<div class="footer">Avelinas Azul · Olavarría 529, Azul · 2494 251936</div>'
+    +'</body></html>';
+
+  var win=window.open('','_blank','width=700,height=800');
+  win.document.write(html);
+  win.document.close();
+}
+
+function exportarLiquidacion(cobros,adelantos,retiros){
+  var periodo=cjPer==='mes'?(cjMesSel||new Date().toISOString().slice(0,7)):cjPer;
+  var meses=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+  var periodoLabel=periodo;
+  if(periodo.length===7){var parts=periodo.split('-');periodoLabel=meses[parseInt(parts[1])-1]+' '+parts[0];}
+  var fecha=new Date().toLocaleDateString('es-AR');
+
+  var html='<!DOCTYPE html><html><head><meta charset="UTF-8">'
+    +'<style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:Arial,sans-serif;padding:30px;color:#333}'
+    +'h1{font-size:22px;color:#8b8f6b;margin-bottom:4px}h2{font-size:12px;color:#999;font-weight:400;margin-bottom:24px}'
+    +'table{width:100%;border-collapse:collapse;margin-bottom:20px}th{background:#8b8f6b;color:#fff;padding:8px 12px;text-align:left;font-size:12px}'
+    +'td{padding:7px 12px;border-bottom:1px solid #eee;font-size:12px}.total td{font-weight:700;background:#f5f5f0;border-top:2px solid #8b8f6b}'
+    +'.green{color:#3b6d11;font-weight:600}.red{color:#c0392b}'
+    +'@media print{.no-print{display:none}}</style></head><body>'
+    +'<div class="no-print" style="margin-bottom:16px"><button onclick="window.print()" style="background:#8b8f6b;color:#fff;border:none;padding:8px 16px;border-radius:4px;cursor:pointer;font-size:13px">🖨 Imprimir</button></div>'
+    +'<h1>Avelinas Azul — Liquidación de comisiones</h1>'
+    +'<h2>Período: '+periodoLabel+' · Emitido: '+fecha+'</h2>'
+    +'<table><tr><th>Profesional</th><th>Servicios</th><th>Comisión</th><th>Adelantos</th><th>Retiros</th><th>A cobrar</th></tr>';
+
+  var totalGeneral=0;
+  D.profesionales.forEach(function(p){
+    var mis=cobros.filter(function(c){return c.prof===p.id;});
+    var tot=mis.reduce(function(s,c){return s+(c.monto||0);},0);
+    if(!tot)return;
+    var comPct=(p.comision||50)/100;
+    var com=tot*comPct;
+    var ade=adelantos.filter(function(a){return a.prof===p.id;}).reduce(function(s,a){return s+(a.monto||0);},0);
+    var ret=retiros.filter(function(r){return r.prof===p.id;}).reduce(function(s,r){return s+(r.precio||0)*(r.cant||1);},0);
+    var neto=Math.max(0,com-ade-ret);
+    totalGeneral+=neto;
+    html+='<tr><td>'+p.n+'</td><td>'+fmtPeso(tot)+'</td><td>'+fmtPeso(com)+'</td>'
+      +'<td class="red">'+(ade?fmtPeso(ade):'—')+'</td>'
+      +'<td class="red">'+(ret?fmtPeso(ret):'—')+'</td>'
+      +'<td class="green">'+fmtPeso(neto)+'</td></tr>';
+  });
+
+  html+='<tr class="total"><td colspan="5">Total a pagar</td><td class="green">'+fmtPeso(totalGeneral)+'</td></tr></table>';
+
+  // Detalle por profesional
+  D.profesionales.forEach(function(p){
+    var mis=cobros.filter(function(c){return c.prof===p.id;});
+    if(!mis.length)return;
+    html+='<div style="margin-bottom:16px;page-break-inside:avoid">'
+      +'<div style="font-weight:600;font-size:13px;margin-bottom:6px;color:#8b8f6b">'+p.n+'</div>'
+      +'<table><tr><th>Fecha</th><th>Clienta</th><th>Servicio</th><th>Monto</th></tr>';
+    mis.sort(function(a,b){return a.fecha.localeCompare(b.fecha);}).forEach(function(c){
+      html+='<tr><td>'+c.fecha+'</td><td>'+c.cliente+'</td><td>'+c.srv+'</td><td class="green">'+fmtPeso(c.monto)+'</td></tr>';
+    });
+    html+='</table></div>';
+  });
+
+  html+='<div style="margin-top:20px;padding-top:12px;border-top:1px solid #eee;font-size:11px;color:#999;text-align:center">Avelinas Azul · Olavarría 529, Azul · 2494 251936</div></body></html>';
+
+  var win=window.open('','_blank','width=800,height=900');
+  win.document.write(html);
+  win.document.close();
 }
 
 function cjBorrar(coleccion,id){
