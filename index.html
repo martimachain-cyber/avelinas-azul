@@ -4277,9 +4277,9 @@ function renderCjComisiones(cobros,adelantos,retiros){
       +(ret?'<br>Retiros: -'+fmtPeso(ret):'')
       +'</div>'
       +'<div style="display:flex;gap:6px;margin-top:.6rem">'
-      +'<button class="btn-v" style="font-size:10px;padding:4px 8px" onclick="cjToggleDetalle(''+detId+'')">Ver detalle</button>'
-      +'<button class="btn-v" style="font-size:10px;padding:4px 8px;background:var(--gris)" onclick="imprimirRecibo(''+p.id+'',''+p.n+'','+total+','+comision+','+ade+','+ret+','+neto+')">🖨 Recibo</button>'
-      +'</div>'
+      +'<div style="display:flex;gap:6px;margin-top:.6rem">'
+      +'<button class="btn-v cj-det-btn" data-det="'+detId+'" style="font-size:10px;padding:4px 8px">Ver detalle</button>'
+      +'<button class="btn-v cj-rec-btn" data-pid="'+p.id+'" data-pn="'+p.n.replace(/&/g,"&amp;")+'" data-tot="'+total+'" data-com="'+comision+'" data-ade="'+ade+'" data-ret="'+ret+'" data-neto="'+neto+'" style="font-size:10px;padding:4px 8px;background:var(--gris)">🖨 Recibo</button>'
       +'<div id="'+detId+'" style="display:none;margin-top:.7rem;border-top:1px solid var(--cd);padding-top:.6rem">'
       +mis.sort(function(a,b){return b.fecha.localeCompare(a.fecha);}).map(function(c){
         return '<div style="display:flex;justify-content:space-between;align-items:flex-start;padding:4px 0;border-bottom:.5px solid var(--cd)">'
@@ -4292,6 +4292,17 @@ function renderCjComisiones(cobros,adelantos,retiros){
     comLista.appendChild(d);
   });
   if(!hayComis) comLista.innerHTML='<div class="empty">Sin servicios en el período.</div>';
+
+  // Event delegation para botones de comisiones
+  comLista.addEventListener('click',function(e){
+    var det=e.target.closest('.cj-det-btn');
+    var rec=e.target.closest('.cj-rec-btn');
+    if(det)cjToggleDetalle(det.dataset.det);
+    if(rec)imprimirRecibo(rec.dataset.pid,rec.dataset.pn,
+      parseFloat(rec.dataset.tot),parseFloat(rec.dataset.com),
+      parseFloat(rec.dataset.ade),parseFloat(rec.dataset.ret),
+      parseFloat(rec.dataset.neto));
+  },{once:false});
 
   // Adelantos
   if(adeLista){
