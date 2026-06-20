@@ -3013,7 +3013,7 @@ function agRenderMobile(){
   // Selector de profesional (pills)
   var pills=profs.map(function(p){
     var sel=p.id===agMobProf;
-    return '<button onclick="agSelMobProf(''+p.id+'')" style="padding:.35rem .8rem;border-radius:20px;border:1.5px solid '+(sel?AG_COLORS[p.id]:'var(--cd)')+';background:'+(sel?AG_COLORS[p.id]:'transparent')+';color:'+(sel?'#fff':'var(--gc)')+';font-size:12px;font-family:Raleway,sans-serif;font-weight:'+(sel?'600':'400')+';cursor:pointer;white-space:nowrap">'+p.n+'</button>';
+    return '<button data-pid="'+p.id+'" class="ag-mob-prof-btn" style="padding:.35rem .8rem;border-radius:20px;border:1.5px solid '+(sel?AG_COLORS[p.id]:'var(--cd)')+';background:'+(sel?AG_COLORS[p.id]:'transparent')+';color:'+(sel?'#fff':'var(--gc)')+';font-size:12px;font-family:Raleway,sans-serif;font-weight:'+(sel?'600':'400')+';cursor:pointer;white-space:nowrap">'+p.n+'</button>';
   }).join('');
 
   // Turnos del día para la profesional seleccionada
@@ -3051,7 +3051,7 @@ function agRenderMobile(){
         +'<div style="font-size:12px;color:var(--gc)">🔒 Bloqueado</div>'
         +'</div>';
     }else{
-      rows+='<div onclick="agAbrirNuevo(null);setTimeout(function(){var f=document.getElementById('ag-mt-fecha');if(f)f.value=''+fStr+'';var pr=document.getElementById('ag-mt-prof');if(pr)pr.value=''+agMobProf+'';var ho=document.getElementById('ag-mt-hora');if(ho)ho.value=''+slot.h+'';agMtCargarServicios(''+agMobProf+'');},80)" style="display:flex;gap:.7rem;padding:.4rem .8rem;border-bottom:0.5px solid var(--cd);cursor:pointer;opacity:.5">'
+      rows+='<div class="ag-mob-slot-libre" data-fecha="'+fStr+'" data-hora="'+slot.h+'" data-prof="'+agMobProf+'" style="display:flex;gap:.7rem;padding:.4rem .8rem;border-bottom:0.5px solid var(--cd);cursor:pointer;opacity:.5">'
         +'<div style="font-size:11px;color:var(--gc);min-width:38px">'+slot.h+'</div>'
         +'<div style="font-size:11px;color:var(--oliva)">+ Agregar turno</div>'
         +'</div>';
@@ -3060,8 +3060,23 @@ function agRenderMobile(){
 
   if(!rows&&agMobProf)rows='<div style="font-size:13px;color:var(--gc);padding:1rem;text-align:center">Sin turnos para este día</div>';
 
-  grid.innerHTML='<div style="overflow-x:auto;display:flex;gap:.5rem;padding:.5rem 0;margin-bottom:.8rem">'+pills+'</div>'
+  grid.innerHTML='<div style="overflow-x:auto;display:flex;gap:.5rem;padding:.5rem 0;margin-bottom:.8rem" id="ag-mob-pills">'+pills+'</div>'
     +'<div>'+rows+'</div>';
+  grid.querySelectorAll('.ag-mob-prof-btn').forEach(function(btn){
+    btn.addEventListener('click',function(){agSelMobProf(this.dataset.pid);});
+  });
+  grid.querySelectorAll('.ag-mob-slot-libre').forEach(function(el){
+    el.addEventListener('click',function(){
+      agAbrirNuevo(null);
+      var f=this.dataset.fecha,h=this.dataset.hora,pr=this.dataset.prof;
+      setTimeout(function(){
+        var fe=document.getElementById('ag-mt-fecha');if(fe)fe.value=f;
+        var pre=document.getElementById('ag-mt-prof');if(pre)pre.value=pr;
+        var ho=document.getElementById('ag-mt-hora');if(ho)ho.value=h;
+        agMtCargarServicios(pr);
+      },80);
+    });
+  });
 }
 
 function agRender(){
