@@ -1522,51 +1522,69 @@ function renderLaserTimeline(fecha){
     +'<div class="sc" style="flex:1"><div class="sc-n" style="color:var(--oliva)">'+fmtPeso(totalRec)+'</div><div class="sc-l">Total</div></div>'
     +'</div>';
 
-  // Grilla — tabla con hora a la izquierda y columna Camila
-  out+='<div style="border:1px solid var(--cd);border-radius:4px;overflow:hidden">';
-  out+='<table style="width:100%;border-collapse:collapse">';
-  out+='<thead><tr>'
-    +'<th style="width:52px;background:var(--crema);border-bottom:1px solid var(--cd);padding:6px 4px;font-size:10px;color:var(--gris);font-family:Raleway,sans-serif"></th>'
-    +'<th style="background:var(--crema);border-bottom:1px solid var(--cd);border-left:1px solid var(--cd);padding:6px;text-align:center;font-size:12px;font-weight:600;color:var(--oliva);font-family:Raleway,sans-serif">Camila · Depilación definitiva</th>'
-    +'</tr></thead>';
-  out+='<tbody>';
-
-  var LASER_SLOT_MIN=5;
-  var rendered={};
-  for(var m=8*60;m<20*60;m+=LASER_SLOT_MIN){
-    var isHour=m%60===0;
-    var hStr=toStr(m);
-    var borderB=isHour?'1px solid var(--cd)':'1px dashed rgba(184,178,172,.2)';
-    var turno=ocupMap[m];
-    var esPrimero=turno&&(turno.hora===hStr);
-
-    out+='<tr>';
-    // Celda hora — solo mostrar el texto en horas/medias horas para no saturar
-    var mostrarHora=(m%15===0);
-    out+='<td style="width:52px;min-width:52px;height:7px;background:var(--crema);border-bottom:'+borderB+';padding:0 6px;vertical-align:top">'
-      +(mostrarHora?'<span style="font-size:9px;color:var(--gc);font-family:Raleway,sans-serif">'+hStr+'</span>':'')
-      +'</td>';
-
-    // Celda turno o libre
-    if(turno&&!rendered[turno.id]){
-      // Primera celda de este turno — calcular rowspan según duración real en slots de 5 min
-      rendered[turno.id]=true;
-      var slots=Math.max(Math.round((turno.dur||30)/LASER_SLOT_MIN),1);
-      out+='<td rowspan="'+slots+'" class="ls-edit" data-id="'+turno.id+'" style="background:#a8b8c5;border-bottom:1px solid var(--cd);border-left:1px solid var(--cd);cursor:pointer;padding:4px 6px;vertical-align:top">'
-        +'<div style="font-size:11px;font-weight:600;color:#1e3040;overflow:hidden;white-space:nowrap;text-overflow:ellipsis">'+turno.nombre+'</div>'
-        +(turno.srv?'<div style="font-size:10px;color:#1e3040;opacity:.8;overflow:hidden;white-space:nowrap;text-overflow:ellipsis">'+turno.srv+' · '+turno.dur+' min</div>':'')
-        +(turno.precio?'<div style="font-size:10px;color:#1e3040;opacity:.65">'+fmtPeso(turno.precio)+(turno.senia?' · Seña: '+fmtPeso(turno.senia):'')+'</div>':'')
-        +'</td>';
-    } else if(!turno){
-      out+='<td class="ls-slot-libre" data-fecha="'+fecha+'" data-hora="'+hStr+'" style="border-bottom:'+borderB+';border-left:1px solid var(--cd);cursor:pointer;text-align:center;padding:0">'
-        +(mostrarHora?'<span style="font-size:9px;color:var(--oliva);opacity:.5">+</span>':'')
-        +'</td>';
+  // En mobile: lista vertical. En desktop: grilla de slots
+  if(window.innerWidth<=600){
+    // Vista mobile: lista de turnos + slots libres cada 30 min
+    out+='<div style="display:flex;flex-direction:column;gap:.4rem">';
+    var rendered2={};
+    for(var m2=8*60;m2<20*60;m2+=30){
+      var hStr2=toStr(m2);
+      var turno2=ocupMap[m2];
+      if(turno2&&!rendered2[turno2.id]){
+        rendered2[turno2.id]=true;
+        out+='<div class="ls-edit" data-id="'+turno2.id+'" style="display:flex;gap:.7rem;padding:.6rem .8rem;background:#a8b8c5;border-left:3px solid #5a7a8a;border-radius:0 4px 4px 0;cursor:pointer">'
+          +'<div style="font-size:11px;color:#1e3040;min-width:38px;padding-top:2px;font-weight:600">'+hStr2+'</div>'
+          +'<div style="flex:1">'
+            +'<div style="font-size:13px;font-weight:600;color:#1e3040">'+turno2.nombre+'</div>'
+            +'<div style="font-size:11px;color:#1e3040;opacity:.8">'+turno2.srv+' · '+turno2.dur+' min'+(turno2.senia?' · 💵 seña':'')+'</div>'
+          +'</div>'
+          +'</div>';
+      } else if(!ocupMap[m2]){
+        out+='<div class="ls-slot-libre" data-fecha="'+fecha+'" data-hora="'+hStr2+'" style="display:flex;gap:.7rem;padding:.4rem .8rem;border-bottom:0.5px solid var(--cd);cursor:pointer">'
+          +'<div style="font-size:11px;color:var(--gc);min-width:38px">'+hStr2+'</div>'
+          +'<div style="font-size:11px;color:var(--oliva);opacity:.6">+ Agregar turno</div>'
+          +'</div>';
+      }
     }
-    // Si está ocupado pero ya renderizado (rowspan), no agregar celda
-    out+='</tr>';
+    out+='</div>';
+  } else {
+    // Vista desktop: grilla con slots de 5 min
+    out+='<div style="border:1px solid var(--cd);border-radius:4px;overflow:hidden">';
+    out+='<table style="width:100%;border-collapse:collapse">';
+    out+='<thead><tr>'
+      +'<th style="width:52px;background:var(--crema);border-bottom:1px solid var(--cd);padding:6px 4px;font-size:10px;color:var(--gris);font-family:Raleway,sans-serif"></th>'
+      +'<th style="background:var(--crema);border-bottom:1px solid var(--cd);border-left:1px solid var(--cd);padding:6px;text-align:center;font-size:12px;font-weight:600;color:var(--oliva);font-family:Raleway,sans-serif">Camila · Depilación definitiva</th>'
+      +'</tr></thead>';
+    out+='<tbody>';
+    var LASER_SLOT_MIN=5;
+    var rendered={};
+    for(var m=8*60;m<20*60;m+=LASER_SLOT_MIN){
+      var isHour=m%60===0;
+      var hStr=toStr(m);
+      var borderB=isHour?'1px solid var(--cd)':'1px dashed rgba(184,178,172,.2)';
+      var turno=ocupMap[m];
+      out+='<tr>';
+      var mostrarHora=(m%15===0);
+      out+='<td style="width:52px;min-width:52px;height:7px;background:var(--crema);border-bottom:'+borderB+';padding:0 6px;vertical-align:top">'
+        +(mostrarHora?'<span style="font-size:9px;color:var(--gc);font-family:Raleway,sans-serif">'+hStr+'</span>':'')
+        +'</td>';
+      if(turno&&!rendered[turno.id]){
+        rendered[turno.id]=true;
+        var slots=Math.max(Math.round((turno.dur||30)/LASER_SLOT_MIN),1);
+        out+='<td rowspan="'+slots+'" class="ls-edit" data-id="'+turno.id+'" style="background:#a8b8c5;border-bottom:1px solid var(--cd);border-left:1px solid var(--cd);cursor:pointer;padding:4px 6px;vertical-align:top">'
+          +'<div style="font-size:11px;font-weight:600;color:#1e3040;overflow:hidden;white-space:nowrap;text-overflow:ellipsis">'+turno.nombre+'</div>'
+          +(turno.srv?'<div style="font-size:10px;color:#1e3040;opacity:.8;overflow:hidden;white-space:nowrap;text-overflow:ellipsis">'+turno.srv+' · '+turno.dur+' min</div>':'')
+          +(turno.precio?'<div style="font-size:10px;color:#1e3040;opacity:.65">'+fmtPeso(turno.precio)+(turno.senia?' · Seña: '+fmtPeso(turno.senia):'')+'</div>':'')
+          +'</td>';
+      } else if(!turno){
+        out+='<td class="ls-slot-libre" data-fecha="'+fecha+'" data-hora="'+hStr+'" style="border-bottom:'+borderB+';border-left:1px solid var(--cd);cursor:pointer;text-align:center;padding:0">'
+          +(mostrarHora?'<span style="font-size:9px;color:var(--oliva);opacity:.5">+</span>':'')
+          +'</td>';
+      }
+      out+='</tr>';
+    }
+    out+='</tbody></table></div>';
   }
-
-  out+='</tbody></table></div>';
   slotsEl.innerHTML=out;
   // Event listeners para celdas dinámicas
   slotsEl.querySelectorAll('.ls-edit').forEach(function(el){
@@ -1580,7 +1598,7 @@ function renderLaserTimeline(fecha){
 function lun(d){const x=new Date(d),dw=x.getDay();x.setDate(x.getDate()-(dw===0?6:dw-1));return x}
 function fnow(){const n=new Date();return`${n.getDate()} ${MSC[n.getMonth()]}`}
 function cerrarM(id){document.getElementById(id).classList.remove('on')}
-['modal-cl-login','m-prof','m-srv','m-cl','m-canje'].forEach(id=>{
+['modal-cl-login','m-prof','m-srv','m-cl','m-canje','modal-cancelados'].forEach(id=>{
   document.getElementById(id).addEventListener('click',function(e){if(e.target===this)cerrarM(id)})
 });
 
@@ -2340,8 +2358,9 @@ function stAdm(id,btn){
 function renderAdmRes(){
   const h=hoy();
   // Birthday alerts
-  const cumpleHoy=D.clientas.filter(function(c){return isCumpleHoy(c.cumple);});
-  const cumpleProx=D.clientas.filter(function(c){return isCumpleProximo(c.cumple);});
+  // Usar nac (fecha nacimiento nueva) o cumple (campo viejo) como fallback
+  const cumpleHoy=D.clientas.filter(function(c){return isCumpleHoy(c.nac||c.cumple);});
+  const cumpleProx=D.clientas.filter(function(c){return isCumpleProximo(c.nac||c.cumple);});
   const cumpleEl=document.getElementById('a-cumples');
   if(cumpleEl){
     if(cumpleHoy.length||cumpleProx.length){
@@ -3293,6 +3312,7 @@ function agVerTurno(id){
       <div>⏱ ${t.duracion||60} min</div>
       ${t.senia?'<div>💵 Seña pagada: '+fmtPeso(t.senia)+'</div>':''}
       ${t.notas?'<div>📝 '+t.notas+'</div>':''}
+      ${t.histCambios&&t.histCambios.length?'<div style="margin-top:6px;font-size:10px;color:var(--gc)">✏️ Editado '+t.histCambios.length+' vez'+(t.histCambios.length>1?'es':'')+' · último cambio '+t.histCambios[t.histCambios.length-1].fecha+' por '+t.histCambios[t.histCambios.length-1].user+'</div>':''}
       <div style="font-size:11px;color:var(--gc);margin-top:4px">${t.manual||!t.online?'Cargado manualmente':'Reserva online'}</div>
     </div>`;
   const isAdmin=ROL_PANEL[curPUser]==='admin';
@@ -3318,6 +3338,34 @@ function agEditarDesdeVer(){
   const t=agD.turnos.find(x=>x.id===agVerTurnoId);
   if(!t)return;
   agAbrirNuevo(t);
+}
+
+function agVerCancelados(){
+  var lista=document.getElementById('cancelados-lista');
+  if(!lista)return;
+  var cancelados=(agD.cancelados||[]).slice().sort(function(a,b){
+    return (b.canceladoEn||'').localeCompare(a.canceladoEn||'');
+  });
+  if(!cancelados.length){
+    lista.innerHTML='<div style="font-size:13px;color:var(--gc);padding:1rem;text-align:center">No hay turnos cancelados registrados.</div>';
+  }else{
+    lista.innerHTML=cancelados.map(function(t){
+      var profData=AG_PROFS.find(function(p){return p.id===t.prof;});
+      return '<div style="padding:.6rem .8rem;border-bottom:0.5px solid var(--cd)">'
+        +'<div style="display:flex;justify-content:space-between;align-items:flex-start">'
+          +'<div>'
+            +'<div style="font-size:13px;font-weight:600;color:var(--texto)">'+t.cliente+'</div>'
+            +'<div style="font-size:11px;color:var(--gc)">'+(t.servicio||'')+(profData?' · '+profData.n:'')+'</div>'
+            +'<div style="font-size:11px;color:var(--gc)">'+t.fecha+' '+t.hora+(t.duracion?' · '+t.duracion+' min':'')+'</div>'
+          +'</div>'
+          +'<div style="text-align:right;font-size:10px;color:var(--gc)">'
+            +'Cancelado '+t.canceladoEn+'<br>por '+(t.canceladoPor||'—')
+          +'</div>'
+        +'</div>'
+        +'</div>';
+    }).join('');
+  }
+  document.getElementById('modal-cancelados').classList.add('on');
 }
 
 function agCobrarDesdeVer(){
@@ -3354,6 +3402,8 @@ function agEliminarDesdeVer(){
   var tManual=agD.turnos.find(function(t){return t.id===agVerTurnoId;});
   if(tManual){
     if(tManual.prof==='camila')fueLaser=true;
+    agD.cancelados=agD.cancelados||[];
+    agD.cancelados.push({...tManual,canceladoEn:hoy(),canceladoPor:curPUser||'admin'});
     agD.turnos=agD.turnos.filter(t=>t.id!==agVerTurnoId);agSv();
   }else{
     // Si no está en turnos manuales, debe ser una reserva online — buscar por id exacto
@@ -3475,7 +3525,9 @@ function agGuardarTurno(){
         const haySolape=intervalosOcupados.some(function(iv){return iniNuevo<iv[1]&&finNuevo>iv[0];});
         if(haySolape){er.textContent='Ya hay un turno o bloqueo que se superpone con ese horario.';er.classList.add('on');_agGuardando=false;return;}
       }
-      agD.turnos[idx]={...agD.turnos[idx],prof,fecha,hora,duracion:dur,cliente,servicio,notas,senia,manual:true,bloqueo:esBloqueo};
+      var histCambio={fecha:hoy(),hora:new Date().toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'}),user:curPUser||'admin',de:{prof:agD.turnos[idx].prof,fecha:agD.turnos[idx].fecha,hora:agD.turnos[idx].hora,servicio:agD.turnos[idx].servicio}};
+      var histPrev=agD.turnos[idx].histCambios||[];
+      agD.turnos[idx]={...agD.turnos[idx],prof,fecha,hora,duracion:dur,cliente,servicio,notas,senia,manual:true,bloqueo:esBloqueo,histCambios:[...histPrev,histCambio]};
     }
   }else{
     // Evitar superposiciones: chequear contra turnos manuales, reservas online y bloqueos
@@ -7339,9 +7391,13 @@ function rpPagarCom(profId,profNombre,monto){
     <button class="btn-cancel" onclick="cerrarM(&#39;modal-ag-turno&#39;)">Cancelar</button>
     <button class="btn-v" style="flex:1" onclick="this.disabled=true;agGuardarTurno();setTimeout(()=>this.disabled=false,2000)">Guardar</button>
   </div>
+<div id="modal-cancelados" class="modal"><div class="mc" style="max-width:520px">
+  <div class="mc-title">🗑 Turnos cancelados</div>
+  <div id="cancelados-lista" style="max-height:60vh;overflow-y:auto"></div>
+  <div class="mc-acts"><button class="btn-cancel" onclick="cerrarM('modal-cancelados')">Cerrar</button></div>
 </div></div>
 
-<div id="modal-ag-ver" class="modal"><div class="mc">
+<div id="modal-ag-ver"  class="modal"><div class="mc">
   <div class="mc-title" id="ag-mv-title">Turno</div>
   <div id="ag-mv-content"></div>
   <div class="mc-acts" id="ag-mv-acts"></div>
@@ -7378,6 +7434,7 @@ function rpPagarCom(profId,profNombre,monto){
     <button class="ag-btn on" id="ag-v-dia" onclick="agSetVista(&#39;dia&#39;,this)">Día</button>
     <button class="ag-btn" id="ag-v-sem" onclick="agSetVista(&#39;semana&#39;,this)">Semana</button>
     <button class="ag-btn" onclick="agAbrirModalTurno(null,agFk(agFecha),null)" style="display: block;" id="ag-btn-nuevo">+ Turno</button>
+    <button class="ag-btn" onclick="agVerCancelados()" title="Ver turnos cancelados">🗑</button>
     <button class="ag-btn" id="ag-panel-btn" onclick="irPanelDesdeAgenda()" style="display: block;">Panel →</button>
     <button class="ag-btn" onclick="agLogout()">Salir</button>
   </div>
