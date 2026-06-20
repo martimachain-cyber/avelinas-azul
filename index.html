@@ -1261,6 +1261,7 @@ td.ag-slot-free{background:transparent}
   <input type="hidden" id="mc-id">
   <label class="flbl">Nombre</label><input class="finp" id="mc-n" placeholder="Nombre completo">
   <label class="flbl">Teléfono</label><input class="finp" id="mc-tel" placeholder="2494...">
+  <label class="flbl">Fecha de nacimiento</label><input class="finp" id="mc-nac" type="date" placeholder="dd/mm/aaaa">
   <label class="flbl">Puntos</label><input class="finp" id="mc-pts" type="number" min="0" value="0">
   <label class="flbl">Canjes</label><input class="finp" id="mc-can" type="number" min="0" value="0">
   <div style="display:flex;align-items:center;gap:.5rem;margin:.5rem 0">
@@ -2746,6 +2747,7 @@ function abrirMC(id){
   eIds.c=id;const c=id?D.clientas.find(x=>x.id===id):null;
   document.getElementById('mc-t').textContent=c?`Editar — ${c.n}`:'Nueva clienta';
   document.getElementById('mc-n').value=c?.n||'';document.getElementById('mc-tel').value=c?.tel||'';document.getElementById('mc-pts').value=c?.pts||0;document.getElementById('mc-can').value=c?.can||0;
+  var nacEl=document.getElementById('mc-nac');if(nacEl)nacEl.value=c?.nac||'';
   var migEl=document.getElementById('mc-migrada');if(migEl)migEl.checked=c?.migrada||false;
   document.getElementById('ok-mc').classList.remove('on');document.getElementById('er-mc').classList.remove('on');
   document.getElementById('m-cl').classList.add('on');
@@ -2753,11 +2755,12 @@ function abrirMC(id){
 function guardarC(){
   const n=document.getElementById('mc-n').value.trim(),tel=document.getElementById('mc-tel').value.trim();
   const pts=parseInt(document.getElementById('mc-pts').value)||0,can=parseInt(document.getElementById('mc-can').value)||0;
+  const nac=document.getElementById('mc-nac')?document.getElementById('mc-nac').value:'';
   const migrada=document.getElementById('mc-migrada')?document.getElementById('mc-migrada').checked:false;
   const ok=document.getElementById('ok-mc'),er=document.getElementById('er-mc');ok.classList.remove('on');er.classList.remove('on');
   if(!n||!tel){er.textContent='Completá nombre y teléfono.';er.classList.add('on');return}
-  if(eIds.c){const idx=D.clientas.findIndex(x=>x.id===eIds.c);if(idx>=0)D.clientas[idx]={...D.clientas[idx],n,tel,pts,can,migrada}}
-  else{if(D.clientas.find(x=>x.tel===tel)){er.textContent='Ya existe esa clienta.';er.classList.add('on');return}D.clientas.push({id:'c_'+Date.now(),n,tel,pts,can,migrada,hist:[{d:'Registro',f:fnow(),p:0}]})}
+  if(eIds.c){const idx=D.clientas.findIndex(x=>x.id===eIds.c);if(idx>=0)D.clientas[idx]={...D.clientas[idx],n,tel,pts,can,nac,migrada}}
+  else{if(D.clientas.find(x=>x.tel===tel)){er.textContent='Ya existe esa clienta.';er.classList.add('on');return}D.clientas.push({id:'c_'+Date.now(),n,tel,pts,can,nac,migrada,hist:[{d:'Registro',f:fnow(),p:0}]})}
   sv();filtraCls('');ok.textContent=eIds.c?'Actualizada ✓':'Registrada ✓';ok.classList.add('on');setTimeout(()=>cerrarM('m-cl'),1500);
 }
 function borrarC(id){const c=D.clientas.find(x=>x.id===id);if(!confirm(`¿Eliminar a ${c?.n}?`))return;D.clientas=D.clientas.filter(x=>x.id!==id);sv();filtraCls('')}
@@ -6139,7 +6142,11 @@ function abrirFicha(clId, soloLectura){
 
   // Header
   document.getElementById('ficha-nombre').textContent = cl.n;
-  document.getElementById('ficha-sub').textContent = cl.tel + (cl.cumple?' · 🎂 '+cl.cumple.split('-').slice(1).reverse().join('/'):'');
+  var nacStr='';
+  if(cl.nac){var nacParts=cl.nac.split('-');nacStr=' · 🎂 '+nacParts[2]+'/'+nacParts[1];}
+  else if(cl.cumple){nacStr=' · 🎂 '+cl.cumple.split('-').slice(1).reverse().join('/');}
+  var migradaStr=cl.migrada?' · 👤 Clienta anterior':'';
+  document.getElementById('ficha-sub').textContent = cl.tel + nacStr + migradaStr;
 
   // Stats — profesionales solo ven visitas y última fecha
   const turnos = D.reservas.filter(function(r){return r.tel===cl.tel||r.cl===cl.n;});
