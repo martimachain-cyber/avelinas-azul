@@ -2656,9 +2656,9 @@ function renderRecordatorios(){
     return{cl:cl,ultima:ultima};
   });
 
-  // Filtrar las que no vienen desde hace `recDias` días (o nunca vinieron)
+  // Filtrar solo las que SÍ vinieron alguna vez pero no vuelven desde hace `recDias` días
   var resultado=clientasConFecha.filter(function(x){
-    if(!x.ultima)return true; // nunca vinieron
+    if(!x.ultima)return false; // sin historial, no mostrar
     return x.ultima<limStr;
   }).sort(function(a,b){
     if(!a.ultima)return -1;
