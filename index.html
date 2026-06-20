@@ -2971,7 +2971,86 @@ function agGetSemana(){
   return dias;
 }
 
+var agMobProf=null;
+
+function agSelMobProf(id){
+  agMobProf=id;
+  agRenderMobile();
+}
+
+function agRenderMobile(){
+  const grid=document.getElementById('ag-grid');
+  if(!grid)return;
+  const DS=['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+  const MS=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+  const d=agFecha;
+  const fStr=agFk(d);
+  const titEl=document.getElementById('ag-titulo');
+  if(titEl)titEl.textContent=DS[d.getDay()]+' '+d.getDate()+' '+MS[d.getMonth()]+' '+d.getFullYear();
+
+  const profs=AG_PROFS.filter(function(p){return agFiltroProfs.includes(p.id);});
+  if(!agMobProf||!profs.find(function(p){return p.id===agMobProf;}))agMobProf=profs[0]?.id||null;
+
+  // Selector de profesional (pills)
+  var pills=profs.map(function(p){
+    var sel=p.id===agMobProf;
+    return '<button onclick="agSelMobProf(''+p.id+'')" style="padding:.35rem .8rem;border-radius:20px;border:1.5px solid '+(sel?AG_COLORS[p.id]:'var(--cd)')+';background:'+(sel?AG_COLORS[p.id]:'transparent')+';color:'+(sel?'#fff':'var(--gc)')+';font-size:12px;font-family:Raleway,sans-serif;font-weight:'+(sel?'600':'400')+';cursor:pointer;white-space:nowrap">'+p.n+'</button>';
+  }).join('');
+
+  // Turnos del día para la profesional seleccionada
+  var turnosDelDia=[];
+  if(agMobProf){
+    var workH=getWorkH(agMobProf,d.getDay());
+    var hIni=workH?workH[0]:AG_H_INI;
+    var hFin=workH?workH[1]:AG_H_FIN;
+    for(var m=hIni*60;m<hFin*60;m+=30){
+      var hStr=String(Math.floor(m/60)).padStart(2,'0')+':'+String(m%60).padStart(2,'0');
+      var turno=getSlotTurno(agMobProf,fStr,hStr);
+      var blq=(agD.bloqueos||[]).find(function(b){return b.prof===agMobProf&&b.fecha===fStr&&b.h===hStr;});
+      turnosDelDia.push({h:hStr,turno:turno,blq:blq});
+    }
+  }
+
+  // Renderizar
+  var rows='';
+  var rendered={};
+  turnosDelDia.forEach(function(slot){
+    if(slot.turno&&rendered[slot.turno.id])return;
+    if(slot.turno){
+      rendered[slot.turno.id]=true;
+      var dur=slot.turno.duracion||slot.turno.dur||60;
+      rows+='<div onclick="agVerTurno(''+slot.turno.id+'')" style="display:flex;gap:.7rem;padding:.6rem .8rem;background:'+AG_COLORS[agMobProf]+'22;border-left:3px solid '+AG_COLORS[agMobProf]+';border-radius:0 4px 4px 0;margin-bottom:.4rem;cursor:pointer">'
+        +'<div style="font-size:11px;color:var(--gc);min-width:38px;padding-top:2px">'+slot.h+'</div>'
+        +'<div style="flex:1">'
+          +'<div style="font-size:13px;font-weight:600;color:var(--texto)">'+slot.turno.cliente+'</div>'
+          +'<div style="font-size:11px;color:var(--gc)">'+slot.turno.servicio+' · '+dur+' min'+(slot.turno.senia?' · 💵 seña':'')+'</div>'
+        +'</div>'
+        +'</div>';
+    }else if(slot.blq){
+      rows+='<div style="display:flex;gap:.7rem;padding:.5rem .8rem;background:var(--crema);border-left:3px solid var(--cd);border-radius:0 4px 4px 0;margin-bottom:.4rem">'
+        +'<div style="font-size:11px;color:var(--gc);min-width:38px">'+slot.h+'</div>'
+        +'<div style="font-size:12px;color:var(--gc)">🔒 Bloqueado</div>'
+        +'</div>';
+    }else{
+      rows+='<div onclick="agAbrirNuevo(null);setTimeout(function(){var f=document.getElementById('ag-mt-fecha');if(f)f.value=''+fStr+'';var pr=document.getElementById('ag-mt-prof');if(pr)pr.value=''+agMobProf+'';var ho=document.getElementById('ag-mt-hora');if(ho)ho.value=''+slot.h+'';agMtCargarServicios(''+agMobProf+'');},80)" style="display:flex;gap:.7rem;padding:.4rem .8rem;border-bottom:0.5px solid var(--cd);cursor:pointer;opacity:.5">'
+        +'<div style="font-size:11px;color:var(--gc);min-width:38px">'+slot.h+'</div>'
+        +'<div style="font-size:11px;color:var(--oliva)">+ Agregar turno</div>'
+        +'</div>';
+    }
+  });
+
+  if(!rows&&agMobProf)rows='<div style="font-size:13px;color:var(--gc);padding:1rem;text-align:center">Sin turnos para este día</div>';
+
+  grid.innerHTML='<div style="overflow-x:auto;display:flex;gap:.5rem;padding:.5rem 0;margin-bottom:.8rem">'+pills+'</div>'
+    +'<div>'+rows+'</div>';
+}
+
 function agRender(){
+  // En mobile, usar vista simplificada por profesional
+  if(window.innerWidth<=600&&document.getElementById('ag-grid')){
+    agRenderMobile();
+    return;
+  }
   const fechas=agVista==='dia'?[new Date(agFecha)]:agGetSemana();
   const profs=AG_PROFS.filter(function(p){return agFiltroProfs.includes(p.id);});
   const DS=['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
