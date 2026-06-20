@@ -3038,7 +3038,7 @@ function agRenderMobile(){
     if(slot.turno){
       rendered[slot.turno.id]=true;
       var dur=slot.turno.duracion||slot.turno.dur||60;
-      rows+='<div onclick="agVerTurno(''+slot.turno.id+'')" style="display:flex;gap:.7rem;padding:.6rem .8rem;background:'+AG_COLORS[agMobProf]+'22;border-left:3px solid '+AG_COLORS[agMobProf]+';border-radius:0 4px 4px 0;margin-bottom:.4rem;cursor:pointer">'
+      rows+='<div class="ag-mob-turno" data-tid="'+slot.turno.id+'" style="display:flex;gap:.7rem;padding:.6rem .8rem;background:'+AG_COLORS[agMobProf]+'22;border-left:3px solid '+AG_COLORS[agMobProf]+';border-radius:0 4px 4px 0;margin-bottom:.4rem;cursor:pointer">'
         +'<div style="font-size:11px;color:var(--gc);min-width:38px;padding-top:2px">'+slot.h+'</div>'
         +'<div style="flex:1">'
           +'<div style="font-size:13px;font-weight:600;color:var(--texto)">'+slot.turno.cliente+'</div>'
@@ -3064,6 +3064,9 @@ function agRenderMobile(){
     +'<div>'+rows+'</div>';
   grid.querySelectorAll('.ag-mob-prof-btn').forEach(function(btn){
     btn.addEventListener('click',function(){agSelMobProf(this.dataset.pid);});
+  });
+  grid.querySelectorAll('.ag-mob-turno').forEach(function(el){
+    el.addEventListener('click',function(){agVerTurno(this.dataset.tid);});
   });
   grid.querySelectorAll('.ag-mob-slot-libre').forEach(function(el){
     el.addEventListener('click',function(){
