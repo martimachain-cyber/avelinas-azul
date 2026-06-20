@@ -957,11 +957,13 @@ td.ag-slot-free{background:transparent}
         <button class="cpill on" id="rp-tab-cierre" onclick="rpSetTab('cierre',this)">📅 Cierre mensual</button>
         <button class="cpill" id="rp-tab-profs" onclick="rpSetTab('profs',this)">👩 Por profesional</button>
         <button class="cpill" id="rp-tab-servicios" onclick="rpSetTab('servicios',this)">✂️ Por servicio</button>
+        <button class="cpill" id="rp-tab-retencion" onclick="rpSetTab('retencion',this)">👥 Retención</button>
       </div>
       <input type="month" id="rp-mes-sel" onchange="rpRender()" style="font-size:12px;padding:4px 8px;border:1px solid var(--cd);border-radius:3px;margin-bottom:1rem">
       <div id="rp-cierre"></div>
       <div id="rp-profs" style="display:none"></div>
       <div id="rp-servicios" style="display:none"></div>
+      <div id="rp-retencion" style="display:none"></div>
     </div></div>
 
     <div id="a-insumos" class="tsec"><div style="padding:1rem">
@@ -6641,14 +6643,137 @@ function agMtSrvChange(){
   const prEl=document.getElementById('ag-mt-precio');if(prEl)prEl.value=precio>0?precio:'';
 }
 
+function rpRenderRetencion(){
+  var cont=document.getElementById('rp-retencion');
+  if(!cont)return;
+  var mes=rpGetMes();
+  var meses=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+  var parts=mes.split('-');
+  var mesLabel=meses[parseInt(parts[1])-1]+' '+parts[0];
+  var hoyStr=hoy();
+
+  // Obtener todas las fechas de visita por clienta (reservas + turnos manuales)
+  function visitasDe(clNombre,clTel){
+    var rs=(D.reservas||[]).filter(function(r){return r.tel===clTel||r.cl===clNombre;}).map(function(r){return r.f;});
+    var ts=(agD.turnos||[]).filter(function(t){return t.cliente===clNombre&&!t.bloqueo;}).map(function(t){return t.fecha;});
+    return rs.concat(ts).filter(Boolean).filter(function(f){return f<=hoyStr;}).sort();
+  }
+
+  // Mes actual y mes anterior
+  var [anio,nMes]=mes.split('-').map(Number);
+  var mesIni=mes+'-01';
+  var mesFin=mes+'-31';
+  var antAnio=nMes===1?anio-1:anio;
+  var antMes=nMes===1?12:nMes-1;
+  var antStr=antAnio+'-'+(antMes<10?'0':'')+antMes;
+  var antIni=antStr+'-01';
+  var antFin=antStr+'-31';
+
+  // Clientas que visitaron este mes
+  var clsEsteMes=D.clientas.filter(function(cl){
+    var v=visitasDe(cl.n,cl.tel);
+    return v.some(function(f){return f>=mesIni&&f<=mesFin;});
+  });
+
+  // Clientas que visitaron el mes anterior
+  var clsMesAnt=D.clientas.filter(function(cl){
+    var v=visitasDe(cl.n,cl.tel);
+    return v.some(function(f){return f>=antIni&&f<=antFin;});
+  });
+
+  var idsMesAnt=new Set(clsMesAnt.map(function(cl){return cl.id;}));
+  var idsEsteMes=new Set(clsEsteMes.map(function(cl){return cl.id;}));
+
+  // Nuevas: vinieron este mes pero NO el anterior
+  var nuevas=clsEsteMes.filter(function(cl){return !idsMesAnt.has(cl.id);});
+  // Recurrentes: vinieron este mes Y también el anterior
+  var recurrentes=clsEsteMes.filter(function(cl){return idsMesAnt.has(cl.id);});
+  // Perdidas: vinieron el mes anterior pero NO este mes
+  var perdidas=clsMesAnt.filter(function(cl){return !idsEsteMes.has(cl.id);});
+
+  var total=clsEsteMes.length;
+  var pctRec=total>0?Math.round(recurrentes.length/total*100):0;
+  var pctNue=total>0?Math.round(nuevas.length/total*100):0;
+
+  // Clientas con múltiples visitas este mes
+  var multiVisita=D.clientas.filter(function(cl){
+    var v=visitasDe(cl.n,cl.tel).filter(function(f){return f>=mesIni&&f<=mesFin;});
+    return v.length>=2;
+  });
+
+  function statCard(label,value,sub,color){
+    return '<div style="flex:1;background:var(--blanco);border:0.5px solid var(--cd);border-radius:4px;padding:.8rem;text-align:center">'
+      +'<div style="font-size:22px;font-weight:600;color:'+(color||'var(--texto)')+'">'+value+'</div>'
+      +'<div style="font-size:11px;font-weight:500;color:var(--texto);margin:2px 0">'+label+'</div>'
+      +(sub?'<div style="font-size:10px;color:var(--gc)">'+sub+'</div>':'')
+      +'</div>';
+  }
+
+  function clList(lista,emptyMsg){
+    if(!lista.length)return '<div style="font-size:12px;color:var(--gc);padding:.3rem 0">'+emptyMsg+'</div>';
+    return lista.slice(0,8).map(function(cl){
+      return '<div style="font-size:12px;padding:3px 0;color:var(--texto)">'+cl.n+'</div>';
+    }).join('')+(lista.length>8?'<div style="font-size:11px;color:var(--gc)">+ '+(lista.length-8)+' más...</div>':'');
+  }
+
+  cont.innerHTML=
+    '<div style="font-size:13px;font-weight:500;color:var(--texto);margin-bottom:.8rem">'+mesLabel+'</div>'
+
+    // Métricas principales
+    +'<div style="display:flex;gap:.5rem;margin-bottom:1rem;flex-wrap:wrap">'
+    +statCard('Visitaron este mes',total,'clientas únicas','var(--oliva)')
+    +statCard('Recurrentes',recurrentes.length,pctRec+'% del total','#3B6D11')
+    +statCard('Nuevas',nuevas.length,pctNue+'% del total','#2563a8')
+    +statCard('No volvieron',perdidas.length,'vs mes anterior','#A32D2D')
+    +'</div>'
+
+    // Barra de retención visual
+    +(total>0?'<div style="margin-bottom:1rem">'
+    +'<div style="font-size:11px;color:var(--gc);margin-bottom:4px">Composición del mes</div>'
+    +'<div style="display:flex;height:10px;border-radius:5px;overflow:hidden;background:var(--cd)">'
+    +'<div style="width:'+pctRec+'%;background:#3B6D11;transition:width .3s"></div>'
+    +'<div style="width:'+pctNue+'%;background:#2563a8;transition:width .3s"></div>'
+    +'</div>'
+    +'<div style="display:flex;gap:1rem;margin-top:4px;font-size:10px;color:var(--gc)">'
+    +'<span>🟩 Recurrentes '+pctRec+'%</span><span>🟦 Nuevas '+pctNue+'%</span>'
+    +'</div>'
+    +'</div>':'')
+
+    // Detalle en dos columnas
+    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:.8rem;margin-top:.5rem">'
+
+    +'<div style="background:var(--blanco);border:0.5px solid var(--cd);border-radius:4px;padding:.8rem">'
+    +'<div style="font-size:11px;font-weight:600;color:#3B6D11;margin-bottom:6px;text-transform:uppercase;letter-spacing:.04em">Recurrentes ('+recurrentes.length+')</div>'
+    +clList(recurrentes,'Ninguna')
+    +'</div>'
+
+    +'<div style="background:var(--blanco);border:0.5px solid var(--cd);border-radius:4px;padding:.8rem">'
+    +'<div style="font-size:11px;font-weight:600;color:#2563a8;margin-bottom:6px;text-transform:uppercase;letter-spacing:.04em">Nuevas ('+nuevas.length+')</div>'
+    +clList(nuevas,'Ninguna')
+    +'</div>'
+
+    +'<div style="background:var(--blanco);border:0.5px solid var(--cd);border-radius:4px;padding:.8rem">'
+    +'<div style="font-size:11px;font-weight:600;color:#A32D2D;margin-bottom:6px;text-transform:uppercase;letter-spacing:.04em">No volvieron ('+perdidas.length+')</div>'
+    +clList(perdidas,'Ninguna 🎉')
+    +'</div>'
+
+    +'<div style="background:var(--blanco);border:0.5px solid var(--cd);border-radius:4px;padding:.8rem">'
+    +'<div style="font-size:11px;font-weight:600;color:var(--oliva);margin-bottom:6px;text-transform:uppercase;letter-spacing:.04em">+2 visitas este mes ('+multiVisita.length+')</div>'
+    +clList(multiVisita,'Ninguna')
+    +'</div>'
+
+    +'</div>';
+}
+
 function rpSetTab(tab,btn){
   document.querySelectorAll('[id^="rp-tab-"]').forEach(b=>b.classList.remove('on'));
   if(btn)btn.classList.add('on');
-  ['cierre','profs','servicios'].forEach(function(t){
+  ['cierre','profs','servicios','retencion'].forEach(function(t){
     var el=document.getElementById('rp-'+t);
     if(el)el.style.display=t===tab?'block':'none';
   });
-  rpRender(tab);
+  if(tab==='retencion')rpRenderRetencion();
+  else rpRender(tab);
 }
 
 function rpGetMes(){
