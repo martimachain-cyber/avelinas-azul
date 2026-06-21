@@ -2321,9 +2321,9 @@ function pLogout(){
 }
 
 function initAdmin(){
-  document.getElementById('panel-login').style.display='none';
-  document.getElementById('panel-admin').style.display='block';
-  document.getElementById('panel-prof').style.display='none';
+  var _pl=document.getElementById('panel-login');if(_pl)_pl.style.display='none';
+  var _pa=document.getElementById('panel-admin');if(_pa)_pa.style.display='block';
+  var _pp=document.getElementById('panel-prof');if(_pp)_pp.style.display='none';
   document.getElementById('adm-brand').textContent=curPUser==='lucia'?'Panel — Lucía':'Panel Admin';
   const tabs=[{id:'a-res',l:'Resumen'},{id:'a-pro',l:'Profesionales'},{id:'a-srv',l:'Servicios'},{id:'a-cls',l:'Clientas'},{id:'a-caja',l:'💰 Caja'},{id:'a-prod',l:'📦 Productos'}];
   const nav=document.getElementById('adm-tabs-el');
@@ -3768,12 +3768,13 @@ function irPanelDesdeAgenda(){
 function agLogout(){
   curPUser=null;
   try{sessionStorage.removeItem('avPU');}catch(e){}
-  document.getElementById('panel-login').style.display='block';
-  document.getElementById('panel-admin').style.display='none';
-  document.getElementById('panel-prof').style.display='none';
-  document.getElementById('p-clave').value='';
+  var _pl=document.getElementById('panel-login');if(_pl)_pl.style.display='block';
+  var _pa=document.getElementById('panel-admin');if(_pa)_pa.style.display='none';
+  var _pp=document.getElementById('panel-prof');if(_pp)_pp.style.display='none';
+  var _pc=document.getElementById('p-clave');if(_pc)_pc.value='';
   document.querySelectorAll('.pb').forEach(b=>b.classList.remove('on'));
-  goPage('panel');
+  goPage('inicio');
+  actualizarNavBtn();
 }
 
 function mkFotoHtml(foto, inicial){
