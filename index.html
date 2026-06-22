@@ -3490,8 +3490,8 @@ function agEliminarDesdeVer(){
 }
 
 var _agLaserMode=false;
-function agAbrirNuevo(t=null){
-  _agLaserMode=false;
+function agAbrirNuevo(t=null,laserMode=false){
+  _agLaserMode=laserMode;
   document.getElementById('ag-mt-title').textContent=t?'Editar turno':'Nuevo turno';
   document.getElementById('ag-mt-id').value=t?t.id:'';
   document.getElementById('ag-mt-fecha').value=t?t.fecha:agFk(agFecha);
@@ -3510,11 +3510,11 @@ function agAbrirNuevo(t=null){
   const _profIdNuevo=t?t.prof:(ROL_PANEL[curPUser]==='prof'?curPUser:AG_PROFS[0].id);
   sel.value=_profIdNuevo;
   // Registrar onchange AQUÍ, después de reconstruir el select
-  sel.onchange=function(){agMtCargarServicios(this.value);};
+  sel.onchange=function(){if(_agLaserMode)agMtCargarServiciosLaser();else agMtCargarServicios(this.value);};
   document.getElementById('ok-ag-mt').classList.remove('on');
   document.getElementById('er-ag-mt').classList.remove('on');
-  agMtCargarServicios(_profIdNuevo);
-  // Segundo intento para cubrir timing de Supabase — lee el value actual del select
+  if(_agLaserMode){agMtCargarServiciosLaser();}else{agMtCargarServicios(_profIdNuevo);}
+  // Segundo intento para cubrir timing de Supabase
   setTimeout(function(){
     if(_agLaserMode){agMtCargarServiciosLaser();return;}
     var profActual=document.getElementById('ag-mt-prof');
@@ -6717,8 +6717,7 @@ function guardarNuevaJornada(){
   inp.value='';
 }
 function laserAgregarDesdeSlot(fecha, hora){
-  _agLaserMode=true;
-  agAbrirNuevo(null);
+  agAbrirNuevo(null,true);
   setTimeout(function(){
     var fd=document.getElementById('ag-mt-fecha');if(fd)fd.value=fecha;
     var pr=document.getElementById('ag-mt-prof');if(pr)pr.value='camila';
@@ -6728,8 +6727,7 @@ function laserAgregarDesdeSlot(fecha, hora){
 }
 
 function abrirLaserNuevoTurno(){
-  _agLaserMode=true;
-  agAbrirNuevo(null);
+  agAbrirNuevo(null,true);
   setTimeout(function(){
     var pr=document.getElementById('ag-mt-prof');if(pr)pr.value='camila';
     var fd=document.getElementById('ag-mt-fecha');if(fd&&laserJornadaSel)fd.value=laserJornadaSel;
