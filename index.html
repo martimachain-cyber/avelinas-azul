@@ -622,7 +622,7 @@ td.ag-slot-free{background:transparent}
     <div class="adm-tabs" id="adm-tabs-el" style="grid-template-columns: repeat(8, 1fr);"><button class="adm-tab" onclick="stAdm(&#39;a-res&#39;,this)">Resumen</button><button class="adm-tab" onclick="stAdm(&#39;a-pro&#39;,this)">Profesionales</button><button class="adm-tab" onclick="stAdm(&#39;a-srv&#39;,this)">Servicios</button><button class="adm-tab on" onclick="stAdm(&#39;a-cls&#39;,this)">Clientas</button><button class="adm-tab" onclick="stAdm(&#39;a-caja&#39;,this)">💰 Caja</button><button class="adm-tab" onclick="stAdm(&#39;a-prod&#39;,this)">📦 Productos</button><button class="adm-tab" onclick="stAdm(&#39;a-reportes&#39;,this)">📊 Reportes</button><button class="adm-tab" onclick="stAdm(&#39;a-insumos&#39;,this)">🧴 Insumos</button></div>
     <div id="a-res" class="tsec">
       <div style="padding:1rem">
-        <div class="stats" style="grid-template-columns:repeat(4,1fr)"><div class="sc"><div class="sc-n" id="a-sh">0</div><div class="sc-l">Hoy</div></div><div class="sc"><div class="sc-n" id="a-ss">0</div><div class="sc-l">Semana</div></div><div class="sc"><div class="sc-n" id="a-sc-hoy" style="font-size:16px;color:#3B6D11">$0</div><div class="sc-l">Cobrado hoy</div></div><div class="sc"><div class="sc-n" id="a-sc">0</div><div class="sc-l">Clientas</div></div></div><div id="a-cumples" style="display:none;background:rgba(255,200,50,.1);border:1px solid rgba(255,200,50,.4);border-radius:3px;padding:.8rem;margin-bottom:.8rem"></div><button class="btn-v full" onclick="irAgendaDesdePanel()" style="margin-bottom:.8rem">📅 Ver agenda completa</button>
+        <div class="stats" style="grid-template-columns:repeat(4,1fr)"><div class="sc"><div class="sc-n" id="a-sh">0</div><div class="sc-l">Hoy</div></div><div class="sc"><div class="sc-n" id="a-ss">0</div><div class="sc-l">Semana</div></div><div class="sc"><div class="sc-n" id="a-sc-hoy" style="font-size:16px;color:#3B6D11">$0</div><div class="sc-l">Cobrado hoy</div></div><div class="sc"><div class="sc-n" id="a-sc">0</div><div class="sc-l">Clientas</div></div></div><div id="a-cumples" style="display:none;background:rgba(255,200,50,.08);border:1px solid rgba(255,180,30,.35);border-radius:6px;padding:.9rem 1rem;margin-bottom:.8rem;font-size:13px;line-height:1.9;font-family:Raleway,sans-serif"></div><button class="btn-v full" onclick="irAgendaDesdePanel()" style="margin-bottom:.8rem">📅 Ver agenda completa</button>
         <button class="btn-v full" onclick="irLaserBooking()" style="margin-bottom:.8rem;background:var(--gris)">💜 Agenda depilación definitiva</button>
         <div class="panel"><div class="ptitle">Turnos de hoy</div><div id="a-hoy"><div class="empty">Sin turnos hoy.</div></div></div>
         <div class="panel"><div class="ptitle">Turnos de mañana <span style="font-size:10px;color:var(--gc);font-weight:400">— tocá 'Recordar' para avisar a cada clienta</span></div><div id="a-manana"><div class="empty">Sin turnos mañana.</div></div></div>
@@ -842,6 +842,10 @@ td.ag-slot-free{background:transparent}
       <div class="panel">
         <div class="ptitle">Por profesional</div>
         <div id="cj-r-profs"></div>
+      </div>
+      <div id="cj-r-semana-panel" class="panel" style="display:none">
+        <div class="ptitle">Desglose por día</div>
+        <div id="cj-r-semana"></div>
       </div>
       <div style="display:flex;gap:.5rem;margin-top:.5rem">
         <button class="btn-v" onclick="exportarPDF()" style="flex:1">📄 Exportar PDF</button>
@@ -2378,10 +2382,13 @@ function renderAdmRes(){
         }).join(', ')+'<br>';
       }
       if(cumpleProx.length){
-        txt+='🎁 <strong>Próximos 7 días:</strong> '+cumpleProx.map(function(c){
-          const parts=c.cumple.split('-');
-          return c.n+' ('+parts[2]+'/'+parts[1]+')';
-        }).join(', ');
+        txt+='🎁 <strong>Próximos 7 días:</strong><br>';
+        txt+=cumpleProx.map(function(c){
+          const fecha=c.nac||c.cumple||'';
+          const parts=fecha.split('-');
+          const dia=parts[2]||''; const mes=parts[1]||'';
+          return c.n+' ('+dia+'/'+mes+') <a href="https://wa.me/549'+c.tel.replace(/\D/g,'')+'?text='+getCumplesMensaje(c)+'" target="_blank" style="background:#25D366;color:#fff;font-size:10px;padding:2px 7px;border-radius:10px;text-decoration:none;margin-left:4px">🎁 Saludar</a>';
+        }).join('<br>');
       }
       cumpleEl.innerHTML=txt;
     }else{
@@ -3323,6 +3330,27 @@ function agVerTurno(id){
   document.getElementById('ag-mv-title').textContent=t.cliente;
   // Add ficha button if client exists
   const clFicha=D.clientas.find(function(c){return c.n===t.cliente||(t.tel&&c.tel===t.tel);});
+  // Historial laser si es turno de Camila
+  let laserHistHtml='';
+  if(t.prof==='camila'){
+    const sesiones=(agD.turnos||[]).filter(function(x){
+      return x.prof==='camila'&&x.cliente===t.cliente&&String(x.id)!==String(t.id);
+    }).sort(function(a,b){return (b.fecha||'').localeCompare(a.fecha||'');});
+    if(sesiones.length){
+      laserHistHtml='<div style="margin-top:10px;border-top:0.5px solid var(--cd);padding-top:8px">'
+        +'<div style="font-size:11px;font-weight:600;color:var(--oliva);margin-bottom:6px;letter-spacing:.03em">SESIONES ANTERIORES ('+sesiones.length+')</div>'
+        +sesiones.map(function(s){
+          return '<div style="display:flex;justify-content:space-between;font-size:11px;padding:3px 0;border-bottom:0.5px dashed var(--cd)">'
+            +'<span style="color:var(--texto)">'+s.fecha+'</span>'
+            +'<span style="color:var(--gc);flex:1;text-align:center;padding:0 6px">'+s.servicio+'</span>'
+            +'<span style="color:var(--oliva);font-weight:500">'+s.duracion+' min</span>'
+            +'</div>';
+        }).join('')
+        +'</div>';
+    }else{
+      laserHistHtml='<div style="margin-top:10px;border-top:0.5px solid var(--cd);padding-top:8px;font-size:11px;color:var(--gc)">Primera sesión registrada</div>';
+    }
+  }
   document.getElementById('ag-mv-content').innerHTML=`
     <div style="display:flex;flex-direction:column;gap:6px">
       <div>👤 <strong>${t.cliente}</strong></div>
@@ -3335,7 +3363,7 @@ function agVerTurno(id){
       ${t.notas?'<div>📝 '+t.notas+'</div>':''}
       ${t.histCambios&&t.histCambios.length?'<div style="margin-top:6px;font-size:10px;color:var(--gc)">✏️ Editado '+t.histCambios.length+' vez'+(t.histCambios.length>1?'es':'')+' · último cambio '+t.histCambios[t.histCambios.length-1].fecha+' por '+t.histCambios[t.histCambios.length-1].user+'</div>':''}
       <div style="font-size:11px;color:var(--gc);margin-top:4px">${t.manual||!t.online?'Cargado manualmente':'Reserva online'}</div>
-    </div>`;
+    </div>`+laserHistHtml;
   const isAdmin=ROL_PANEL[curPUser]==='admin';
   const canEdit=isAdmin&&!t.online;
   const _mvId="modal-ag-ver";
@@ -4281,6 +4309,36 @@ function renderCaja(){
   setEl('cj-r-efec',fmtPeso(totalEfec));
   setEl('cj-r-transf',fmtPeso(totalTransf));
   setEl('cj-r-comi',fmtPeso(totalComis));
+
+  // Desglose semanal
+  const semPanel=document.getElementById('cj-r-semana-panel');
+  const semEl=document.getElementById('cj-r-semana');
+  if(semPanel&&semEl){
+    if(cjPer==='semana'){
+      semPanel.style.display='block';
+      const DSL2=['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+      const lunes=lun(new Date());
+      let semHtml='';
+      for(var di=0;di<7;di++){
+        const dia=new Date(lunes);dia.setDate(lunes.getDate()+di);
+        const dStr=fk(dia);
+        const cobDia=cjD.cobros.filter(function(c){return c.fecha===dStr;});
+        const egDia=cjD.egresos.filter(function(e){return e.fecha===dStr;});
+        const ingDia=cobDia.reduce(function(s,c){return s+(c.monto||0);},0);
+        const egTot=egDia.reduce(function(s,e){return s+(e.monto||0);},0);
+        const netDia=ingDia-egTot;
+        const esHoy=dStr===hoy();
+        semHtml+='<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:0.5px solid var(--cd)'+(esHoy?';background:rgba(139,143,107,.06)':'')+'">'
+          +'<span style="font-size:12px;font-weight:'+(esHoy?'600':'400')+';color:var(--texto);min-width:40px">'+DSL2[dia.getDay()]+'</span>'
+          +'<span style="font-size:11px;color:var(--gc);flex:1;padding-left:6px">'+dia.getDate()+'/'+String(dia.getMonth()+1).padStart(2,'0')+'</span>'
+          +(ingDia?'<span style="font-size:12px;color:var(--oliva);font-weight:500">'+fmtPeso(ingDia)+'</span>':'<span style="font-size:11px;color:var(--gc)">—</span>')
+          +'</div>';
+      }
+      semEl.innerHTML=semHtml||'<div class="empty">Sin datos esta semana.</div>';
+    }else{
+      semPanel.style.display='none';
+    }
+  }
 
   // Por categoría de egreso
   const porCat={};
