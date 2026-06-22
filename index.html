@@ -1548,42 +1548,47 @@ function renderLaserTimeline(fecha){
     }
     out+='</div>';
   } else {
-    // Vista desktop: grilla con slots de 5 min
+    // Vista desktop: grid estilo B — bloques con hora inicio→fin, franjas libres cada 15 min
     out+='<div style="border:1px solid var(--cd);border-radius:4px;overflow:hidden">';
-    out+='<table style="width:100%;border-collapse:collapse">';
-    out+='<thead><tr>'
-      +'<th style="width:52px;background:var(--crema);border-bottom:1px solid var(--cd);padding:6px 4px;font-size:10px;color:var(--gris);font-family:Raleway,sans-serif"></th>'
-      +'<th style="background:var(--crema);border-bottom:1px solid var(--cd);border-left:1px solid var(--cd);padding:6px;text-align:center;font-size:12px;font-weight:600;color:var(--oliva);font-family:Raleway,sans-serif">Camila · Depilación definitiva</th>'
-      +'</tr></thead>';
-    out+='<tbody>';
-    var LASER_SLOT_MIN=5;
-    var rendered={};
-    for(var m=8*60;m<20*60;m+=LASER_SLOT_MIN){
-      var isHour=m%60===0;
+    // Header
+    out+='<div style="display:flex;background:var(--crema);border-bottom:1px solid var(--cd)">'
+      +'<div style="width:64px;flex-shrink:0;padding:6px 8px;font-size:10px;color:var(--gc);font-family:Raleway,sans-serif">Hora</div>'
+      +'<div style="flex:1;border-left:1px solid var(--cd);padding:6px 10px;font-size:12px;font-weight:600;color:var(--oliva);font-family:Raleway,sans-serif;text-align:center">Camila · Depilación definitiva</div>'
+      +'</div>';
+    var SLOT=15;
+    var renderedB={};
+    for(var m=8*60;m<20*60;m+=SLOT){
       var hStr=toStr(m);
-      var borderB=isHour?'1px solid var(--cd)':'1px dashed rgba(184,178,172,.2)';
-      var turno=ocupMap[m];
-      out+='<tr>';
-      var mostrarHora=(m%15===0);
-      out+='<td style="width:52px;min-width:52px;height:7px;background:var(--crema);border-bottom:'+borderB+';padding:0 6px;vertical-align:top">'
-        +(mostrarHora?'<span style="font-size:9px;color:var(--gc);font-family:Raleway,sans-serif">'+hStr+'</span>':'')
-        +'</td>';
-      if(turno&&!rendered[turno.id]){
-        rendered[turno.id]=true;
-        var slots=Math.max(Math.round((turno.dur||30)/LASER_SLOT_MIN),1);
-        out+='<td rowspan="'+slots+'" class="ls-edit" data-id="'+turno.id+'" style="background:#a8b8c5;border-bottom:1px solid var(--cd);border-left:1px solid var(--cd);cursor:pointer;padding:4px 6px;vertical-align:top">'
-          +'<div style="font-size:11px;font-weight:600;color:#1e3040;overflow:hidden;white-space:nowrap;text-overflow:ellipsis">'+turno.nombre+'</div>'
-          +(turno.srv?'<div style="font-size:10px;color:#1e3040;opacity:.8;overflow:hidden;white-space:nowrap;text-overflow:ellipsis">'+turno.srv+' · '+turno.dur+' min</div>':'')
-          +(turno.precio?'<div style="font-size:10px;color:#1e3040;opacity:.65">'+fmtPeso(turno.precio)+(turno.senia?' · Seña: '+fmtPeso(turno.senia):'')+'</div>':'')
-          +'</td>';
-      } else if(!turno){
-        out+='<td class="ls-slot-libre" data-fecha="'+fecha+'" data-hora="'+hStr+'" style="border-bottom:'+borderB+';border-left:1px solid var(--cd);cursor:pointer;text-align:center;padding:0">'
-          +(mostrarHora?'<span style="font-size:9px;color:var(--oliva);opacity:.5">+</span>':'')
-          +'</td>';
+      var turnoActivo=ocupMap[m];
+      if(turnoActivo&&renderedB[turnoActivo.id]){continue;}
+      if(turnoActivo&&!renderedB[turnoActivo.id]){
+        renderedB[turnoActivo.id]=true;
+        var finM=m+turnoActivo.dur;
+        var hFin=toStr(finM);
+        out+='<div class="ls-edit" data-id="'+turnoActivo.id+'" style="display:flex;cursor:pointer;border-bottom:1px solid var(--cd)">'
+          +'<div style="width:64px;flex-shrink:0;padding:8px;background:var(--crema);display:flex;flex-direction:column;justify-content:space-between;font-family:Raleway,sans-serif;border-right:1px solid var(--cd)">'
+            +'<span style="font-size:11px;font-weight:600;color:var(--texto)">'+hStr+'</span>'
+            +'<span style="font-size:10px;color:var(--gc)">→ '+hFin+'</span>'
+          +'</div>'
+          +'<div style="flex:1;padding:8px 10px;background:#eef1eb">'
+            +'<div style="font-size:13px;font-weight:600;color:#2a3020;margin-bottom:2px">'+turnoActivo.nombre+'</div>'
+            +'<div style="font-size:11px;color:#4a5040">'+turnoActivo.srv+' · '+turnoActivo.dur+' min'+(turnoActivo.senia?' · Seña pagada':'')+'</div>'
+            +(turnoActivo.precio?'<div style="font-size:11px;color:var(--gc);margin-top:2px">'+fmtPeso(turnoActivo.precio)+'</div>':'')
+          +'</div>'
+          +'</div>';
+        m=Math.ceil(finM/SLOT)*SLOT-SLOT;
+      } else {
+        out+='<div class="ls-slot-libre" data-fecha="'+fecha+'" data-hora="'+hStr+'" style="display:flex;cursor:pointer;border-bottom:1px dashed rgba(184,178,172,.3)">'
+          +'<div style="width:64px;flex-shrink:0;padding:5px 8px;background:var(--crema);border-right:1px solid var(--cd)">'
+            +'<span style="font-size:10px;color:var(--gc);font-family:Raleway,sans-serif">'+hStr+'</span>'
+          +'</div>'
+          +'<div style="flex:1;padding:5px 10px;display:flex;align-items:center">'
+            +'<span style="font-size:11px;color:var(--oliva);opacity:.7">+ Agregar turno</span>'
+          +'</div>'
+          +'</div>';
       }
-      out+='</tr>';
     }
-    out+='</tbody></table></div>';
+    out+='</div>';
   }
   slotsEl.innerHTML=out;
   // Event listeners para celdas dinámicas
