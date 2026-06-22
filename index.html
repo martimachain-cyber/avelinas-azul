@@ -6689,16 +6689,61 @@ function laserBuscarCl(q){
   });
   drop.style.display='block';
 }
+function abrirModalNuevaJornada(){
+  var m=document.getElementById('modal-nueva-jornada');if(m)m.style.display='flex';
+  var ok=document.getElementById('ok-nueva-jornada-laser');if(ok)ok.style.display='none';
+}
+function cerrarModalNuevaJornada(){
+  var m=document.getElementById('modal-nueva-jornada');if(m)m.style.display='none';
+}
+function guardarNuevaJornada(){
+  var inp=document.getElementById('nueva-jornada-laser');
+  var ok=document.getElementById('ok-nueva-jornada-laser');
+  if(!inp||!inp.value){if(ok){ok.textContent='Seleccioná una fecha.';ok.style.background='rgba(220,80,60,.1)';ok.style.color='var(--rojo)';ok.style.display='block';}return;}
+  if(!D.jornadasLaser)D.jornadasLaser=[];
+  if(D.jornadasLaser.includes(inp.value)){if(ok){ok.textContent='Esa jornada ya existe.';ok.style.background='rgba(220,80,60,.1)';ok.style.color='var(--rojo)';ok.style.display='block';}return;}
+  D.jornadasLaser.push(inp.value);
+  sv();
+  if(typeof renderLaserAgenda==='function')renderLaserAgenda();
+  cerrarModalNuevaJornada();
+  inp.value='';
+}
 function laserAgregarDesdeSlot(fecha, hora){
   agAbrirNuevo(null);
   setTimeout(function(){
     var fd=document.getElementById('ag-mt-fecha');if(fd)fd.value=fecha;
     var pr=document.getElementById('ag-mt-prof');if(pr)pr.value='camila';
     var ho=document.getElementById('ag-mt-hora');if(ho)ho.value=hora;
-    agMtCargarServicios('camila');
+    agMtCargarServiciosLaser();
   },80);
 }
 
+function abrirLaserNuevoTurno(){
+  agAbrirNuevo(null);
+  setTimeout(function(){
+    var pr=document.getElementById('ag-mt-prof');if(pr)pr.value='camila';
+    var fd=document.getElementById('ag-mt-fecha');if(fd&&laserJornadaSel)fd.value=laserJornadaSel;
+    agMtCargarServiciosLaser();
+  },80);
+}
+function agMtCargarServiciosLaser(){
+  var srvSel=document.getElementById('ag-mt-srv-sel');
+  if(!srvSel)return;
+  var svs=(D.servicios&&D.servicios.laser)||[];
+  var o='<option value="">— Elegí un servicio —</option>';
+  if(svs.length){
+    o+='<optgroup label="Depilación definitiva">';
+    svs.forEach(function(sv){
+      var dur=sv.dur||0;
+      if(!dur&&sv.d){var a=sv.d.match(/([0-9]+)\s*h/i);if(a)dur=parseInt(a[1])*60;var b=sv.d.match(/([0-9]+)\s*min/i);if(b)dur+=parseInt(b[1]);}
+      if(!dur)dur=30;
+      var _pNum=parseInt((sv.p||'0').replace(/[^0-9]/g,''))||0;
+      o+='<option value="'+sv.n+'|'+dur+'|'+_pNum+'">'+sv.n+(sv.p?' — '+sv.p:'')+'</option>';
+    });
+    o+='</optgroup>';
+  }
+  srvSel.innerHTML=o;
+}
 function laserEditarTurno(id){
   agVerTurno(id);
 }
@@ -7609,6 +7654,18 @@ function rpPagarCom(profId,profNombre,monto){
   <div style="background:var(--oliva);padding:1rem 1.5rem;display:flex;align-items:center;gap:.8rem">
     <button onclick="irPanelDesdeAgenda()" style="background:rgba(255,255,255,.15);border:none;color:#fff;font-family:Raleway,sans-serif;font-size:12px;padding:4px 10px;border-radius:2px;cursor:pointer">← Panel</button>
     <div style="font-family:Raleway,sans-serif;font-size:16px;font-weight:600;color:#fff;flex:1">Agenda Depilación Definitiva</div>
+    <button onclick="abrirModalNuevaJornada()" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;font-family:Raleway,sans-serif;font-size:12px;padding:4px 12px;border-radius:2px;cursor:pointer">+ Jornada</button>
+  </div>
+  <div id="modal-nueva-jornada" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.4);z-index:999;align-items:center;justify-content:center">
+    <div style="background:#fff;border-radius:8px;padding:1.5rem;width:280px;max-width:90vw">
+      <div style="font-family:Raleway,sans-serif;font-size:15px;font-weight:600;color:var(--oliva);margin-bottom:1rem">Nueva jornada</div>
+      <input type="date" id="nueva-jornada-laser" class="finp" style="margin-bottom:.8rem">
+      <div id="ok-nueva-jornada-laser" style="display:none;font-size:12px;margin-bottom:.8rem;padding:4px 8px;border-radius:4px"></div>
+      <div style="display:flex;gap:.5rem">
+        <button onclick="guardarNuevaJornada()" class="btn-v" style="flex:1">Agregar</button>
+        <button onclick="cerrarModalNuevaJornada()" class="btn-cancel" style="flex:1">Cancelar</button>
+      </div>
+    </div>
   </div>
   <div style="padding:1rem">
     <div class="panel"><div class="ptitle">Jornadas</div><div id="laser-ag-jornadas" style="display:flex;flex-wrap:wrap;gap:.4rem"></div></div>
