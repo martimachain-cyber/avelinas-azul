@@ -3686,6 +3686,11 @@ function calNo(){
 
 // Wire up buttons that need event listeners
 document.addEventListener('DOMContentLoaded', function(){
+  // Limpiar inputs capturados por snapshot/session restore del browser
+  ['a-cls-q','prod-buscar','ag-mt-cliente','cobro-cliente','p-clave'].forEach(function(id){
+    var el=document.getElementById(id);if(el)el.value='';
+  });
+  var drop=document.getElementById('ag-mt-cl-drop');if(drop){drop.style.display='none';drop.innerHTML='';}
   // Restaurar sesión desde sessionStorage y localStorage
   actualizarNavBtn();
   try{
@@ -6734,7 +6739,7 @@ function abrirLaserNuevoTurno(){
 function agMtCargarServiciosLaser(){
   var srvSel=document.getElementById('ag-mt-srv-sel');
   if(!srvSel)return;
-  var svs=(D.servicios&&D.servicios.laser)||[];
+  var svs=(D.servicios&&D.servicios.laser&&D.servicios.laser.length)?D.servicios.laser:defD().servicios.laser;
   var o='<option value="">— Elegí un servicio —</option>';
   if(svs.length){
     o+='<optgroup label="Depilación definitiva">';
