@@ -1462,13 +1462,34 @@ function getDefaultLaserTurnos(){return[
   {id:'ls21_8',prof:'camila',fecha:'2026-05-21',hora:'15:00',duracion:50,cliente:'Soledad Di Pinto',servicio:'Combo 2',precio:30600,manual:true},
   {id:'ls21_9',prof:'camila',fecha:'2026-05-21',hora:'16:20',duracion:25,cliente:'Paz Del Molino',servicio:'Axilas + Bozo + Menton',precio:23000,manual:true}
 ];}
+function getDefaultLaserTurnos26(){return[
+  {id:'ls26_0',prof:'camila',fecha:'2026-06-26',hora:'08:00',duracion:75,cliente:'Lucia Di Giulio',servicio:'Combo 1 + espalda + glúteos',precio:53100,manual:true},
+  {id:'ls26_1',prof:'camila',fecha:'2026-06-26',hora:'09:30',duracion:50,cliente:'Angela Borrelli',servicio:'Combo 2',precio:30600,senia:15300,manual:true},
+  {id:'ls26_2',prof:'camila',fecha:'2026-06-26',hora:'10:15',duracion:25,cliente:'Marcela Sabattini',servicio:'Pierna entera',precio:12750,manual:true},
+  {id:'ls26_3',prof:'camila',fecha:'2026-06-26',hora:'10:45',duracion:15,cliente:'Emilia Tocco',servicio:'Axilas + bozo',precio:8000,manual:true},
+  {id:'ls26_4',prof:'camila',fecha:'2026-06-26',hora:'11:00',duracion:15,cliente:'Cristina Neira',servicio:'Bozo',precio:7000,manual:true},
+  {id:'ls26_5',prof:'camila',fecha:'2026-06-26',hora:'11:15',duracion:50,cliente:'Marina Calderaro',servicio:'Combo 2',precio:17000,manual:true},
+  {id:'ls26_6',prof:'camila',fecha:'2026-06-26',hora:'12:30',duracion:50,cliente:'Paula Abelleira',servicio:'Combo 1',precio:32000,senia:16000,manual:true},
+  {id:'ls26_7',prof:'camila',fecha:'2026-06-26',hora:'13:15',duracion:15,cliente:'Maria Emilia del Molino',servicio:'Bozo + mentón',precio:14000,manual:true},
+  {id:'ls26_8',prof:'camila',fecha:'2026-06-26',hora:'13:30',duracion:45,cliente:'Isabela Catanese',servicio:'Combo 3',precio:29000,senia:14500,manual:true},
+  {id:'ls26_9',prof:'camila',fecha:'2026-06-26',hora:'14:15',duracion:35,cliente:'Cintia Faveiro',servicio:'Combo 4',precio:26000,manual:true},
+  {id:'ls26_10',prof:'camila',fecha:'2026-06-26',hora:'14:45',duracion:15,cliente:'Juliana Diaz',servicio:'Bozo + mentón',precio:14000,manual:true},
+  {id:'ls26_11',prof:'camila',fecha:'2026-06-26',hora:'15:00',duracion:55,cliente:'Soledad Di Pinto',servicio:'Combo 2',precio:30600,senia:15300,manual:true},
+  {id:'ls26_12',prof:'camila',fecha:'2026-06-26',hora:'16:15',duracion:25,cliente:'Paz del Molino',servicio:'Axilas + bozo + mentón',precio:23000,manual:true},
+  {id:'ls26_13',prof:'camila',fecha:'2026-06-26',hora:'16:45',duracion:25,cliente:'Josefina Aitra',servicio:'Combo 4',precio:26000,senia:13000,manual:true},
+  {id:'ls26_14',prof:'camila',fecha:'2026-06-26',hora:'18:30',duracion:20,cliente:'Dolores',servicio:'Cavado completo + axila + bozo',precio:25000,senia:12500,manual:true},
+  {id:'ls26_15',prof:'camila',fecha:'2026-06-26',hora:'19:00',duracion:15,cliente:'Tamara Gomez',servicio:'Combo 5',precio:20000,senia:10000,manual:true}
+];}
 function renderLaserAgenda(){
   // Clean old turno IDs
   agD.turnos=agD.turnos.filter(function(t){return !['l0','l1','l2','l3','l4','l5','l6','l7','l8','l9'].includes(t.id);});
   var defT=getDefaultLaserTurnos();
   defT.forEach(function(dt){if(!agD.turnos.find(function(t){return t.id===dt.id;}))agD.turnos.push(dt);});
+  var defT26=getDefaultLaserTurnos26();
+  defT26.forEach(function(dt){if(!agD.turnos.find(function(t){return t.id===dt.id;}))agD.turnos.push(dt);});
   if(!D.jornadasLaser)D.jornadasLaser=[];
   if(!D.jornadasLaser.includes('2026-05-21'))D.jornadasLaser.push('2026-05-21');
+  if(!D.jornadasLaser.includes('2026-06-26'))D.jornadasLaser.push('2026-06-26');
   var lista=document.getElementById('laser-ag-jornadas');
   if(!lista)return;
   var jornadas=(D.jornadasLaser||[]).slice().sort();
