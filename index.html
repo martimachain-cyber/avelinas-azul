@@ -6225,6 +6225,7 @@ const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJ
 let sbClient = null;
 let sbSyncEnabled = false;
 
+var _sbLastUpdate=Date.now();
 function initSupabase(){
   if(!SB_URL||!SB_KEY||typeof supabase === 'undefined') return;
   try {
@@ -6232,6 +6233,24 @@ function initSupabase(){
     sbSyncEnabled = true;
     console.log('Supabase conectado ✓');
     sbSync();
+    // Realtime: escuchar cambios en avelinas_data
+    sbClient
+      .channel('avelinas-realtime')
+      .on('postgres_changes',{event:'UPDATE',schema:'public',table:'avelinas_data'},function(payload){
+        var ahora=Date.now();
+        // Ignorar si el cambio lo generamos nosotros (menos de 3s)
+        if(ahora-_sbLastUpdate<3000)return;
+        console.log('Cambio remoto detectado, sincronizando...');
+        sbSync().then(function(){
+          if(typeof renderAdmRes==='function')renderAdmRes();
+          if(typeof renderLaserAgenda==='function'&&document.getElementById('pg-laser-agenda')&&document.getElementById('pg-laser-agenda').classList.contains('on'))renderLaserAgenda();
+          var notif=document.getElementById('sb-realtime-notif');
+          if(!notif){notif=document.createElement('div');notif.id='sb-realtime-notif';notif.style.cssText='position:fixed;bottom:1rem;left:50%;transform:translateX(-50%);background:var(--oliva);color:#fff;font-family:Raleway,sans-serif;font-size:12px;padding:6px 16px;border-radius:20px;z-index:9999;transition:opacity .5s';document.body.appendChild(notif);}
+          notif.textContent='🔄 Datos actualizados';notif.style.opacity='1';
+          setTimeout(function(){notif.style.opacity='0';},2500);
+        });
+      })
+      .subscribe();
   } catch(e) {
     console.log('Supabase no disponible:', e);
   }
@@ -6364,6 +6383,7 @@ async function sbSaveAll(){
 
 async function sbSaveKey(key, data){
   if(!sbSyncEnabled||!sbClient) return;
+  _sbLastUpdate=Date.now();
   try {
     await sbClient.from('avelinas_data').upsert({key:key, value: JSON.stringify(data), updated_at: new Date().toISOString()}, {onConflict:'key'});
   } catch(e) {
