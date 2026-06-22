@@ -3489,7 +3489,9 @@ function agEliminarDesdeVer(){
   else{agRender();}
 }
 
+var _agLaserMode=false;
 function agAbrirNuevo(t=null){
+  _agLaserMode=false;
   document.getElementById('ag-mt-title').textContent=t?'Editar turno':'Nuevo turno';
   document.getElementById('ag-mt-id').value=t?t.id:'';
   document.getElementById('ag-mt-fecha').value=t?t.fecha:agFk(agFecha);
@@ -3514,6 +3516,7 @@ function agAbrirNuevo(t=null){
   agMtCargarServicios(_profIdNuevo);
   // Segundo intento para cubrir timing de Supabase — lee el value actual del select
   setTimeout(function(){
+    if(_agLaserMode){agMtCargarServiciosLaser();return;}
     var profActual=document.getElementById('ag-mt-prof');
     if(profActual)agMtCargarServicios(profActual.value);
   },600);
@@ -6709,6 +6712,7 @@ function guardarNuevaJornada(){
   inp.value='';
 }
 function laserAgregarDesdeSlot(fecha, hora){
+  _agLaserMode=true;
   agAbrirNuevo(null);
   setTimeout(function(){
     var fd=document.getElementById('ag-mt-fecha');if(fd)fd.value=fecha;
@@ -6719,6 +6723,7 @@ function laserAgregarDesdeSlot(fecha, hora){
 }
 
 function abrirLaserNuevoTurno(){
+  _agLaserMode=true;
   agAbrirNuevo(null);
   setTimeout(function(){
     var pr=document.getElementById('ag-mt-prof');if(pr)pr.value='camila';
@@ -6781,6 +6786,11 @@ function laserNuevaCliente(){
 // init
 renderSrvPage();
 initSupabase();
+// Limpiar inputs que el browser puede haber capturado en el snapshot
+(function(){
+  var ids=['a-cls-q','prod-buscar','ag-mt-cliente','cobro-cliente'];
+  ids.forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
+})();
 
 function prevFoto(src, inicial){
   var img=document.getElementById('mp-foto-img');
