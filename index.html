@@ -1719,8 +1719,14 @@ function renderSrvItems(){
     <div style="background:#fff;border-radius:3px;padding:.7rem 1rem;margin-bottom:1rem;font-size:11px;color:var(--gris);font-family:Raleway,sans-serif">💳 Precios en efectivo / transferencia</div>`;
   }
   // Merge descripciones de defD si no están en D.servicios
-  var _defSvs=(defD().servicios[srvCat]||[]);
-  var _mergedSvs=svs.map(function(s){
+  var _catMap={facial:'faciales',mani:'manos',pedi:'pies',masajes:'masajes','pestañas':'pestañas',maquillaje:'maquillaje',laser:'laser'};
+  var _defSvs=(defD().servicios[_catMap[srvCat]||srvCat]||[]);
+  // Agregar servicios de defD que no estén en D.servicios
+  var _svsCombined=svs.slice();
+  _defSvs.forEach(function(ds){
+    if(!_svsCombined.find(function(s){return s.id===ds.id;}))_svsCombined.push(ds);
+  });
+  var _mergedSvs=_svsCombined.map(function(s){
     var _def=_defSvs.find(function(d){return d.id===s.id;});
     return Object.assign({},s,{desc:s.desc&&s.desc.length>5?s.desc:(_def?_def.desc:'')});
   });
