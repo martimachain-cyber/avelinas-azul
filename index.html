@@ -3304,7 +3304,7 @@ function agVerTurno(id){
   let t=null;
   // Buscar primero en agD.turnos (manuales), luego en D.reservas (online)
   // sin depender del formato del id, porque reservas viejas pueden no tener el prefijo 'r_'
-  const tManual=agD.turnos.find(x=>x.id===id);
+  const tManual=agD.turnos.find(x=>String(x.id)===String(id));
   if(tManual){
     t=tManual;
   }else{
