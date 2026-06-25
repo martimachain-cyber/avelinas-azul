@@ -1728,8 +1728,9 @@ function renderSrvItems(){
   });
   var _mergedSvs=_svsCombined.map(function(s){
     var _def=_defSvs.find(function(d){return d.id===s.id;});
-    var _bestDesc=(_def&&_def.desc&&_def.desc.length>s.desc.length)?_def.desc:s.desc;
-    return Object.assign({},s,{desc:_bestDesc||s.desc||''});
+    // Siempre usar desc de defD si existe
+    var _bestDesc=(_def&&_def.desc)?_def.desc:(s.desc||'');
+    return Object.assign({},s,{desc:_bestDesc});
   });
   document.getElementById('srv-items').innerHTML=extra+_mergedSvs.map(s=>`
     <div class="srv-item" id="si-${s.id}">
