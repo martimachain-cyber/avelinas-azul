@@ -1434,15 +1434,13 @@ function getDefaultLaserTurnos26(){return[
 function renderLaserAgenda(){
   // Cerrar modales abiertos que puedan interceptar clicks
   document.querySelectorAll('.modal').forEach(function(m){m.classList.remove('on');});
-  // Clean old turno IDs
-  agD.turnos=agD.turnos.filter(function(t){return !['l0','l1','l2','l3','l4','l5','l6','l7','l8','l9'].includes(t.id);});
-  var defT=getDefaultLaserTurnos();
-  defT.forEach(function(dt){if(!agD.turnos.find(function(t){return t.id===dt.id;}))agD.turnos.push(dt);});
-  var defT26=getDefaultLaserTurnos26();
-  defT26.forEach(function(dt){if(!agD.turnos.find(function(t){return t.id===dt.id;}))agD.turnos.push(dt);});
+  // Limpiar turnos hardcodeados (ls21_*, ls26_*) — solo quedan los de Supabase
+  agD.turnos=agD.turnos.filter(function(t){
+    return !/^(ls21_|ls26_|l[0-9]$)/.test(String(t.id));
+  });
+  agSv();
+  // Turnos viven solo en Supabase — no hardcodeados
   if(!D.jornadasLaser)D.jornadasLaser=[];
-  if(!D.jornadasLaser.includes('2026-05-21'))D.jornadasLaser.push('2026-05-21');
-  if(!D.jornadasLaser.includes('2026-06-26'))D.jornadasLaser.push('2026-06-26');
   var lista=document.getElementById('laser-ag-jornadas');
   if(!lista)return;
   var jornadas=(D.jornadasLaser||[]).slice().sort();
