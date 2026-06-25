@@ -1434,11 +1434,26 @@ function getDefaultLaserTurnos26(){return[
 function renderLaserAgenda(){
   // Cerrar modales abiertos que puedan interceptar clicks
   document.querySelectorAll('.modal').forEach(function(m){m.classList.remove('on');});
-  // Limpiar turnos hardcodeados (ls21_*, ls26_*) — solo quedan los de Supabase
-  agD.turnos=agD.turnos.filter(function(t){
-    return !/^(ls21_|ls26_|l[0-9]$)/.test(String(t.id));
-  });
-  agSv();
+  // Fallback turnos que no están en Supabase
+  var _avFallback=[
+    {id:'av_26_ma',prof:'camila',fecha:'2026-06-26',hora:'10:15',duracion:25,cliente:'Marcela Sabattini',servicio:'Pierna entera',precio:12750,manual:true},
+    {id:'av_26_ml',prof:'camila',fecha:'2026-06-26',hora:'11:15',duracion:50,cliente:'Marina Calderaro',servicio:'Combo 2',precio:17000,manual:true},
+    {id:'av_26_is',prof:'camila',fecha:'2026-06-26',hora:'13:30',duracion:45,cliente:'Isabela Catanese',servicio:'Combo 3',precio:29000,senia:14500,manual:true},
+    {id:'av_26_ci',prof:'camila',fecha:'2026-06-26',hora:'14:15',duracion:35,cliente:'Cintia Faveiro',servicio:'Combo 4',precio:26000,manual:true},
+    {id:'av_26_ju',prof:'camila',fecha:'2026-06-26',hora:'14:45',duracion:15,cliente:'Juliana Diaz',servicio:'Bozo + mentón',precio:14000,manual:true},
+    {id:'av_26_so',prof:'camila',fecha:'2026-06-26',hora:'15:00',duracion:55,cliente:'Soledad Di Pinto',servicio:'Combo 2',precio:30600,senia:15300,manual:true},
+    {id:'av_26_pa',prof:'camila',fecha:'2026-06-26',hora:'16:15',duracion:25,cliente:'Paz del Molino',servicio:'Axilas + bozo + mentón',precio:23000,manual:true},
+    {id:'av_26_jo',prof:'camila',fecha:'2026-06-26',hora:'16:45',duracion:25,cliente:'Josefina Aitra',servicio:'Combo 4',precio:26000,senia:13000,manual:true},
+    {id:'av_26_do',prof:'camila',fecha:'2026-06-26',hora:'18:30',duracion:20,cliente:'Dolores',servicio:'Cavado completo + axila + bozo',precio:25000,senia:12500,manual:true},
+    {id:'av_26_ta',prof:'camila',fecha:'2026-06-26',hora:'19:00',duracion:15,cliente:'Tamara Gomez',servicio:'Combo 5',precio:20000,senia:10000,manual:true},
+    {id:'av_21_lu',prof:'camila',fecha:'2026-05-21',hora:'08:10',duracion:75,cliente:'Lucia Di Giulio',servicio:'Combo 2 + Espalda + Glúteos',precio:53100,manual:true},
+    {id:'av_21_an',prof:'camila',fecha:'2026-05-21',hora:'10:00',duracion:50,cliente:'Angela Borrelli',servicio:'Combo 2',precio:30600,manual:true}
+  ];
+  _avFallback.forEach(function(dt){if(!agD.turnos.find(function(t){return t.id===dt.id||(t.fecha===dt.fecha&&t.hora===dt.hora&&t.prof===dt.prof);}))agD.turnos.push(dt);});
+  // Jornadas
+  if(!D.jornadasLaser)D.jornadasLaser=[];
+  if(!D.jornadasLaser.includes('2026-05-21'))D.jornadasLaser.push('2026-05-21');
+  if(!D.jornadasLaser.includes('2026-06-26'))D.jornadasLaser.push('2026-06-26');
   // Turnos viven solo en Supabase — no hardcodeados
   if(!D.jornadasLaser)D.jornadasLaser=[];
   var lista=document.getElementById('laser-ag-jornadas');
@@ -1703,7 +1718,13 @@ function renderSrvItems(){
     </div>
     <div style="background:#fff;border-radius:3px;padding:.7rem 1rem;margin-bottom:1rem;font-size:11px;color:var(--gris);font-family:Raleway,sans-serif">💳 Precios en efectivo / transferencia</div>`;
   }
-  document.getElementById('srv-items').innerHTML=extra+svs.map(s=>`
+  // Merge descripciones de defD si no están en D.servicios
+  var _defSvs=(defD().servicios[srvCat]||[]);
+  var _mergedSvs=svs.map(function(s){
+    var _def=_defSvs.find(function(d){return d.id===s.id;});
+    return Object.assign({},s,{desc:s.desc&&s.desc.length>5?s.desc:(_def?_def.desc:'')});
+  });
+  document.getElementById('srv-items').innerHTML=extra+_mergedSvs.map(s=>`
     <div class="srv-item" id="si-${s.id}">
       <div class="srv-top" onclick="togSrv('${s.id}')">
         <div class="srv-left"><div class="srv-nombre">${s.n}</div><div class="srv-dur">${s.d}</div></div>
