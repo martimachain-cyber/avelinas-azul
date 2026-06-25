@@ -421,63 +421,7 @@ td.ag-slot-free{background:transparent}
     <div class="sec-tag">Lo que ofrecemos</div>
     <h2 class="sec-title">Servicios y <em>precios</em></h2>
     <div class="cpills" id="srv-pills"><div class="cpill on" onclick="selSrvCat(&#39;facial&#39;)">Faciales</div><div class="cpill" onclick="selSrvCat(&#39;mani&#39;)">Manicura</div><div class="cpill" onclick="selSrvCat(&#39;pedi&#39;)">Pedicura</div><div class="cpill" onclick="selSrvCat(&#39;masajes&#39;)">Masajes</div><div class="cpill" onclick="selSrvCat(&#39;pestañas&#39;)">Pestañas &amp; Cejas</div><div class="cpill" onclick="selSrvCat(&#39;maquillaje&#39;)">Maquillaje</div><div class="cpill" onclick="selSrvCat(&#39;laser&#39;)">Depilación definitiva</div></div>
-    <div id="srv-items">
-    <div class="srv-item" id="si-f1">
-      <div class="srv-top" onclick="togSrv(&#39;f1&#39;)">
-        <div class="srv-left"><div class="srv-nombre">Facial a convenir</div><div class="srv-dur">1 hora</div></div>
-        <div class="srv-right"><div class="srv-desde">desde</div><div class="srv-precio">$40.000</div><div class="srv-arr">▾</div></div>
-      </div>
-      <div class="srv-desc-wrap">Tratamiento personalizado según el tipo y necesidades de tu piel.</div>
-    </div>
-    <div class="srv-item" id="si-f2">
-      <div class="srv-top" onclick="togSrv(&#39;f2&#39;)">
-        <div class="srv-left"><div class="srv-nombre">Facial con dermapen</div><div class="srv-dur">1 hora</div></div>
-        <div class="srv-right"><div class="srv-desde"></div><div class="srv-precio">$52.000</div><div class="srv-arr">▾</div></div>
-      </div>
-      <div class="srv-desc-wrap">Microagujas que estimulan la producción de colágeno y elastina.</div>
-    </div>
-    <div class="srv-item" id="si-f3">
-      <div class="srv-top" onclick="togSrv(&#39;f3&#39;)">
-        <div class="srv-left"><div class="srv-nombre">Facial GLOW</div><div class="srv-dur">1 hora</div></div>
-        <div class="srv-right"><div class="srv-desde"></div><div class="srv-precio">$49.000</div><div class="srv-arr">▾</div></div>
-      </div>
-      <div class="srv-desc-wrap">Tratamiento iluminador que revitaliza y unifica el tono de la piel.</div>
-    </div>
-    <div class="srv-item" id="si-f4">
-      <div class="srv-top" onclick="togSrv(&#39;f4&#39;)">
-        <div class="srv-left"><div class="srv-nombre">Facial Premium</div><div class="srv-dur">1h 30 min</div></div>
-        <div class="srv-right"><div class="srv-desde"></div><div class="srv-precio">$55.000</div><div class="srv-arr">▾</div></div>
-      </div>
-      <div class="srv-desc-wrap">El tratamiento más completo del salón.</div>
-    </div>
-    <div class="srv-item" id="si-f5">
-      <div class="srv-top" onclick="togSrv(&#39;f5&#39;)">
-        <div class="srv-left"><div class="srv-nombre">Higiene facial profunda</div><div class="srv-dur">1 hora</div></div>
-        <div class="srv-right"><div class="srv-desde"></div><div class="srv-precio">$40.000</div><div class="srv-arr">▾</div></div>
-      </div>
-      <div class="srv-desc-wrap">Limpieza completa del rostro.</div>
-    </div>
-    <div class="srv-item" id="si-f6">
-      <div class="srv-top" onclick="togSrv(&#39;f6&#39;)">
-        <div class="srv-left"><div class="srv-nombre">Facial profunda con Dermaplaning</div><div class="srv-dur">1 hora</div></div>
-        <div class="srv-right"><div class="srv-desde"></div><div class="srv-precio">$44.000</div><div class="srv-arr">▾</div></div>
-      </div>
-      <div class="srv-desc-wrap">Exfoliación mecánica con cuchilla especial.</div>
-    </div>
-    <div class="srv-item" id="si-f7">
-      <div class="srv-top" onclick="togSrv(&#39;f7&#39;)">
-        <div class="srv-left"><div class="srv-nombre">Masaje SculptFacial con Gua-Sha</div><div class="srv-dur">1 hora</div></div>
-        <div class="srv-right"><div class="srv-desde"></div><div class="srv-precio">$43.000</div><div class="srv-arr">▾</div></div>
-      </div>
-      <div class="srv-desc-wrap">Técnica china con piedra gua-sha para tonificar el rostro.</div>
-    </div>
-    <div class="srv-item" id="si-f8">
-      <div class="srv-top" onclick="togSrv(&#39;f8&#39;)">
-        <div class="srv-left"><div class="srv-nombre">Spa facial holístico</div><div class="srv-dur">1 hora</div></div>
-        <div class="srv-right"><div class="srv-desde"></div><div class="srv-precio">$43.000</div><div class="srv-arr">▾</div></div>
-      </div>
-      <div class="srv-desc-wrap">Limpieza facial con armonización energética.</div>
-    </div></div>
+    <div id="srv-items"></div>
   </div>
   <div class="wa-bar">
     <span class="wa-text">¿Consultas? Escribinos</span>
@@ -1597,7 +1541,7 @@ function renderLaserTimeline(fecha){
         renderedB[turnoActivo.id]=true;
         var finM=m+turnoActivo.dur;
         var hFin=toStr(finM);
-        out+='<div class="ls-edit" data-id="'+turnoActivo.id+'" style="display:flex;cursor:pointer;border-bottom:1px solid var(--cd)">'
+        out+='<div class="ls-edit" data-id="'+turnoActivo.id+'" style="display:flex;cursor:pointer;border-bottom:2px solid var(--oliva)">'
           +'<div style="width:64px;flex-shrink:0;padding:8px;background:var(--crema);display:flex;flex-direction:column;justify-content:space-between;font-family:Raleway,sans-serif;border-right:1px solid var(--cd)">'
             +'<span style="font-size:11px;font-weight:600;color:var(--texto)">'+hStr+'</span>'
             +'<span style="font-size:10px;color:var(--gc)">→ '+hFin+'</span>'
