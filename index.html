@@ -1541,7 +1541,8 @@ function renderLaserTimeline(fecha){
         renderedB[turnoActivo.id]=true;
         var finM=m+turnoActivo.dur;
         var hFin=toStr(finM);
-        out+='<div class="ls-edit" data-id="'+turnoActivo.id+'" style="display:flex;cursor:pointer;border-bottom:2px solid var(--oliva)">'
+        var _tid=turnoActivo.id;
+        out+='<div onclick="laserEditarTurno(\''+_tid+'\')" style="display:flex;cursor:pointer;border-bottom:2px solid var(--oliva)">'
           +'<div style="width:64px;flex-shrink:0;padding:8px;background:var(--crema);display:flex;flex-direction:column;justify-content:space-between;font-family:Raleway,sans-serif;border-right:1px solid var(--cd)">'
             +'<span style="font-size:11px;font-weight:600;color:var(--texto)">'+hStr+'</span>'
             +'<span style="font-size:10px;color:var(--gc)">→ '+hFin+'</span>'
@@ -1554,7 +1555,8 @@ function renderLaserTimeline(fecha){
           +'</div>';
         m=(finM%SLOT===0)?finM-SLOT:Math.ceil(finM/SLOT)*SLOT-SLOT;
       } else {
-        out+='<div class="ls-slot-libre" data-fecha="'+fecha+'" data-hora="'+hStr+'" style="display:flex;cursor:pointer;border-bottom:1px dashed rgba(139,143,107,.3);min-height:36px;background:#fafaf8">'
+        var _ff=fecha,_hh=hStr;
+        out+='<div onclick="laserAgregarDesdeSlot(\''+_ff+'\',\''+_hh+'\')" style="display:flex;cursor:pointer;border-bottom:1px dashed rgba(139,143,107,.3);min-height:36px;background:#fafaf8">'
           +'<div style="width:64px;flex-shrink:0;padding:6px 8px;background:var(--crema);border-right:1px solid var(--cd);display:flex;align-items:center">'
             +'<span style="font-size:10px;font-weight:500;color:var(--oliva);font-family:Raleway,sans-serif">'+hStr+'</span>'
           +'</div>'
@@ -1568,12 +1570,7 @@ function renderLaserTimeline(fecha){
   }
   slotsEl.innerHTML=out;
   // Event delegation — un solo listener en el contenedor
-  slotsEl.onclick=function(e){
-    var edit=e.target.closest('.ls-edit');
-    if(edit){laserEditarTurno(edit.dataset.id);return;}
-    var libre=e.target.closest('.ls-slot-libre');
-    if(libre){laserAgregarDesdeSlot(libre.dataset.fecha,libre.dataset.hora);return;}
-  };
+
 }
 
 function lun(d){const x=new Date(d),dw=x.getDay();x.setDate(x.getDate()-(dw===0?6:dw-1));return x}
