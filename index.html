@@ -1432,6 +1432,8 @@ function getDefaultLaserTurnos26(){return[
   {id:'ls26_15',prof:'camila',fecha:'2026-06-26',hora:'19:00',duracion:15,cliente:'Tamara Gomez',servicio:'Combo 5',precio:20000,senia:10000,manual:true}
 ];}
 function renderLaserAgenda(){
+  // Cerrar modales abiertos que puedan interceptar clicks
+  document.querySelectorAll('.modal').forEach(function(m){m.classList.remove('on');});
   // Clean old turno IDs
   agD.turnos=agD.turnos.filter(function(t){return !['l0','l1','l2','l3','l4','l5','l6','l7','l8','l9'].includes(t.id);});
   var defT=getDefaultLaserTurnos();
@@ -1602,6 +1604,7 @@ function goPage(id){
   if(id==='nosotras')renderNosotras();
   if(id==='agenda'){setTimeout(function(){if(typeof agInitVista==='function')agInitVista();},100);}
   if(id==='laser'&&curPUser){
+    document.querySelectorAll('.modal').forEach(function(m){m.classList.remove('on');m.style.display='';});
     var plPg=document.getElementById('pg-laser');if(plPg){plPg.classList.remove('on');plPg.style.display='';}
     var laPg=document.getElementById('pg-laser-agenda');if(laPg){laPg.classList.add('on');laPg.style.display='block';}
     setTimeout(function(){if(typeof renderLaserAgenda==='function')renderLaserAgenda();},50);
