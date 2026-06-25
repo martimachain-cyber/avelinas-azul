@@ -1544,15 +1544,15 @@ function renderLaserTimeline(fecha){
         var finM=m+turnoActivo.dur;
         var hFin=toStr(finM);
         var _tid=turnoActivo.id;
-        out+='<div onclick="laserEditarTurno(\''+_tid+'\')" style="display:flex;cursor:pointer;border-bottom:2px solid var(--oliva)">'
-          +'<div style="width:64px;flex-shrink:0;padding:8px;background:var(--crema);display:flex;flex-direction:column;justify-content:space-between;font-family:Raleway,sans-serif;border-right:1px solid var(--cd)">'
+        out+='<div onclick="laserEditarTurno(\''+_tid+'\')" style="display:flex;cursor:pointer;border-bottom:2px solid var(--oliva);pointer-events:auto">'
+          +'<div style="width:64px;flex-shrink:0;padding:8px;background:var(--crema);display:flex;flex-direction:column;justify-content:space-between;font-family:Raleway,sans-serif;border-right:1px solid var(--cd);pointer-events:none">'
             +'<span style="font-size:11px;font-weight:600;color:var(--texto)">'+hStr+'</span>'
             +'<span style="font-size:10px;color:var(--gc)">→ '+hFin+'</span>'
           +'</div>'
-          +'<div style="flex:1;padding:8px 10px;background:#eef1eb">'
+          +'<div style="flex:1;padding:8px 10px;background:#eef1eb;pointer-events:none">'
             +'<div style="font-size:13px;font-weight:600;color:#2a3020;margin-bottom:2px">'+turnoActivo.nombre+'</div>'
             +'<div style="font-size:11px;color:#4a5040">'+turnoActivo.srv+' · '+turnoActivo.dur+' min'+(turnoActivo.senia?' · Seña pagada':'')+'</div>'
-            +(turnoActivo.precio?'<div style="font-size:11px;color:var(--gc);margin-top:2px">'+fmtPeso(turnoActivo.precio)+'</div>':'')
+            +(turnoActivo.precio?'<div style="font-size:11px;color:var(--gc);margin-top:2px;pointer-events:none">'+fmtPeso(turnoActivo.precio)+'</div>':'')
           +'</div>'
           +'</div>';
         m=(finM%SLOT===0)?finM-SLOT:Math.ceil(finM/SLOT)*SLOT-SLOT;
