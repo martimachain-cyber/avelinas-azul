@@ -1485,8 +1485,7 @@ function getDefaultLaserTurnos26(){return[
   {id:'ls26_12',prof:'camila',fecha:'2026-06-26',hora:'16:15',duracion:25,cliente:'Paz del Molino',servicio:'Axilas + bozo + mentón',precio:23000,manual:true},
   {id:'ls26_13',prof:'camila',fecha:'2026-06-26',hora:'16:45',duracion:25,cliente:'Josefina Aitra',servicio:'Combo 4',precio:26000,senia:13000,manual:true},
   {id:'ls26_14',prof:'camila',fecha:'2026-06-26',hora:'18:30',duracion:20,cliente:'Dolores',servicio:'Cavado completo + axila + bozo',precio:25000,senia:12500,manual:true},
-  {id:'ls26_15',prof:'camila',fecha:'2026-06-26',hora:'19:00',duracion:15,cliente:'Tamara Gomez',servicio:'Combo 5',precio:20000,senia:10000,manual:true},
-  {id:'ls26_16',prof:'camila',fecha:'2026-06-26',hora:'13:15',duracion:15,cliente:'Maria Emilia del Molino',servicio:'Bozo + mentón',precio:14000,manual:true}
+  {id:'ls26_15',prof:'camila',fecha:'2026-06-26',hora:'19:00',duracion:15,cliente:'Tamara Gomez',servicio:'Combo 5',precio:20000,senia:10000,manual:true}
 ];}
 function renderLaserAgenda(){
   // Clean old turno IDs
@@ -1609,14 +1608,14 @@ function renderLaserTimeline(fecha){
             +(turnoActivo.precio?'<div style="font-size:11px;color:var(--gc);margin-top:2px">'+fmtPeso(turnoActivo.precio)+'</div>':'')
           +'</div>'
           +'</div>';
-        m=Math.ceil(finM/SLOT)*SLOT-SLOT;
+        m=(finM%SLOT===0)?finM-SLOT:Math.ceil(finM/SLOT)*SLOT-SLOT;
       } else {
-        out+='<div class="ls-slot-libre" data-fecha="'+fecha+'" data-hora="'+hStr+'" style="display:flex;cursor:pointer;border-bottom:1px dashed rgba(184,178,172,.3);min-height:32px">'
-          +'<div style="width:64px;flex-shrink:0;padding:5px 8px;background:var(--crema);border-right:1px solid var(--cd)">'
-            +'<span style="font-size:10px;color:var(--gc);font-family:Raleway,sans-serif">'+hStr+'</span>'
+        out+='<div class="ls-slot-libre" data-fecha="'+fecha+'" data-hora="'+hStr+'" style="display:flex;cursor:pointer;border-bottom:1px dashed rgba(139,143,107,.3);min-height:36px;background:#fafaf8">'
+          +'<div style="width:64px;flex-shrink:0;padding:6px 8px;background:var(--crema);border-right:1px solid var(--cd);display:flex;align-items:center">'
+            +'<span style="font-size:10px;font-weight:500;color:var(--oliva);font-family:Raleway,sans-serif">'+hStr+'</span>'
           +'</div>'
-          +'<div style="flex:1;padding:5px 10px;display:flex;align-items:center">'
-            +'<span style="font-size:11px;color:var(--oliva);opacity:.7">+ Agregar turno</span>'
+          +'<div style="flex:1;padding:6px 10px;display:flex;align-items:center">'
+            +'<span style="font-size:11px;color:var(--oliva)">+ Agregar turno</span>'
           +'</div>'
           +'</div>';
       }
