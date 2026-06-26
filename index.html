@@ -2902,11 +2902,24 @@ const AG_PROFS=[
   {id:'emilia',n:'Emilia',esp:'Masajes · Maquillaje'},
   {id:'camila',n:'Camila',esp:'Faciales · Láser'},
   {id:'ludovica',n:'Ludovica',esp:'Manicura · Uñas'},
-  {id:'rosario',n:'Rosario',esp:'Pestañas · Cejas'}
+  {id:'rosario',n:'Rosario',esp:'Pestañas · Cejas'},
+  {id:'celeste',n:'Celeste',esp:'Masajes'},
+  {id:'angeles',n:'Ángeles',esp:'Masajes'},
+  {id:'luciana',n:'Luciana',esp:'Manicura · Pies'},
+  {id:'marina',n:'Marina',esp:'Reflexología Podal'}
 ];
-const AG_COLORS={emilia:'#7daa74',camila:'#7496aa',ludovica:'#aa8f6e',rosario:'#aa7490'};
-const AG_FONTS={emilia:'#1a3a17',camila:'#0e2a3a',ludovica:'#3a2010',rosario:'#3a1025'};
+const AG_COLORS={emilia:'#7daa74',camila:'#7496aa',ludovica:'#aa8f6e',rosario:'#aa7490',celeste:'#8aaa8a',angeles:'#aa9a74',luciana:'#7a9aaa',marina:'#74aa9a'};
+const AG_FONTS={emilia:'#1a3a17',camila:'#0e2a3a',ludovica:'#3a2010',rosario:'#3a1025',celeste:'#1a3a1a',angeles:'#3a2a10',luciana:'#0e2a3a',marina:'#0e3a2a'};
 const AG_H_INI=8,AG_H_FIN=21,AG_SLOT=40,AG_SLOT_MIN=30;
+const AG_GRUPOS_RECURSO={
+  masajes:['emilia','celeste','angeles','marina'],
+  faciales:['rosario','camila'],
+  pies:['ludovica','luciana']
+};
+function agGetGrupo(profId){
+  for(var g in AG_GRUPOS_RECURSO){if(AG_GRUPOS_RECURSO[g].includes(profId))return AG_GRUPOS_RECURSO[g];}
+  return [profId];
+}
 
 function agLd(){try{const d=localStorage.getItem(AG_KEY);return d?JSON.parse(d):{turnos:[]}}catch(e){return{turnos:[]}}}
 function agSv(){try{localStorage.setItem(AG_KEY,JSON.stringify(agD))}catch(e){}if(typeof sbSaveKey==='function')sbSaveKey('agenda',agD);}
@@ -3571,13 +3584,14 @@ function agGuardarTurno(){
       if(!esBloqueo){
         const iniNuevo=agHm(hora);
         const finNuevo=iniNuevo+(dur||30);
+        var _grupoProfsE=agGetGrupo(prof);
         const intervalosOcupados=[
-          ...agD.turnos.filter((t,i)=>i!==idx&&t.prof===prof&&t.fecha===fecha&&!t.bloqueo).map(t=>{const ini=agHm(t.hora);return[ini,ini+(t.duracion||30)];}),
-          ...(D.reservas||[]).filter(r=>r.prof===prof&&r.f===fecha).map(r=>{const ini=agHm(r.h);return[ini,ini+(r.dur||30)];}),
-          ...(agD.bloqueos||[]).filter(b=>b.prof===prof&&b.fecha===fecha).map(b=>{const ini=agHm(b.h);return[ini,ini+30];})
+          ...agD.turnos.filter((t,i)=>i!==idx&&_grupoProfsE.includes(t.prof)&&t.fecha===fecha&&!t.bloqueo).map(t=>{const ini=agHm(t.hora);return[ini,ini+(t.duracion||30)];}),
+          ...(D.reservas||[]).filter(r=>_grupoProfsE.includes(r.prof)&&r.f===fecha).map(r=>{const ini=agHm(r.h);return[ini,ini+(r.dur||30)];}),
+          ...(agD.bloqueos||[]).filter(b=>_grupoProfsE.includes(b.prof)&&b.fecha===fecha).map(b=>{const ini=agHm(b.h);return[ini,ini+30];})
         ];
         const haySolape=intervalosOcupados.some(function(iv){return iniNuevo<iv[1]&&finNuevo>iv[0];});
-        if(haySolape){er.textContent='Ya hay un turno o bloqueo que se superpone con ese horario.';er.classList.add('on');_agGuardando=false;return;}
+        if(haySolape){er.textContent='Ya hay un turno en esa sala para ese horario.';er.classList.add('on');_agGuardando=false;return;}
       }
       var histCambio={fecha:hoy(),hora:new Date().toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'}),user:curPUser||'admin',de:{prof:agD.turnos[idx].prof,fecha:agD.turnos[idx].fecha,hora:agD.turnos[idx].hora,servicio:agD.turnos[idx].servicio}};
       var histPrev=agD.turnos[idx].histCambios||[];
@@ -3589,13 +3603,14 @@ function agGuardarTurno(){
     if(!esBloqueo){
       const iniNuevo=agHm(hora);
       const finNuevo=iniNuevo+(dur||30);
+      var _grupoProfs=agGetGrupo(prof);
       const intervalosOcupados=[
-        ...agD.turnos.filter(t=>t.prof===prof&&t.fecha===fecha&&!t.bloqueo).map(t=>{const ini=agHm(t.hora);return[ini,ini+(t.duracion||30)];}),
-        ...(D.reservas||[]).filter(r=>r.prof===prof&&r.f===fecha).map(r=>{const ini=agHm(r.h);return[ini,ini+(r.dur||30)];}),
-        ...(agD.bloqueos||[]).filter(b=>b.prof===prof&&b.fecha===fecha).map(b=>{const ini=agHm(b.h);return[ini,ini+30];})
+        ...agD.turnos.filter(t=>_grupoProfs.includes(t.prof)&&t.fecha===fecha&&!t.bloqueo).map(t=>{const ini=agHm(t.hora);return[ini,ini+(t.duracion||30)];}),
+        ...(D.reservas||[]).filter(r=>_grupoProfs.includes(r.prof)&&r.f===fecha).map(r=>{const ini=agHm(r.h);return[ini,ini+(r.dur||30)];}),
+        ...(agD.bloqueos||[]).filter(b=>_grupoProfs.includes(b.prof)&&b.fecha===fecha).map(b=>{const ini=agHm(b.h);return[ini,ini+30];})
       ];
       const haySolape=intervalosOcupados.some(function(iv){return iniNuevo<iv[1]&&finNuevo>iv[0];});
-      if(haySolape){er.textContent='Ya hay un turno o bloqueo que se superpone con ese horario.';er.classList.add('on');_agGuardando=false;return;}
+      if(haySolape){er.textContent='Ya hay un turno en esa sala para ese horario.';er.classList.add('on');_agGuardando=false;return;}
     }
     const precioT=parseFloat((document.getElementById('ag-mt-precio')||{}).value)||0;
     if(esBloqueo){
