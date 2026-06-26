@@ -6311,6 +6311,22 @@ async function sbSync(){
         var profActual=document.getElementById('ag-mt-prof');
         if(profActual&&typeof agMtCargarServicios==='function')agMtCargarServicios(profActual.value);
       }
+      // Actualizar descripciones de servicios con las de defD
+      var _catMapSb={facial:'faciales',mani:'manos',pedi:'pies',masajes:'masajes','pestañas':'pestañas',maquillaje:'maquillaje',laser:'laser'};
+      Object.keys(D.servicios).forEach(function(cat){
+        var _defCat=defD().servicios[_catMapSb[cat]||cat]||[];
+        (D.servicios[cat]||[]).forEach(function(s){
+          var _def=_defCat.find(function(d){return d.id===s.id;});
+          if(_def&&_def.desc)s.desc=_def.desc;
+        });
+        // Agregar servicios nuevos que no están en Supabase
+        _defCat.forEach(function(ds){
+          if(!(D.servicios[cat]||[]).find(function(s){return s.id===ds.id;})){
+            if(!D.servicios[cat])D.servicios[cat]=[];
+            D.servicios[cat].push(ds);
+          }
+        });
+      });
       renderSrvPage();
       console.log('✓ Datos sincronizados desde Supabase');
       // Cancelar el timeout de bienvenida si ya hay sesión
