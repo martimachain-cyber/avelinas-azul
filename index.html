@@ -1719,8 +1719,7 @@ function renderSrvItems(){
     <div style="background:#fff;border-radius:3px;padding:.7rem 1rem;margin-bottom:1rem;font-size:11px;color:var(--gris);font-family:Raleway,sans-serif">💳 Precios en efectivo / transferencia</div>`;
   }
   // Merge descripciones de defD si no están en D.servicios
-  var _catMap={facial:'faciales',mani:'manos',pedi:'pies',masajes:'masajes','pestañas':'pestañas',maquillaje:'maquillaje',laser:'laser'};
-  var _defSvs=(defD().servicios[_catMap[srvCat]||srvCat]||[]);
+  var _defSvs=(defD().servicios[srvCat]||[]);
   // Agregar servicios de defD que no estén en D.servicios
   var _svsCombined=svs.slice();
   _defSvs.forEach(function(ds){
@@ -6312,9 +6311,8 @@ async function sbSync(){
         if(profActual&&typeof agMtCargarServicios==='function')agMtCargarServicios(profActual.value);
       }
       // Actualizar descripciones de servicios con las de defD
-      var _catMapSb={facial:'faciales',mani:'manos',pedi:'pies',masajes:'masajes','pestañas':'pestañas',maquillaje:'maquillaje',laser:'laser'};
       Object.keys(D.servicios).forEach(function(cat){
-        var _defCat=defD().servicios[_catMapSb[cat]||cat]||[];
+        var _defCat=defD().servicios[cat]||[];
         (D.servicios[cat]||[]).forEach(function(s){
           var _def=_defCat.find(function(d){return d.id===s.id;});
           if(_def&&_def.desc)s.desc=_def.desc;
