@@ -6336,6 +6336,7 @@ async function sbSync(){
         });
       });
       renderSrvPage();
+      if(document.getElementById('eq-grid-dynamic'))renderNosotras();
       console.log('✓ Datos sincronizados desde Supabase');
       // Cancelar el timeout de bienvenida si ya hay sesión
       if(typeof window._mostrarBienvenidaSiSinSesion === 'function'){
