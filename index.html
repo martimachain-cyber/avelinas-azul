@@ -1234,8 +1234,8 @@ td.ag-slot-free{background:transparent}
 <script>// Sesión restaurada en DOMContentLoaded (ver abajo)
 
 // ===== DATA =====
-const CLAVES_PANEL={martina:'avelinas743',lucia:'lucia123',emilia:'emilia123',camila:'camila123',ludovica:'ludo123',rosario:'rosario123'};
-const ROL_PANEL={martina:'admin',lucia:'admin',emilia:'prof',camila:'prof',ludovica:'prof',rosario:'prof'};
+const CLAVES_PANEL={martina:'avelinas743',lucia:'lucia123',emilia:'emilia123',camila:'camila123',ludovica:'ludo123',rosario:'rosario123',celeste:'celeste123',angeles:'angeles123',luciana:'luciana123',marina:'marina123'};
+const ROL_PANEL={martina:'admin',lucia:'admin',emilia:'prof',camila:'prof',ludovica:'prof',rosario:'prof',celeste:'prof',angeles:'prof',luciana:'prof',marina:'prof'};
 const NOMBRES_P={martina:'Martina',lucia:'Lucía',emilia:'Emilia',camila:'Camila',ludovica:'Ludovica',rosario:'Rosario'};
 const CATS_LABELS={facial:'Faciales',mani:'Manicura',pedi:'Pedicura',masajes:'Masajes','pestañas':'Pestañas & Cejas',maquillaje:'Maquillaje',laser:'Depilación definitiva'};
 const PREMIOS_CLUB=[{id:'p1',n:'$5.000 de descuento en servicio o producto a elección'},{id:'p2',n:'Belleza de manos express gratis'},{id:'p3',n:'20% off en productos pagando en efectivo'}];
@@ -2236,8 +2236,8 @@ function mcSelTipo(tipo){
       document.getElementById('eq-clave').value='';
       // Build prof buttons
       const grid=document.getElementById('eq-pb-grid');
-      const users=['martina','lucia','emilia','camila','ludovica','rosario'];
-      const roles={martina:'Admin',lucia:'Secretaria',emilia:'Profesional',camila:'Profesional',ludovica:'Profesional',rosario:'Profesional'};
+      const users=['martina','lucia','emilia','camila','ludovica','rosario','celeste','angeles','luciana','marina'];
+      const roles={martina:'Admin',lucia:'Secretaria',emilia:'Profesional',camila:'Profesional',ludovica:'Profesional',rosario:'Profesional',celeste:'Profesional',angeles:'Profesional',luciana:'Profesional',marina:'Profesional'};
       grid.innerHTML=users.map(u=>`
         <div onclick="eqSelUser('${u}',this)" style="padding:8px 5px;background:var(--crema);border:1.5px solid var(--cd);border-radius:3px;cursor:pointer;text-align:center;-webkit-tap-highlight-color:transparent;transition:all .15s" class="eq-pb">
           <span style="font-family:Raleway,sans-serif;font-size:12px;font-weight:500;color:var(--texto);display:block">${NOMBRES_P[u]||u}</span>
@@ -2913,8 +2913,7 @@ const AG_FONTS={emilia:'#1a3a17',camila:'#0e2a3a',ludovica:'#3a2010',rosario:'#3
 const AG_H_INI=8,AG_H_FIN=21,AG_SLOT=40,AG_SLOT_MIN=30;
 const AG_GRUPOS_RECURSO={
   masajes:['emilia','celeste','angeles','marina'],
-  faciales:['rosario','camila'],
-  pies:['ludovica','luciana']
+  faciales:['rosario','camila']
 };
 function agGetGrupo(profId){
   for(var g in AG_GRUPOS_RECURSO){if(AG_GRUPOS_RECURSO[g].includes(profId))return AG_GRUPOS_RECURSO[g];}
@@ -3399,7 +3398,7 @@ function agVerTurno(id){
 
 function agEditarDesdeVer(){
   cerrarM('modal-ag-ver');
-  const t=agD.turnos.find(x=>x.id===agVerTurnoId);
+  const t=agD.turnos.find(x=>String(x.id)===String(agVerTurnoId));
   if(!t)return;
   agAbrirNuevo(t);
 }
