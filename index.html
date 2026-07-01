@@ -4124,7 +4124,7 @@ function insModalNuevo(){
   document.getElementById('egreso-monto').value='';
   var hoy=new Date();
   document.getElementById('egreso-fecha').value=hoy.toISOString().split('T')[0];
-  abrirM('modal-egreso');
+  document.getElementById('modal-egreso').classList.add('on');
 }
 
 function insAbrir(id){
@@ -5331,7 +5331,7 @@ function prodSetTab(tab,btn){
   });
   if(tab==='stock'){renderProdStock();renderProductos();}
   if(tab==='ventas'){renderProdVentas();}
-  if(tab==='pedidos'){renderProdPedidos();}
+  if(tab==='pedidos'){renderProdPedidos();renderPedidoManuales();}
   if(tab==='proveedores'){renderProveedores();}
 }
 
@@ -5734,6 +5734,34 @@ function buildTextoPedido(provId){
   return txt;
 }
 
+function agregarPedidoManual(){
+  var nombre=document.getElementById('pedido-manual-nombre').value.trim();
+  var cant=parseInt(document.getElementById('pedido-manual-cant').value)||1;
+  if(!nombre)return;
+  if(!prodD.pedidoManuales)prodD.pedidoManuales=[];
+  prodD.pedidoManuales.push({nombre:nombre,cant:cant});
+  prodSv();
+  document.getElementById('pedido-manual-nombre').value='';
+  document.getElementById('pedido-manual-cant').value='';
+  renderPedidoManuales();
+}
+function renderPedidoManuales(){
+  var el=document.getElementById('pedido-manuales');
+  if(!el)return;
+  var items=prodD.pedidoManuales||[];
+  el.innerHTML=items.length?items.map(function(m,i){
+    return '<div style="display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:0.5px solid var(--cd);font-size:12px">'
+      +'<span>'+m.nombre+' × '+m.cant+'</span>'
+      +'<button onclick="quitarPedidoManual('+i+')" style="background:none;border:none;color:var(--rojo);cursor:pointer;font-size:13px">✕</button>'
+      +'</div>';
+  }).join(''):'';
+}
+function quitarPedidoManual(i){
+  if(!prodD.pedidoManuales)return;
+  prodD.pedidoManuales.splice(i,1);
+  prodSv();
+  renderPedidoManuales();
+}
 function generarPedido(){
   const provId=document.getElementById('pedido-prov-sel').value;
   const prov=prodD.proveedores.find(x=>x.id===provId);
@@ -5784,8 +5812,9 @@ function enviarPedidoWA(){
   const texto=document.getElementById('pedido-contenido').textContent;
   const provId=document.getElementById('pedido-prov-sel').value;
   const prov=prodD.proveedores.find(x=>x.id===provId);
-  const tel=(prov&&prov.tel)?prov.tel.replace(/\D/g,''):'549';
-  const url='https://wa.me/'+tel+'?text='+encodeURIComponent(texto);
+  const tel=(prov&&prov.tel)?prov.tel.replace(/\D/g,''):'';
+  if(!tel){alert('El proveedor no tiene teléfono cargado. Copiá el pedido y envialo manualmente.');return;}
+  const url='https://wa.me/549'+tel+'?text='+encodeURIComponent(texto);
   window.open(url,'_blank');
 }
 
