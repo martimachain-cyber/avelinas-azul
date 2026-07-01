@@ -5801,21 +5801,18 @@ Avelinas Azul · Olavarría 529, Azul
 Tel: 2494 251936`;
   document.getElementById('pedido-title').textContent=prov?`Pedido — ${prov.nombre}`:'Pedido de reposición';
   document.getElementById('pedido-contenido').textContent=texto;
-  document.getElementById('modal-pedido').classList.add('on');
+  var mp=document.getElementById('modal-pedido');mp.dataset.provId=provId||'';
+  mp.classList.add('on');
 }
 
 function copiarPedido(){
   const texto=document.getElementById('pedido-contenido').textContent;
   navigator.clipboard.writeText(texto).then(()=>alert('¡Copiado! Podés pegarlo en WhatsApp o donde necesites.'));
 }
-function enviarPedidoWA(){
-  const texto=document.getElementById('pedido-contenido').textContent;
-  const provId=document.getElementById('pedido-prov-sel').value;
-  const prov=prodD.proveedores.find(x=>x.id===provId);
-  const tel=(prov&&prov.tel)?prov.tel.replace(/\D/g,''):'';
-  if(!tel){alert('El proveedor no tiene teléfono cargado. Copiá el pedido y envialo manualmente.');return;}
-  const url='https://wa.me/549'+tel+'?text='+encodeURIComponent(texto);
-  window.open(url,'_blank');
+function enviarPedidoWAModal(){
+  var mp=document.getElementById('modal-pedido');
+  var provId=(mp&&mp.dataset.provId)||'';
+  enviarPedidoWA(provId);
 }
 
 // PROVEEDORES
@@ -7433,7 +7430,7 @@ function rpPagarCom(profId,profNombre,monto){
   <div class="mc-acts">
     <button class="btn-cancel" onclick="cerrarM(&#39;modal-pedido&#39;)">Cerrar</button>
     <button class="btn-v" style="flex:1" onclick="copiarPedido()">📋 Copiar</button>
-    <button class="btn-v" style="flex:1;background:#25D366" onclick="enviarPedidoWA()">📲 WhatsApp</button>
+    <button class="btn-v" style="flex:1;background:#25D366" onclick="enviarPedidoWAModal()">📲 WhatsApp</button>
   </div>
 </div></div>
 
