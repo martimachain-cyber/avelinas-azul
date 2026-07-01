@@ -4736,7 +4736,7 @@ function imprimirRecibo(profId,profNombre,total,comision,adelantos,retiros,neto)
     +'<div class="top-sub">Olavarría 529, Azul · Buenos Aires</div>'
     +'</div>'
     +'<div class="body">'
-    +'<div class="no-print" style="text-align:center;margin-bottom:14px"><button onclick="window.print()" style="background:#8B8F6B;color:#fff;border:none;padding:7px 18px;border-radius:4px;cursor:pointer;font-size:12px">🖨 Imprimir</button></div>'
+    +'<div class="no-print" style="text-align:center;margin-bottom:14px;display:flex;gap:8px;justify-content:center"><button onclick="history.back()" style="background:transparent;color:#8B8F6B;border:1px solid #8B8F6B;padding:7px 14px;border-radius:4px;cursor:pointer;font-size:12px">← Volver</button><button onclick="window.print()" style="background:#8B8F6B;color:#fff;border:none;padding:7px 18px;border-radius:4px;cursor:pointer;font-size:12px">🖨 Imprimir</button></div>'
     +'<div class="prof-name">'+profNombre+'</div>'
     +'<div class="periodo">'+periodoLabel+' · Emitido '+fecha+'</div>'
     +'<div class="dash"></div>';
@@ -5557,7 +5557,7 @@ function renderProdVentas(){
       <div class="iinfo">
         <div class="inombre">${p?.nombre||'Producto'} × ${v.cant||1}</div>
         <div class="isub">${v.cliente||'—'} · ${ff(pk(v.fecha))} · ${v.metodo}</div>
-        +(prof?'<div class="isub" style="color:var(--oliva)">Comisión '+prof.n+': '+fmtPeso((v.precio||0)*(v.cant||1)*((p&&p.comisionPct)||0)/100)+'</div>':'')
+        ${prof?'<div class="isub" style="color:var(--oliva)">Comisión '+prof.n+': '+fmtPeso((v.precio||0)*(v.cant||1)*((p&&p.comisionPct)||0)/100)+'</div>':''}
       </div>
       <div style="text-align:right;flex-shrink:0">
         <div style="font-family:Raleway,sans-serif;font-size:14px;font-weight:600;color:var(--oliva)">${fmtPeso((v.precio||0)*(v.cant||1))}</div>
@@ -5755,8 +5755,9 @@ ${prov.contacto?'Contacto: '+prov.contacto+'\n':''}
 
 `;
   bajos.forEach(p=>{
-    texto+=`• ${p.nombre} (${p.codigo})
-  Stock actual: ${p.stock} | Mínimo: ${p.minimo}
+    const cantPedir=Math.max((p.minimo||1)-p.stock,1);
+    texto+=`• ${p.nombre}${p.codigo?' ('+p.codigo+')':''}
+  Cantidad: ${cantPedir}
 
 `;
   });
@@ -5778,6 +5779,14 @@ Tel: 2494 251936`;
 function copiarPedido(){
   const texto=document.getElementById('pedido-contenido').textContent;
   navigator.clipboard.writeText(texto).then(()=>alert('¡Copiado! Podés pegarlo en WhatsApp o donde necesites.'));
+}
+function enviarPedidoWA(){
+  const texto=document.getElementById('pedido-contenido').textContent;
+  const provId=document.getElementById('pedido-prov-sel').value;
+  const prov=prodD.proveedores.find(x=>x.id===provId);
+  const tel=(prov&&prov.tel)?prov.tel.replace(/\D/g,''):'549';
+  const url='https://wa.me/'+tel+'?text='+encodeURIComponent(texto);
+  window.open(url,'_blank');
 }
 
 // PROVEEDORES
@@ -6328,11 +6337,12 @@ async function sbSync(){
         var profActual=document.getElementById('ag-mt-prof');
         if(profActual&&typeof agMtCargarServicios==='function')agMtCargarServicios(profActual.value);
       }
-      // Actualizar titulos de profesionales desde defD
+      // Actualizar titulos y esp de profesionales desde defD
       var _defProfs=defD().profesionales||[];
       (D.profesionales||[]).forEach(function(p){
         var _def=_defProfs.find(function(d){return d.id===p.id;});
         if(_def&&_def.titulos&&_def.titulos.length)p.titulos=_def.titulos;
+        if(_def&&_def.esp)p.esp=_def.esp;
       });
       // Actualizar descripciones de servicios con las de defD
       Object.keys(D.servicios).forEach(function(cat){
@@ -7394,6 +7404,7 @@ function rpPagarCom(profId,profNombre,monto){
   <div class="mc-acts">
     <button class="btn-cancel" onclick="cerrarM(&#39;modal-pedido&#39;)">Cerrar</button>
     <button class="btn-v" style="flex:1" onclick="copiarPedido()">📋 Copiar</button>
+    <button class="btn-v" style="flex:1;background:#25D366" onclick="enviarPedidoWA()">📲 WhatsApp</button>
   </div>
 </div></div>
 
