@@ -907,12 +907,14 @@ td.ag-slot-free{background:transparent}
         <button class="cpill" id="rp-tab-profs" onclick="rpSetTab('profs',this)">👩 Por profesional</button>
         <button class="cpill" id="rp-tab-servicios" onclick="rpSetTab('servicios',this)">✂️ Por servicio</button>
         <button class="cpill" id="rp-tab-retencion" onclick="rpSetTab('retencion',this)">👥 Retención</button>
+        <button class="cpill" id="rp-tab-productos" onclick="rpSetTab('productos',this)">📦 Productos</button>
       </div>
       <input type="month" id="rp-mes-sel" onchange="rpRender()" style="font-size:12px;padding:4px 8px;border:1px solid var(--cd);border-radius:3px;margin-bottom:1rem">
       <div id="rp-cierre"></div>
       <div id="rp-profs" style="display:none"></div>
       <div id="rp-servicios" style="display:none"></div>
       <div id="rp-retencion" style="display:none"></div>
+    <div id="rp-productos" style="display:none"></div>
     </div></div>
 
     <div id="a-insumos" class="tsec"><div style="padding:1rem">
@@ -7145,12 +7147,96 @@ function rpRenderRetencion(){
 function rpSetTab(tab,btn){
   document.querySelectorAll('[id^="rp-tab-"]').forEach(b=>b.classList.remove('on'));
   if(btn)btn.classList.add('on');
-  ['cierre','profs','servicios','retencion'].forEach(function(t){
+  ['cierre','profs','servicios','retencion','productos'].forEach(function(t){
     var el=document.getElementById('rp-'+t);
     if(el)el.style.display=t===tab?'block':'none';
   });
   if(tab==='retencion')rpRenderRetencion();
+  else if(tab==='productos')rpRenderProductos();
   else rpRender(tab);
+}
+
+function rpRenderProductos(){
+  var el=document.getElementById('rp-productos');
+  if(!el)return;
+  var mes=rpGetMes();
+  var ventas=(prodD.ventas||[]).filter(function(v){return v.fecha&&v.fecha.startsWith(mes);});
+  
+  // Selector de marca
+  var marcas=['Todas'];
+  (prodD.productos||[]).forEach(function(p){if(p.marca&&!marcas.includes(p.marca))marcas.push(p.marca);});
+  var selMarca=el.querySelector('.rp-prod-marca')?el.querySelector('.rp-prod-marca').value:'Todas';
+  
+  // Agrupar por producto
+  var map={};
+  ventas.forEach(function(v){
+    var prod=(prodD.productos||[]).find(function(p){return p.id===v.prodId;});
+    if(!prod)return;
+    if(selMarca!=='Todas'&&prod.marca!==selMarca)return;
+    if(!map[prod.id])map[prod.id]={nombre:prod.nombre,marca:prod.marca||'—',cant:0,total:0,ganancia:0};
+    var cant=v.cant||1;
+    var precio=v.precio||0;
+    var costo=(prod.costo||0)*cant;
+    map[prod.id].cant+=cant;
+    map[prod.id].total+=precio*cant;
+    map[prod.id].ganancia+=(precio*cant)-costo;
+  });
+
+  var items=Object.values(map).sort(function(a,b){return b.total-a.total;});
+  var totalVentas=items.reduce(function(s,i){return s+i.total;},0);
+  var totalGan=items.reduce(function(s,i){return s+i.ganancia;},0);
+  var totalCant=items.reduce(function(s,i){return s+i.cant;},0);
+
+  // Agrupar por marca
+  var byMarca={};
+  items.forEach(function(i){
+    if(!byMarca[i.marca])byMarca[i.marca]={cant:0,total:0};
+    byMarca[i.marca].cant+=i.cant;
+    byMarca[i.marca].total+=i.total;
+  });
+
+  var html='<div style="margin-bottom:12px;display:flex;align-items:center;gap:8px">'
+    +'<label style="font-size:12px;color:var(--gc)">Marca:</label>'
+    +'<select class="fsel rp-prod-marca" onchange="rpRenderProductos()" style="flex:1;font-size:12px;padding:4px 8px">'
+    +marcas.map(function(m){return'<option value="'+m+'"'+(m===selMarca?' selected':'')+'>'+m+'</option>';}).join('')
+    +'</select></div>';
+
+  // Stats
+  html+='<div class="stats" style="grid-template-columns:repeat(3,1fr);margin-bottom:12px">'
+    +'<div class="sc"><div class="sc-n" style="color:var(--oliva)">'+fmtPeso(totalVentas)+'</div><div class="sc-l">Total vendido</div></div>'
+    +'<div class="sc"><div class="sc-n">'+totalCant+'</div><div class="sc-l">Unidades</div></div>'
+    +'<div class="sc"><div class="sc-n" style="color:var(--oliva)">'+fmtPeso(totalGan)+'</div><div class="sc-l">Ganancia</div></div>'
+    +'</div>';
+
+  if(!items.length){el.innerHTML=html+'<div class="empty">Sin ventas este mes.</div>';return;}
+
+  // Ranking por marca
+  if(selMarca==='Todas'&&Object.keys(byMarca).length>1){
+    html+='<div class="panel" style="margin-bottom:12px"><div class="ptitle">Por marca</div>';
+    html+=Object.entries(byMarca).sort(function(a,b){return b[1].total-a[1].total;}).map(function(e){
+      return '<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:0.5px solid var(--cd);font-size:12px">'
+        +'<span style="font-weight:500">'+e[0]+'</span>'
+        +'<span style="color:var(--gc)">'+e[1].cant+' u · '+fmtPeso(e[1].total)+'</span>'
+        +'</div>';
+    }).join('')+'</div>';
+  }
+
+  // Ranking de productos
+  html+='<div class="panel"><div class="ptitle">Ranking de productos</div>';
+  html+=items.map(function(i,idx){
+    return '<div style="display:flex;justify-content:space-between;align-items:start;padding:6px 0;border-bottom:0.5px solid var(--cd)">'
+      +'<div>'
+        +'<div style="font-size:13px;font-weight:500;color:var(--texto)">'+(idx+1)+'. '+i.nombre+'</div>'
+        +'<div style="font-size:11px;color:var(--gc)">'+i.marca+' · '+i.cant+' unidades</div>'
+      +'</div>'
+      +'<div style="text-align:right;flex-shrink:0">'
+        +'<div style="font-size:13px;font-weight:600;color:var(--oliva)">'+fmtPeso(i.total)+'</div>'
+        +'<div style="font-size:10px;color:var(--gc)">gan. '+fmtPeso(i.ganancia)+'</div>'
+      +'</div>'
+      +'</div>';
+  }).join('')+'</div>';
+
+  el.innerHTML=html;
 }
 
 function rpGetMes(){
