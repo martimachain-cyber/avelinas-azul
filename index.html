@@ -3592,7 +3592,7 @@ function agGuardarTurno(){
           ...(agD.bloqueos||[]).filter(b=>_grupoProfsE.includes(b.prof)&&b.fecha===fecha).map(b=>{const ini=agHm(b.h);return[ini,ini+30];})
         ];
         const haySolape=intervalosOcupados.some(function(iv){return iniNuevo<iv[1]&&finNuevo>iv[0];});
-        if(haySolape){er.textContent='Ya hay un turno en esa sala para ese horario.';er.classList.add('on');_agGuardando=false;return;}
+        if(haySolape&&!confirm('⚠️ Ya hay un turno en esa sala para ese horario.\n¿Querés guardarlo igual como sobre-turno?')){er.textContent='Turno cancelado.';er.classList.add('on');_agGuardando=false;return;}
       }
       var histCambio={fecha:hoy(),hora:new Date().toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'}),user:curPUser||'admin',de:{prof:agD.turnos[idx].prof,fecha:agD.turnos[idx].fecha,hora:agD.turnos[idx].hora,servicio:agD.turnos[idx].servicio}};
       var histPrev=agD.turnos[idx].histCambios||[];
@@ -3611,7 +3611,7 @@ function agGuardarTurno(){
         ...(agD.bloqueos||[]).filter(b=>_grupoProfs.includes(b.prof)&&b.fecha===fecha).map(b=>{const ini=agHm(b.h);return[ini,ini+30];})
       ];
       const haySolape=intervalosOcupados.some(function(iv){return iniNuevo<iv[1]&&finNuevo>iv[0];});
-      if(haySolape){er.textContent='Ya hay un turno en esa sala para ese horario.';er.classList.add('on');_agGuardando=false;return;}
+      if(haySolape&&!confirm('⚠️ Ya hay un turno en esa sala para ese horario.\n¿Querés guardarlo igual como sobre-turno?')){er.textContent='Turno cancelado.';er.classList.add('on');_agGuardando=false;return;}
     }
     const precioT=parseFloat((document.getElementById('ag-mt-precio')||{}).value)||0;
     if(esBloqueo){
