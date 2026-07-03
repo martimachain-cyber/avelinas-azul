@@ -3494,7 +3494,8 @@ function agAbrirNuevo(t=null,laserMode=false){
   document.getElementById('ag-mt-dur').value=t?t.duracion||60:60;
   // Set tipo
   const esBloqueo = t?.bloqueo||false;
-  agSelTipo(esBloqueo?'bloqueo':'turno', null);
+  agTipoActual = esBloqueo?'bloqueo':'turno';
+  agSelTipo(agTipoActual, null);
   document.getElementById('ag-mt-cliente').value=t&&!esBloqueo?t.cliente:'';
   document.getElementById('ag-mt-motivo').value=t&&esBloqueo?(t.cliente||'').replace('🔒 ',''):'';
   document.getElementById('ag-mt-servicio').value=t?t.servicio:'';
