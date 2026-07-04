@@ -4851,11 +4851,41 @@ function abrirModalCobro(id){
   document.getElementById('cobro-notas').value=c?c.notas||'':'';
   var descEl=document.getElementById('cobro-desc-pct');if(descEl)descEl.value='';
   var bcEl=document.getElementById('cobro-base-comision');if(bcEl)bcEl.value=c&&c.baseComision?c.baseComision:'servicio';
+  var paEl=document.getElementById('cobro-paga-ahora');if(paEl)paEl.value='';
+  var dfEl=document.getElementById('cobro-cc-diff');if(dfEl)dfEl.style.display='none';
   var totalEl=document.getElementById('cobro-total-final');if(totalEl)totalEl.value='';
   document.getElementById('ok-cobro').classList.remove('on');
   document.getElementById('er-cobro').classList.remove('on');
   document.getElementById('modal-cobro').classList.add('on');
   setTimeout(cjActualizarInfoCC,100);
+}
+
+function cjActualizarDiferencia(){
+  var montoEl=document.getElementById('cobro-monto');
+  var descEl=document.getElementById('cobro-desc-pct');
+  var pagaEl=document.getElementById('cobro-paga-ahora');
+  var diffEl=document.getElementById('cobro-cc-diff');
+  if(!montoEl||!pagaEl||!diffEl)return;
+  var monto=parseFloat(montoEl.value)||0;
+  var desc=parseFloat(descEl?descEl.value:0)||0;
+  var total=monto-(monto*desc/100);
+  var paga=parseFloat(pagaEl.value);
+  if(isNaN(paga)||pagaEl.value===''){diffEl.style.display='none';return;}
+  var diff=paga-total;
+  diffEl.style.display='block';
+  if(Math.abs(diff)<1){
+    diffEl.style.background='rgba(139,143,107,.1)';
+    diffEl.style.color='var(--oliva-dark)';
+    diffEl.textContent='✓ Pago exacto';
+  }else if(diff<0){
+    diffEl.style.background='rgba(200,80,60,.08)';
+    diffEl.style.color='#c0392b';
+    diffEl.textContent='⚠️ Queda $'+Math.abs(diff).toLocaleString('es-AR')+' pendiente → se registra como deuda en cuenta corriente';
+  }else{
+    diffEl.style.background='rgba(139,143,107,.1)';
+    diffEl.style.color='var(--oliva-dark)';
+    diffEl.textContent='💚 Paga $'+diff.toLocaleString('es-AR')+' de más → se registra como saldo a favor en cuenta corriente';
+  }
 }
 
 function cjActualizarInfoCC(){
@@ -4937,7 +4967,29 @@ function cjGuardarCobro(){
       if(!cl.cc)cl.cc=[];
       cl.cc.push({id:'cc_'+Date.now(),tipo:'cargo',monto:deuda,concepto:'Deuda: '+srv,fecha:fecha,autor:NOMBRES_P[curPUser]||curPUser});
     }
-    cjD.cobros.push({id:'cb_'+Date.now(),prof,cliente,srv,monto:montoFinal||monto,metodo,fecha,notas,baseComision,montoServicio:montoBase});
+    const pagaAhoraEl=document.getElementById('cobro-paga-ahora');
+    const pagaAhora=pagaAhoraEl&&pagaAhoraEl.value!==''?parseFloat(pagaAhoraEl.value):null;
+    const montoRegistrar=(pagaAhora!==null)?pagaAhora:(montoFinal||monto);
+    cjD.cobros.push({id:'cb_'+Date.now(),prof,cliente,srv,monto:montoRegistrar,metodo,fecha,notas,baseComision,montoServicio:montoBase});
+    // Registrar diferencia en cuenta corriente
+    if(pagaAhora!==null){
+      const totalServicio=montoFinal||monto;
+      const diff=pagaAhora-totalServicio;
+      if(Math.abs(diff)>=1){
+        const clCC=D.clientas.find(function(c){return c.n.toLowerCase()===cliente.toLowerCase();});
+        if(clCC){
+          if(!clCC.cc)clCC.cc=[];
+          if(diff<0){
+            // Queda debiendo
+            clCC.cc.push({id:'cc_'+Date.now(),tipo:'cargo',monto:Math.abs(diff),concepto:'Saldo pendiente: '+srv,fecha:fecha,autor:curPUser||'admin'});
+          }else{
+            // Paga de más → saldo a favor
+            clCC.cc.push({id:'cc_'+Date.now(),tipo:'favor',monto:diff,concepto:'Saldo a favor: '+srv,fecha:fecha,autor:curPUser||'admin'});
+          }
+          sv();
+        }
+      }
+    }
     // Auto suma punto club
     if(cl){cl.pts=(cl.pts||0)+1;cl.hist=cl.hist||[];cl.hist.unshift({d:'Servicio: '+srv,f:fnow(),p:1});sv();}
   }
@@ -7544,6 +7596,9 @@ function rpPagarCom(profId,profNombre,monto){
     <div><label class="flbl">Descuento (%)</label><input class="finp" id="cobro-desc-pct" type="number" min="0" max="100" placeholder="0" oninput="cjCalcularDescuento()"></div>
     <div><label class="flbl">Total con descuento</label><input class="finp" id="cobro-total-final" type="text" disabled style="background:var(--crema);color:var(--gris)"></div>
   </div>
+  <label class="flbl">Paga ahora ($)</label>
+  <input class="finp" id="cobro-paga-ahora" type="number" min="0" placeholder="Dejar vacío si paga el total" oninput="cjActualizarDiferencia()">
+  <div id="cobro-cc-diff" style="display:none;padding:8px 10px;border-radius:4px;margin-bottom:4px;font-size:12px;font-weight:500"></div>
   <label class="flbl">Método de pago</label>
   <select class="fsel" id="cobro-metodo">
     <option value="efectivo">Efectivo</option>
