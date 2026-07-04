@@ -4870,7 +4870,14 @@ function cjActualizarDiferencia(){
   var desc=parseFloat(descEl?descEl.value:0)||0;
   var total=monto-(monto*desc/100);
   var paga=parseFloat(pagaEl.value);
-  if(isNaN(paga)||pagaEl.value===''){diffEl.style.display='none';return;}
+  if(isNaN(paga)||pagaEl.value===''){
+    // Vacío = no paga nada, todo queda en CC
+    diffEl.style.display='block';
+    diffEl.style.background='rgba(200,80,60,.08)';
+    diffEl.style.color='#c0392b';
+    diffEl.textContent='⚠️ No paga nada → $'+total.toLocaleString('es-AR')+' queda como deuda en cuenta corriente';
+    return;
+  }
   var diff=paga-total;
   diffEl.style.display='block';
   if(Math.abs(diff)<1){
@@ -4968,8 +4975,8 @@ function cjGuardarCobro(){
       cl.cc.push({id:'cc_'+Date.now(),tipo:'cargo',monto:deuda,concepto:'Deuda: '+srv,fecha:fecha,autor:NOMBRES_P[curPUser]||curPUser});
     }
     const pagaAhoraEl=document.getElementById('cobro-paga-ahora');
-    const pagaAhora=pagaAhoraEl&&pagaAhoraEl.value!==''?parseFloat(pagaAhoraEl.value):null;
-    const montoRegistrar=(pagaAhora!==null)?pagaAhora:(montoFinal||monto);
+    const pagaAhora=pagaAhoraEl&&pagaAhoraEl.value!==''?parseFloat(pagaAhoraEl.value):(montoFinal||monto);
+    const montoRegistrar=pagaAhora;
     cjD.cobros.push({id:'cb_'+Date.now(),prof,cliente,srv,monto:montoRegistrar,metodo,fecha,notas,baseComision,montoServicio:montoBase});
     // Registrar diferencia en cuenta corriente
     if(pagaAhora!==null){
@@ -7597,7 +7604,7 @@ function rpPagarCom(profId,profNombre,monto){
     <div><label class="flbl">Total con descuento</label><input class="finp" id="cobro-total-final" type="text" disabled style="background:var(--crema);color:var(--gris)"></div>
   </div>
   <label class="flbl">Paga ahora ($)</label>
-  <input class="finp" id="cobro-paga-ahora" type="number" min="0" placeholder="Dejar vacío si paga el total" oninput="cjActualizarDiferencia()">
+  <input class="finp" id="cobro-paga-ahora" type="number" min="0" placeholder="Dejar vacío si no paga nada (queda en CC)" oninput="cjActualizarDiferencia()">
   <div id="cobro-cc-diff" style="display:none;padding:8px 10px;border-radius:4px;margin-bottom:4px;font-size:12px;font-weight:500"></div>
   <label class="flbl">Método de pago</label>
   <select class="fsel" id="cobro-metodo">
