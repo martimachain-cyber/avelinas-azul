@@ -6022,6 +6022,13 @@ function abrirModalCompra(){
   document.getElementById('modal-compra').classList.add('on');
 }
 
+function _registrarEgresoCaja(desc, monto, fecha, cat){
+  if(!monto||monto<=0)return;
+  cjD.egresos=cjD.egresos||[];
+  cjD.egresos.push({id:'eg_'+Date.now(),cat:cat||'compras',desc:desc,monto:monto,fecha:fecha||hoy(),autor:curPUser||'admin'});
+  try{sbSaveKey('caja',cjD);}catch(e){}
+}
+
 function guardarCompra(){
   const provId=document.getElementById('comp-prov-id').value;
   const prodId=document.getElementById('comp-prod').value;
@@ -6043,6 +6050,9 @@ function guardarCompra(){
   if(!prodD.cuentaCorriente)prodD.cuentaCorriente=[];
   prodD.cuentaCorriente.push({id:'cc_'+Date.now(),prov:provId,tipo:'compra',monto:totalCosto,desc:`Compra: ${prod?.nombre||'Producto'} × ${cant}`,fecha});
   prodSv();
+  // Registrar egreso en caja
+  const _provNombre=(prodD.proveedores.find(function(x){return x.id===provId;})||{}).nombre||'Proveedor';
+  _registrarEgresoCaja('Compra: '+(prod?.nombre||'Producto')+' × '+cant+' — '+_provNombre, totalCosto, fecha, 'compras');
   ok.textContent='Compra registrada ✓ Stock actualizado';ok.classList.add('on');
   setTimeout(()=>{cerrarM('modal-compra');renderProvCompras();renderProvCC();renderProdStock();},1500);
 }
@@ -6106,6 +6116,11 @@ function guardarCC(){
   if(!monto){document.getElementById('ok-cc').textContent='Ingresá un monto.';document.getElementById('ok-cc').classList.add('on');return}
   prodD.cuentaCorriente=prodD.cuentaCorriente||[];
   prodD.cuentaCorriente.push({id:'cc_'+Date.now(),prov:provId,tipo,monto,desc,fecha});
+  // Registrar en caja si es pago a proveedor
+  if(tipo==='pago'){
+    const _pNombre=(prodD.proveedores.find(function(x){return x.id===provId;})||{}).nombre||'Proveedor';
+    _registrarEgresoCaja('Pago a proveedor: '+_pNombre+(desc?' — '+desc:''), monto, fecha, 'proveedores');
+  }
   prodSv();renderProvCC();
   document.getElementById('ok-cc').textContent='Guardado ✓';document.getElementById('ok-cc').classList.add('on');
   setTimeout(function(){cerrarM('modal-cc');},1500);
@@ -6673,7 +6688,19 @@ function fichaGuardarCC(){
   }
   if(!cl.cc) cl.cc=[];
   var autor = curPUser?(NOMBRES_P[curPUser]||curPUser):'Admin';
-  cl.cc.push({id:'cc_'+Date.now(), tipo:tipo, monto:monto, concepto:concepto, fecha:fnow(), autor:autor});
+  var ccId='cc_'+Date.now();
+  cl.cc.push({id:ccId, tipo:tipo, monto:monto, concepto:concepto, fecha:fnow(), autor:autor});
+  // Reflejar en caja si es un movimiento de dinero real
+  if(tipo==='pago'){
+    // Pago recibido → cobro en caja
+    cjD.cobros.push({id:'cob_cc_'+Date.now(),prof:curPUser||'lucia',cliente:cl.n,srv:concepto||'Pago cuenta corriente',monto:monto,metodo:'efectivo',fecha:hoy(),notas:'Pago desde cuenta corriente',baseComision:'cobrado',montoServicio:monto});
+    try{sbSaveKey('caja',cjD);}catch(e){}
+  } else if(tipo==='ajuste'&&monto<0){
+    // Ajuste negativo = devolucion → egreso en caja
+    cjD.egresos=cjD.egresos||[];
+    cjD.egresos.push({id:'eg_cc_'+Date.now(),cat:'devolución',desc:concepto||'Ajuste cuenta corriente: '+cl.n,monto:Math.abs(monto),fecha:hoy(),autor:curPUser||'admin'});
+    try{sbSaveKey('caja',cjD);}catch(e){}
+  }
   sv();
   document.getElementById('ficha-cc-monto').value='';
   document.getElementById('ficha-cc-concepto').value='';
