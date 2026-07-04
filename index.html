@@ -4510,7 +4510,12 @@ function renderCjComisiones(cobros,adelantos,retiros){
     if(!total) return;
     hayComis=true;
     const comPct=(p.comision||50)/100;
-    const comision=total*comPct;
+    // Base comision: usa montoServicio si baseComision==='servicio', sino monto cobrado
+    const baseTotal=mis.reduce(function(s,c){
+      if(c.baseComision==='cobrado')return s+(c.monto||0);
+      return s+(c.montoServicio||c.monto||0);
+    },0);
+    const comision=baseTotal*comPct;
     const ade=adelantos.filter(function(a){return a.prof===p.id;}).reduce(function(s,a){return s+(a.monto||0);},0);
     const ret=retiros.filter(function(r){return r.prof===p.id;}).reduce(function(s,r){return s+(r.precio||0)*(r.cant||1);},0);
     const neto=Math.max(0,comision-ade-ret);
@@ -4845,6 +4850,7 @@ function abrirModalCobro(id){
   document.getElementById('cobro-fecha').value=c?c.fecha:hoy();
   document.getElementById('cobro-notas').value=c?c.notas||'':'';
   var descEl=document.getElementById('cobro-desc-pct');if(descEl)descEl.value='';
+  var bcEl=document.getElementById('cobro-base-comision');if(bcEl)bcEl.value=c&&c.baseComision?c.baseComision:'servicio';
   var totalEl=document.getElementById('cobro-total-final');if(totalEl)totalEl.value='';
   document.getElementById('ok-cobro').classList.remove('on');
   document.getElementById('er-cobro').classList.remove('on');
@@ -4907,9 +4913,10 @@ function cjGuardarCobro(){
   ok.classList.remove('on');er.classList.remove('on');
   if(!cliente||!srv||!monto||!fecha){er.textContent='Completá todos los campos.';er.classList.add('on');return;}
   const id=document.getElementById('cobro-id').value;
+  const baseComision=document.getElementById('cobro-base-comision')?document.getElementById('cobro-base-comision').value:'servicio';
   if(id){
     const idx=cjD.cobros.findIndex(function(x){return x.id===id;});
-    if(idx>=0)cjD.cobros[idx]=Object.assign(cjD.cobros[idx],{prof,cliente,srv,monto,metodo,fecha,notas});
+    if(idx>=0)cjD.cobros[idx]=Object.assign(cjD.cobros[idx],{prof,cliente,srv,monto,metodo,fecha,notas,baseComision});
   }else{
     // Verificar si hay saldo de cuenta corriente a aplicar
     const aplicarCC=document.getElementById('cobro-aplicar-cc')&&document.getElementById('cobro-aplicar-cc').checked;
@@ -4930,7 +4937,7 @@ function cjGuardarCobro(){
       if(!cl.cc)cl.cc=[];
       cl.cc.push({id:'cc_'+Date.now(),tipo:'cargo',monto:deuda,concepto:'Deuda: '+srv,fecha:fecha,autor:NOMBRES_P[curPUser]||curPUser});
     }
-    cjD.cobros.push({id:'cb_'+Date.now(),prof,cliente,srv,monto:montoFinal||monto,metodo,fecha,notas});
+    cjD.cobros.push({id:'cb_'+Date.now(),prof,cliente,srv,monto:montoFinal||monto,metodo,fecha,notas,baseComision,montoServicio:montoBase});
     // Auto suma punto club
     if(cl){cl.pts=(cl.pts||0)+1;cl.hist=cl.hist||[];cl.hist.unshift({d:'Servicio: '+srv,f:fnow(),p:1});sv();}
   }
@@ -7528,6 +7535,11 @@ function rpPagarCom(profId,profNombre,monto){
   <label class="flbl">Clienta</label><input class="finp" id="cobro-cliente" placeholder="Nombre de la clienta" oninput="cjActualizarInfoCC()">
   <label class="flbl">Servicio</label><input class="finp" id="cobro-srv" placeholder="Ej: Facial GLOW">
   <label class="flbl">Monto ($)</label><input class="finp" id="cobro-monto" type="number" min="0" placeholder="0" oninput="cjCalcularDescuento()">
+  <label class="flbl">Calcular comisión sobre</label>
+  <select class="fsel" id="cobro-base-comision">
+    <option value="servicio">Precio del servicio (monto ingresado)</option>
+    <option value="cobrado">Monto cobrado (después del descuento)</option>
+  </select>
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:.6rem">
     <div><label class="flbl">Descuento (%)</label><input class="finp" id="cobro-desc-pct" type="number" min="0" max="100" placeholder="0" oninput="cjCalcularDescuento()"></div>
     <div><label class="flbl">Total con descuento</label><input class="finp" id="cobro-total-final" type="text" disabled style="background:var(--crema);color:var(--gris)"></div>
