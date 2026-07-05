@@ -6022,13 +6022,6 @@ function abrirModalCompra(){
   document.getElementById('modal-compra').classList.add('on');
 }
 
-function _registrarEgresoCaja(desc, monto, fecha, cat){
-  if(!monto||monto<=0)return;
-  cjD.egresos=cjD.egresos||[];
-  cjD.egresos.push({id:'eg_'+Date.now(),cat:cat||'compras',desc:desc,monto:monto,fecha:fecha||hoy(),autor:curPUser||'admin'});
-  try{sbSaveKey('caja',cjD);}catch(e){}
-}
-
 function guardarCompra(){
   const provId=document.getElementById('comp-prov-id').value;
   const prodId=document.getElementById('comp-prod').value;
@@ -6050,9 +6043,6 @@ function guardarCompra(){
   if(!prodD.cuentaCorriente)prodD.cuentaCorriente=[];
   prodD.cuentaCorriente.push({id:'cc_'+Date.now(),prov:provId,tipo:'compra',monto:totalCosto,desc:`Compra: ${prod?.nombre||'Producto'} × ${cant}`,fecha});
   prodSv();
-  // Registrar egreso en caja
-  const _provNombre=(prodD.proveedores.find(function(x){return x.id===provId;})||{}).nombre||'Proveedor';
-  _registrarEgresoCaja('Compra: '+(prod?.nombre||'Producto')+' × '+cant+' — '+_provNombre, totalCosto, fecha, 'compras');
   ok.textContent='Compra registrada ✓ Stock actualizado';ok.classList.add('on');
   setTimeout(()=>{cerrarM('modal-compra');renderProvCompras();renderProvCC();renderProdStock();},1500);
 }
@@ -6116,11 +6106,6 @@ function guardarCC(){
   if(!monto){document.getElementById('ok-cc').textContent='Ingresá un monto.';document.getElementById('ok-cc').classList.add('on');return}
   prodD.cuentaCorriente=prodD.cuentaCorriente||[];
   prodD.cuentaCorriente.push({id:'cc_'+Date.now(),prov:provId,tipo,monto,desc,fecha});
-  // Registrar en caja si es pago a proveedor
-  if(tipo==='pago'){
-    const _pNombre=(prodD.proveedores.find(function(x){return x.id===provId;})||{}).nombre||'Proveedor';
-    _registrarEgresoCaja('Pago a proveedor: '+_pNombre+(desc?' — '+desc:''), monto, fecha, 'proveedores');
-  }
   prodSv();renderProvCC();
   document.getElementById('ok-cc').textContent='Guardado ✓';document.getElementById('ok-cc').classList.add('on');
   setTimeout(function(){cerrarM('modal-cc');},1500);
@@ -7953,6 +7938,8 @@ function rpPagarCom(profId,profNombre,monto){
     </div>
   </div>
 </div>
+
+<div style="background:var(--texto);color:rgba(255,255,255,.3);text-align:center;padding:10px;font-size:10px;font-family:Raleway,sans-serif;letter-spacing:.05em">Desarrollado por <a href="https://instagram.com/mmstudio.cm" target="_blank" style="color:rgba(255,255,255,.5);text-decoration:none">Martina Machain · @mmstudio.cm</a></div>
 </body>
 
 </html>
