@@ -3401,7 +3401,7 @@ function agVerTurno(id){
       <div>⏱ ${t.duracion||60} min</div>
       ${t.senia?'<div>💵 Seña pagada: '+fmtPeso(t.senia)+'</div>':''}
       ${t.notas?'<div>📝 '+t.notas+'</div>':''}
-      ${t.histCambios&&t.histCambios.length?'<div style="margin-top:6px;font-size:10px;color:var(--gc)">✏️ Editado '+t.histCambios.length+' vez'+(t.histCambios.length>1?'es':'')+' · último cambio '+t.histCambios[t.histCambios.length-1].fecha+' por '+t.histCambios[t.histCambios.length-1].user+'</div>':''}
+      ${t.histCambios&&t.histCambios.length?'<div style="margin-top:6px;font-size:10px;color:var(--gc)">✏️ Editado '+t.histCambios.length+(t.histCambios.length>1?' veces':' vez')+' · último cambio '+t.histCambios[t.histCambios.length-1].fecha+' por '+t.histCambios[t.histCambios.length-1].user+'</div>':''}
       <div style="font-size:11px;color:var(--gc);margin-top:4px">${t.manual||!t.online?'Cargado manualmente':'Reserva online'}</div>
     </div>`+laserHistHtml;
   const isAdmin=ROL_PANEL[curPUser]==='admin';
@@ -3503,17 +3503,17 @@ function agEliminarDesdeVer(btn){
   }
   if(btn&&btn._agTimeoutConfirm)clearTimeout(btn._agTimeoutConfirm);
   // Buscar primero si es un turno manual real (existe con ese id exacto en agD.turnos)
-  var tManual=agD.turnos.find(function(t){return t.id===agVerTurnoId;});
+  var tManual=agD.turnos.find(function(t){return String(t.id)===String(agVerTurnoId);});
   if(tManual){
     agD.cancelados=agD.cancelados||[];
     agD.cancelados.push({...tManual,canceladoEn:hoy(),canceladoPor:curPUser||'admin'});
-    agD.turnos=agD.turnos.filter(t=>t.id!==agVerTurnoId);agSv();
+    agD.turnos=agD.turnos.filter(t=>String(t.id)!==String(agVerTurnoId));agSv();
   }else{
     // Si no está en turnos manuales, debe ser una reserva online — buscar por id exacto
     // o por id numérico (reservas viejas pueden no tener el prefijo 'r_')
     var rId=agVerTurnoId;
     if(typeof agVerTurnoId==='string'&&agVerTurnoId.startsWith('r_'))rId=parseInt(agVerTurnoId.replace('r_',''));
-    D.reservas=(D.reservas||[]).filter(r=>r.id!==rId&&r.id!==agVerTurnoId);sv();
+    D.reservas=(D.reservas||[]).filter(r=>String(r.id)!==String(rId)&&String(r.id)!==String(agVerTurnoId));sv();
   }
   cerrarM('modal-ag-ver');
   // Refrescar la vista que esté realmente en pantalla (no adivinar por profesional)
@@ -3668,7 +3668,7 @@ function agGuardarTurno(){
         agD.bloqueos.push({id:'blq_'+Date.now()+'_'+bm,prof,fecha,h:bh,motivo:motivo||'Bloqueado',horaIni:hora,horaFin:String(Math.floor(blqFin/60)).padStart(2,'0')+':'+String(blqFin%60).padStart(2,'0')});
       }
     }else{
-      agD.turnos.push({id:Date.now(),prof,fecha,hora,duracion:dur,cliente,servicio,notas,senia,precio:precioT,manual:true,bloqueo:false});
+      agD.turnos.push({id:String(Date.now()),prof,fecha,hora,duracion:dur,cliente,servicio,notas,senia,precio:precioT,manual:true,bloqueo:false});
     }
   }
   agSv();ok.textContent=editId?'Actualizado ✓':(esBloqueo?'Bloqueo agregado ✓':'Turno agregado ✓');ok.classList.add('on');
