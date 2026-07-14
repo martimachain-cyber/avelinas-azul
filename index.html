@@ -3409,7 +3409,7 @@ function agVerTurno(id){
   const _mvId="modal-ag-ver";
   const agMvCancelBtn="<button class=\"btn-cancel\" onclick=\"cerrarM('modal-ag-ver')\">Cerrar</button>";
   const agMvEditBtn=canEdit?"<button class=\"btn-v\" onclick=\"agEditarDesdeVer()\">Editar</button>":"";
-  const agMvDelBtn=isAdmin?"<button class=\"btn-red\" onclick=\"agEliminarDesdeVer()\">Eliminar</button>":"";
+  const agMvDelBtn=isAdmin?"<button class=\"btn-red\" onclick=\"agEliminarDesdeVer(this)\">Eliminar</button>":"";
   const agMvFichaBtn=clFicha?"<button class=\"btn-v\" style=\"background:var(--oliva)\" onclick=\"cerrarM('modal-ag-ver');abrirFicha('"+clFicha.id+"',false)\">👤 Ver ficha</button>":"";
   // WhatsApp recordatorio
   const clTel=(clFicha&&clFicha.tel)||t.tel||'';
@@ -3488,8 +3488,20 @@ function agCobrarDesdeVer(){
   },80);
 }
 
-function agEliminarDesdeVer(){
-  if(!confirm('¿Eliminar este turno?'))return;
+function agEliminarDesdeVer(btn){
+  // No usamos window.confirm() porque algunos navegadores "envueltos" (ej: el navegador interno
+  // de WhatsApp) lo bloquean en silencio y el botón queda como muerto. En cambio, pedimos una
+  // segunda confirmación tocando de nuevo el mismo botón.
+  if(btn&&!btn.dataset.confirmando){
+    btn.dataset.confirmando='1';
+    btn.textContent='¿Seguro? Tocá de nuevo';
+    btn.style.background='#8a1c1c';
+    btn._agTimeoutConfirm=setTimeout(function(){
+      if(btn&&btn.dataset){btn.dataset.confirmando='';btn.textContent='Eliminar';btn.style.background='';}
+    },4000);
+    return;
+  }
+  if(btn&&btn._agTimeoutConfirm)clearTimeout(btn._agTimeoutConfirm);
   // Buscar primero si es un turno manual real (existe con ese id exacto en agD.turnos)
   var tManual=agD.turnos.find(function(t){return t.id===agVerTurnoId;});
   if(tManual){
