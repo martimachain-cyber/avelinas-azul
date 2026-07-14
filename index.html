@@ -1608,7 +1608,19 @@ function renderLaserTimeline(fecha){
     out+='</div>';
   }
   slotsEl.innerHTML=out;
-  // Event delegation — un solo listener en el contenedor
+  // Event delegation — un solo listener en el contenedor (vista mobile usa data-* en vez de onclick inline
+  // porque el nombre de la clienta puede tener comillas y rompería el onclick inline)
+  slotsEl.onclick=function(e){
+    var editEl=e.target.closest('.ls-edit');
+    if(editEl){
+      laserEditarTurno(editEl.getAttribute('data-id'));
+      return;
+    }
+    var slotEl=e.target.closest('.ls-slot-libre');
+    if(slotEl){
+      laserAgregarDesdeSlot(slotEl.getAttribute('data-fecha'),slotEl.getAttribute('data-hora'));
+    }
+  };
 
 }
 
@@ -4465,6 +4477,7 @@ function renderCjIngresos(cobros){
       +'<div class="inombre">'+c.cliente+' — '+c.srv+'</div>'
       +'<div class="isub">'+(esGift?'🎁 Gift Card':(prof?prof.n:'—'))+' · '+ff(pk(c.fecha))+' · '+(CJ_METODOS[c.metodo]||c.metodo)+'</div>'
       +(c.notas?'<div class="isub">'+c.notas+'</div>':'')
+      +(c.giftCodigo?'<div class="isub" style="color:var(--oliva-dark);font-weight:600">🎁 Pagado con Gift Card '+c.giftCodigo+' ('+fmtPeso(c.giftMontoAplicado||0)+')</div>':'')
       +'</div>'
       +'<div style="text-align:right;flex-shrink:0">'
       +'<div style="font-family:Raleway,sans-serif;font-size:14px;font-weight:600;color:var(--oliva)">'+fmtPeso(c.monto)+'</div>'
@@ -5222,11 +5235,12 @@ function cjGuardarCobro(){
     // Cash efectivamente atribuible a servicios (los productos se registran aparte y no afectan comisión/caja)
     const pagaServicios=Math.min(Math.max(pagaAhora,0),subServDesc);
     const ratioServ=subServDesc>0?(pagaServicios/subServDesc):0;
+    const giftCodigoUsado=(giftAplicadoMonto>0&&cobroGiftAplicada)?cobroGiftAplicada.codigo:null;
 
     lineasServicio.forEach(function(l){
       const montoDescLinea=l.monto-(l.monto*l.desc/100);
       const montoRegistrar=Math.round(montoDescLinea*ratioServ);
-      cjD.cobros.push({id:'cb_'+Date.now()+'_'+Math.random().toString(36).slice(2,7),prof:l.prof,cliente,srv:l.nombre,monto:montoRegistrar,metodo,fecha,notas,baseComision,montoServicio:l.monto});
+      cjD.cobros.push({id:'cb_'+Date.now()+'_'+Math.random().toString(36).slice(2,7),prof:l.prof,cliente,srv:l.nombre,monto:montoRegistrar,metodo,fecha,notas,baseComision,montoServicio:l.monto,giftCodigo:giftCodigoUsado,giftMontoAplicado:giftCodigoUsado?giftAplicadoMonto:0});
     });
 
     // Registrar diferencia total en cuenta corriente (servicios + productos)
@@ -5689,8 +5703,21 @@ function abrirModalGiftVender(){
   document.getElementById('gift-v-tipo').value='monto';
   giftVenderTipoChange();
   document.getElementById('gift-v-monto').value='';
-  document.getElementById('gift-v-servicio-nombre').value='';
-  document.getElementById('gift-v-servicio-valor').value='';
+  var srvSel=document.getElementById('gift-v-servicio-sel');
+  if(srvSel){
+    var o='<option value="">— Elegí un servicio —</option>';
+    Object.keys(D.servicios||{}).forEach(function(cat){
+      var svs=(D.servicios||{})[cat]||[];
+      if(!svs.length)return;
+      o+='<optgroup label="'+(CATS_LABELS[cat]||cat)+'">';
+      svs.forEach(function(sv){
+        var _pNum=parseInt((sv.p||'0').replace(/[^0-9]/g,''))||0;
+        o+='<option value="'+sv.n+'|'+_pNum+'">'+sv.n+(sv.p?' — '+sv.p:'')+'</option>';
+      });
+      o+='</optgroup>';
+    });
+    srvSel.innerHTML=o;
+  }
   var sel=document.getElementById('gift-v-producto-sel');
   if(sel)sel.innerHTML=(prodD.productos||[]).map(function(p){return '<option value="'+p.id+'">'+p.nombre+' — '+fmtPeso(p.precio)+'</option>';}).join('');
   document.getElementById('gift-v-comprador').value='';
@@ -5713,7 +5740,11 @@ function giftVenderTipoChange(){
 function giftVenderValorActual(){
   var tipo=document.getElementById('gift-v-tipo').value;
   if(tipo==='monto')return parseFloat(document.getElementById('gift-v-monto').value)||0;
-  if(tipo==='servicio')return parseFloat(document.getElementById('gift-v-servicio-valor').value)||0;
+  if(tipo==='servicio'){
+    var sel=document.getElementById('gift-v-servicio-sel');
+    var parts=(sel&&sel.value?sel.value:'').split('|');
+    return parseFloat(parts[1])||0;
+  }
   if(tipo==='producto'){
     var sel=document.getElementById('gift-v-producto-sel');
     var p=(prodD.productos||[]).find(function(x){return x.id===(sel?sel.value:'');});
@@ -5736,7 +5767,7 @@ function giftVenderGuardar(){
   const ok=document.getElementById('ok-gift-v'),er=document.getElementById('er-gift-v');
   ok.classList.remove('on');er.classList.remove('on');
   if(!comprador||!valor){er.textContent='Completá comprador/a y el valor de la gift card.';er.classList.add('on');return;}
-  if(tipo==='servicio'&&!document.getElementById('gift-v-servicio-nombre').value.trim()){er.textContent='Completá el nombre del servicio.';er.classList.add('on');return;}
+  if(tipo==='servicio'&&!document.getElementById('gift-v-servicio-sel').value){er.textContent='Elegí un servicio.';er.classList.add('on');return;}
   const codigo=giftGenerarCodigo();
   const fechaVencimiento=giftFechaVencimiento(fecha);
   const gc={
@@ -5744,7 +5775,7 @@ function giftVenderGuardar(){
     codigo:codigo,
     tipo:tipo,
     valor:valor,
-    servicioNombre:tipo==='servicio'?document.getElementById('gift-v-servicio-nombre').value.trim():'',
+    servicioNombre:tipo==='servicio'?(document.getElementById('gift-v-servicio-sel').value.split('|')[0]||''):'',
     productoId:tipo==='producto'?document.getElementById('gift-v-producto-sel').value:'',
     saldo:valor,
     compradoPor:comprador,
@@ -8291,10 +8322,8 @@ function rpPagarCom(profId,profNombre,monto){
     <input class="finp" id="gift-v-monto" type="number" min="0" placeholder="0" oninput="giftVenderRecalc()">
   </div>
   <div id="gift-v-campo-servicio" style="display:none">
-    <label class="flbl">Nombre del servicio</label>
-    <input class="finp" id="gift-v-servicio-nombre" placeholder="Ej: Facial GLOW">
-    <label class="flbl">Valor equivalente ($)</label>
-    <input class="finp" id="gift-v-servicio-valor" type="number" min="0" placeholder="0" oninput="giftVenderRecalc()">
+    <label class="flbl">Servicio</label>
+    <select class="fsel" id="gift-v-servicio-sel" onchange="giftVenderRecalc()"></select>
   </div>
   <div id="gift-v-campo-producto" style="display:none">
     <label class="flbl">Producto</label>
