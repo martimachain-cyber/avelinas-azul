@@ -3490,11 +3490,9 @@ function agCobrarDesdeVer(){
 
 function agEliminarDesdeVer(){
   if(!confirm('¿Eliminar este turno?'))return;
-  var fueLaser=false;
   // Buscar primero si es un turno manual real (existe con ese id exacto en agD.turnos)
   var tManual=agD.turnos.find(function(t){return t.id===agVerTurnoId;});
   if(tManual){
-    if(tManual.prof==='camila')fueLaser=true;
     agD.cancelados=agD.cancelados||[];
     agD.cancelados.push({...tManual,canceladoEn:hoy(),canceladoPor:curPUser||'admin'});
     agD.turnos=agD.turnos.filter(t=>t.id!==agVerTurnoId);agSv();
@@ -3503,13 +3501,16 @@ function agEliminarDesdeVer(){
     // o por id numérico (reservas viejas pueden no tener el prefijo 'r_')
     var rId=agVerTurnoId;
     if(typeof agVerTurnoId==='string'&&agVerTurnoId.startsWith('r_'))rId=parseInt(agVerTurnoId.replace('r_',''));
-    var rBorrada=(D.reservas||[]).find(function(r){return r.id===rId||r.id===agVerTurnoId;});
-    if(rBorrada&&rBorrada.prof==='camila')fueLaser=true;
     D.reservas=(D.reservas||[]).filter(r=>r.id!==rId&&r.id!==agVerTurnoId);sv();
   }
   cerrarM('modal-ag-ver');
-  if(fueLaser&&typeof laserJornadaSel!=='undefined'&&laserJornadaSel){renderLaserTimeline(laserJornadaSel);}
-  else{agRender();}
+  // Refrescar la vista que esté realmente en pantalla (no adivinar por profesional)
+  var laserPg=document.getElementById('pg-laser-agenda');
+  if(laserPg&&laserPg.classList.contains('on')&&typeof laserJornadaSel!=='undefined'&&laserJornadaSel){
+    renderLaserTimeline(laserJornadaSel);
+  }else{
+    agRender();
+  }
 }
 
 var _agLaserMode=false;
@@ -6724,6 +6725,7 @@ function irLaserBooking(){
     var laPg=document.getElementById('pg-laser-agenda');
     if(laPg){laPg.classList.add('on');laPg.style.display='block';}
     setTimeout(function(){if(typeof renderLaserAgenda==='function')renderLaserAgenda();},50);
+    avGuardarVista({pg:'laser-agenda'});
     return;
   }
   goPage('laser');
