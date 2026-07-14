@@ -1458,32 +1458,15 @@ function getDefaultLaserTurnos26(){return[
 function renderLaserAgenda(){
   // Cerrar modales abiertos que puedan interceptar clicks
   document.querySelectorAll('.modal').forEach(function(m){m.classList.remove('on');});
-  // Fallback turnos que no están en Supabase
-  var _avFallback=[
-    {id:'av_26_ma',prof:'camila',fecha:'2026-06-26',hora:'10:15',duracion:25,cliente:'Marcela Sabattini',servicio:'Pierna entera',precio:12750,manual:true},
-    {id:'av_26_ml',prof:'camila',fecha:'2026-06-26',hora:'11:15',duracion:50,cliente:'Marina Calderaro',servicio:'Combo 2',precio:17000,manual:true},
-    {id:'av_26_is',prof:'camila',fecha:'2026-06-26',hora:'13:30',duracion:45,cliente:'Isabela Catanese',servicio:'Combo 3',precio:29000,senia:14500,manual:true},
-    {id:'av_26_ci',prof:'camila',fecha:'2026-06-26',hora:'14:15',duracion:35,cliente:'Cintia Faveiro',servicio:'Combo 4',precio:26000,manual:true},
-    {id:'av_26_ju',prof:'camila',fecha:'2026-06-26',hora:'14:45',duracion:15,cliente:'Juliana Diaz',servicio:'Bozo + mentón',precio:14000,manual:true},
-    {id:'av_26_so',prof:'camila',fecha:'2026-06-26',hora:'15:00',duracion:55,cliente:'Soledad Di Pinto',servicio:'Combo 2',precio:30600,senia:15300,manual:true},
-    {id:'av_26_pa',prof:'camila',fecha:'2026-06-26',hora:'16:15',duracion:25,cliente:'Paz del Molino',servicio:'Axilas + bozo + mentón',precio:23000,manual:true},
-    {id:'av_26_jo',prof:'camila',fecha:'2026-06-26',hora:'16:45',duracion:25,cliente:'Josefina Aitra',servicio:'Combo 4',precio:26000,senia:13000,manual:true},
-    {id:'av_26_do',prof:'camila',fecha:'2026-06-26',hora:'18:30',duracion:20,cliente:'Dolores',servicio:'Cavado completo + axila + bozo',precio:25000,senia:12500,manual:true},
-    {id:'av_26_ta',prof:'camila',fecha:'2026-06-26',hora:'19:00',duracion:15,cliente:'Tamara Gomez',servicio:'Combo 5',precio:20000,senia:10000,manual:true},
-    {id:'av_21_lu',prof:'camila',fecha:'2026-05-21',hora:'08:10',duracion:75,cliente:'Lucia Di Giulio',servicio:'Combo 2 + Espalda + Glúteos',precio:53100,manual:true},
-    {id:'av_21_an',prof:'camila',fecha:'2026-05-21',hora:'10:00',duracion:50,cliente:'Angela Borrelli',servicio:'Combo 2',precio:30600,manual:true}
-  ];
-  _avFallback.forEach(function(dt){if(!agD.turnos.find(function(t){return t.id===dt.id||(t.fecha===dt.fecha&&t.hora===dt.hora&&t.prof===dt.prof);}))agD.turnos.push(dt);});
-  // Jornadas
-  if(!D.jornadasLaser)D.jornadasLaser=[];
-  if(!D.jornadasLaser.includes('2026-05-21'))D.jornadasLaser.push('2026-05-21');
-  if(!D.jornadasLaser.includes('2026-06-26'))D.jornadasLaser.push('2026-06-26');
-  // Turnos viven solo en Supabase — no hardcodeados
   if(!D.jornadasLaser)D.jornadasLaser=[];
   var lista=document.getElementById('laser-ag-jornadas');
   if(!lista)return;
   var jornadas=(D.jornadasLaser||[]).slice().sort();
-  if(!laserJornadaSel)laserJornadaSel=jornadas[0];
+  if(!laserJornadaSel){
+    var _h=hoy();
+    var _futuras=jornadas.filter(function(f){return f>=_h;});
+    laserJornadaSel=_futuras.length?_futuras[0]:jornadas[jornadas.length-1];
+  }
   lista.innerHTML='';
   jornadas.forEach(function(f){
     var d=pk(f);
@@ -1632,6 +1615,13 @@ function cerrarM(id){document.getElementById(id).classList.remove('on')}
 });
 
 // ===== NAVIGATION =====
+function avGuardarVista(cambios){
+  try{
+    var actual=JSON.parse(localStorage.getItem('avUltimaVista')||'{}');
+    Object.assign(actual,cambios);
+    localStorage.setItem('avUltimaVista',JSON.stringify(actual));
+  }catch(e){}
+}
 function goPage(id){
   document.querySelectorAll('.pg').forEach(function(p){p.classList.remove('on');p.style.display='none';});
   // Ocultar panel admin cuando se navega a páginas públicas
@@ -1657,6 +1647,7 @@ function goPage(id){
     var plPg=document.getElementById('pg-laser');if(plPg){plPg.classList.remove('on');plPg.style.display='';}
     var laPg=document.getElementById('pg-laser-agenda');if(laPg){laPg.classList.add('on');laPg.style.display='block';}
     setTimeout(function(){if(typeof renderLaserAgenda==='function')renderLaserAgenda();},50);
+    avGuardarVista({pg:'laser-agenda'});
     return;
   }
   if(id==='laser-agenda'){setTimeout(function(){if(typeof renderLaserAgenda==='function')renderLaserAgenda();},100);}
@@ -2396,6 +2387,7 @@ function stAdm(id,btn){
   if(id==='a-insumos'){insSetTab('uso',document.getElementById('ins-tab-uso'));}
   var _ag=document.getElementById('pg-agenda');if(_ag){_ag.classList.remove('on');_ag.style.display='';}
   var _la=document.getElementById('pg-laser-agenda');if(_la){_la.classList.remove('on');_la.style.display='';}
+  avGuardarVista({pg:'panel',admTab:id});
 }
 
 function renderAdmRes(){
@@ -3744,7 +3736,31 @@ document.addEventListener('DOMContentLoaded', function(){
       if(ROL_PANEL[_pu]==='admin'){
         var _pa=document.getElementById('panel-admin');
         if(_pa)_pa.style.display='block';
-        if(typeof renderAdmRes==='function')renderAdmRes();
+        if(typeof initAdmin==='function')initAdmin();
+        // Restaurar la última vista donde estaba (pestaña del panel, sub-pestaña de Caja, o agenda)
+        var _uv=null;
+        try{_uv=JSON.parse(localStorage.getItem('avUltimaVista')||'null');}catch(eV){}
+        if(_uv){
+          if(_uv.pg==='agenda'&&typeof irAgendaDesdePanel==='function'){
+            setTimeout(function(){irAgendaDesdePanel();},150);
+          }else if(_uv.pg==='laser-agenda'){
+            setTimeout(function(){goPage('laser');},150);
+          }else if(_uv.admTab){
+            setTimeout(function(){
+              var _btn=null;
+              document.querySelectorAll('#adm-tabs-el .adm-tab').forEach(function(b){
+                if((b.getAttribute('onclick')||'').indexOf("'"+_uv.admTab+"'")>=0)_btn=b;
+              });
+              if(_btn)stAdm(_uv.admTab,_btn);
+              if(_uv.admTab==='a-caja'&&_uv.cjTab){
+                setTimeout(function(){
+                  var _cjBtn=document.getElementById('cj-tab-'+_uv.cjTab);
+                  if(_cjBtn)cjSetTab(_uv.cjTab,_cjBtn);
+                },80);
+              }
+            },150);
+          }
+        }
       }else{
         if(typeof initProfPanel==='function')initProfPanel();
       }
@@ -3847,6 +3863,7 @@ function irAgendaDesdePanel(){
   agFecha=new Date();
   setMobTab(5);
   setTimeout(function(){agInitVista();},100);
+  avGuardarVista({pg:'agenda'});
 }
 
 function irPanelDesdeAgenda(){
@@ -3857,6 +3874,7 @@ function irPanelDesdeAgenda(){
   var _pa=document.getElementById('panel-admin');if(_pa)_pa.style.display='block';
   window.scrollTo(0,0);
   if(typeof renderAdmRes==='function')renderAdmRes();
+  avGuardarVista({pg:'panel'});
 }
 
 function agLogout(){
@@ -4332,6 +4350,7 @@ function cjSetTab(tab,btn){
     if(el) el.style.display=t===tab?'block':'none';
   });
   renderCaja();
+  avGuardarVista({cjTab:tab});
 }
 
 function renderCaja(){
