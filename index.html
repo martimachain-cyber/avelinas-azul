@@ -968,7 +968,7 @@ td.ag-slot-free{background:transparent}
       <div style="font-family:Raleway,sans-serif;font-size:18px;font-weight:300;color:#fff;margin-bottom:.5rem">Lo que usamos y <em style="font-style:italic;color:var(--crema)">recomendamos</em></div>
       <div style="font-size:13px;color:var(--gc);margin-bottom:1.2rem;line-height:1.7">Productos profesionales disponibles para seguir el cuidado desde casa. Envíos a toda la provincia de Buenos Aires.</div>
       <div style="margin-bottom:1.2rem"><span class="ttag">Productos profesionales</span><span class="ttag">Envíos a domicilio</span><span class="ttag">Pago seguro</span></div>
-      <a href="https://avelinas3.mitiendanube.com/" class="btn-p" target="_blank" style="display:inline-block">Ir a la tienda online →</a>
+      <a href="https://tiendaavelinas.mitiendanube.com/" class="btn-p" target="_blank" style="display:inline-block">Ir a la tienda online →</a>
     </div>
   </div>
   <div class="wa-bar">
@@ -1192,11 +1192,23 @@ td.ag-slot-free{background:transparent}
   </div>
   <label class="flbl">✂️ Servicios que realiza</label>
   <div id="mp-servicios-cat" style="margin-top:.4rem;margin-bottom:.6rem"></div>
-  <label class="flbl">💰 Comisión general (%)</label>
-  <input class="finp" id="mp-comision" type="number" min="0" max="100" placeholder="Ej: 50">
-  <div style="font-size:11px;color:var(--gc);margin-bottom:.5rem">Podés sobreescribir por categoría abajo</div>
-  <label class="flbl">Comisión por categoría (opcional)</label>
-  <div id="mp-comisiones-cat" style="margin-top:.4rem"></div>
+  <label class="flbl">💰 Tipo de comisión</label>
+  <select class="fsel" id="mp-comision-tipo" onchange="mpComisionTipoChange()">
+    <option value="porcentaje">Porcentaje del servicio</option>
+    <option value="fijo">Monto fijo por servicio</option>
+  </select>
+  <div id="mp-comision-pct-campo">
+    <label class="flbl">💰 Comisión general (%)</label>
+    <input class="finp" id="mp-comision" type="number" min="0" max="100" placeholder="Ej: 50">
+    <div style="font-size:11px;color:var(--gc);margin-bottom:.5rem">Podés sobreescribir por categoría abajo</div>
+    <label class="flbl">Comisión por categoría (opcional)</label>
+    <div id="mp-comisiones-cat" style="margin-top:.4rem"></div>
+  </div>
+  <div id="mp-comision-fijo-campo" style="display:none">
+    <label class="flbl">💰 Monto fijo por servicio ($)</label>
+    <input class="finp" id="mp-comision-monto-fijo" type="number" min="0" placeholder="Ej: 5000">
+    <div style="font-size:11px;color:var(--gc);margin-bottom:.5rem">Cobra este monto fijo por cada servicio realizado, sin importar el precio del servicio.</div>
+  </div>
   <label class="flbl" style="margin-top:.8rem">📅 Horarios por día</label>
   <div id="mp-horarios-dia" style="margin-top:.4rem"></div>
   <div id="ok-mp" class="ok"></div><div id="er-mp" class="er"></div>
@@ -1250,6 +1262,18 @@ const CLAVES_PANEL={martina:'avelinas743',lucia:'lucia123',emilia:'emilia123',ca
 const ROL_PANEL={martina:'admin',lucia:'admin',emilia:'prof',camila:'prof',ludovica:'prof',rosario:'prof',celeste:'prof',angeles:'prof',luciana:'prof',marina:'prof'};
 const NOMBRES_P={martina:'Martina',lucia:'Lucía',emilia:'Emilia',camila:'Camila',ludovica:'Ludovica',rosario:'Rosario'};
 const CATS_LABELS={facial:'Faciales',mani:'Manicura',pedi:'Pedicura',masajes:'Masajes','pestañas':'Pestañas & Cejas',maquillaje:'Maquillaje',laser:'Depilación definitiva'};
+function calcComisionProf(p,misCobros){
+  if(!p)return 0;
+  misCobros=misCobros||[];
+  if(p.comisionTipo==='fijo'){
+    return misCobros.length*(p.comisionMontoFijo||0);
+  }
+  var total=misCobros.reduce(function(s,c){
+    var base=(c.baseComision==='cobrado')?c.monto:(c.montoServicio!==undefined?c.montoServicio:c.monto);
+    return s+(base||0);
+  },0);
+  return total*((p.comision||50)/100);
+}
 const PREMIOS_CLUB=[{id:'p1',n:'$5.000 de descuento en servicio o producto a elección'},{id:'p2',n:'Belleza de manos express gratis'},{id:'p3',n:'20% off en productos pagando en efectivo'}];
 const DS=['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
 const MSC=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
@@ -2426,18 +2450,23 @@ function renderAdmRes(){
   const manana=new Date();manana.setDate(manana.getDate()+1);
   const mananaStr=fk(manana);
   const l=lun(new Date()),fin=new Date(l);fin.setDate(l.getDate()+6);
-  const hR=D.reservas.filter(r=>r.f===h);
-  const mR=D.reservas.filter(r=>r.f===mananaStr);
+  function normTurnoManual(t){return {id:t.id,prof:t.prof,f:t.fecha,h:t.hora,cl:t.cliente,srv:t.servicio,dur:t.duracion,tel:'',asistio:false,esManual:true};}
+  const turnosManuales=(agD.turnos||[]).filter(function(t){return !t.bloqueo;});
+  const hR=D.reservas.filter(r=>r.f===h).concat(turnosManuales.filter(t=>t.fecha===h).map(normTurnoManual));
+  const mR=D.reservas.filter(r=>r.f===mananaStr).concat(turnosManuales.filter(t=>t.fecha===mananaStr).map(normTurnoManual));
   document.getElementById('a-sh').textContent=hR.length;
-  document.getElementById('a-ss').textContent=D.reservas.filter(r=>r.f>=fk(l)&&r.f<=fk(fin)).length;
+  const semanaReservas=D.reservas.filter(r=>r.f>=fk(l)&&r.f<=fk(fin)).length;
+  const semanaManuales=turnosManuales.filter(t=>t.fecha>=fk(l)&&t.fecha<=fk(fin)).length;
+  document.getElementById('a-ss').textContent=semanaReservas+semanaManuales;
   document.getElementById('a-sc').textContent=D.clientas.length;
   var cobradoHoy=cjD.cobros.filter(function(c){return c.fecha===hoy();}).reduce(function(s,c){return s+(c.monto||0);},0);
   var elCH=document.getElementById('a-sc-hoy');if(elCH)elCH.textContent='$'+cobradoHoy.toLocaleString('es-AR');
   document.getElementById('a-hoy').innerHTML=hR.length?hR.sort((a,b)=>a.h.localeCompare(b.h)).map(function(r){
     const asistio=r.asistio;
     const profN=(D.profesionales.find(function(p){return p.id===r.prof;})||{}).n||'';
-    const asistioHtml=asistio?'<div style="font-size:10px;color:var(--oliva)">✓ Asistió · puntos sumados</div>':'';
-    const btnAsistio=!asistio?('<button onclick="confirmarAsistencia('+r.id+')" style="background:var(--oliva);color:#fff;border:none;padding:4px 8px;border-radius:2px;font-size:10px;cursor:pointer">✓ Asistió</button>'):'';
+    const asistioHtml=(asistio&&!r.esManual)?'<div style="font-size:10px;color:var(--oliva)">✓ Asistió · puntos sumados</div>':'';
+    const btnAsistio=(!asistio&&!r.esManual)?('<button onclick="confirmarAsistencia('+r.id+')" style="background:var(--oliva);color:#fff;border:none;padding:4px 8px;border-radius:2px;font-size:10px;cursor:pointer">✓ Asistió</button>'):'';
+    const btnBorrar=r.esManual?('<button class="ti-x" onclick="cancelarTurnoManualResumen(\''+r.id+'\')">✕</button>'):('<button class="ti-x" onclick="cancelarR('+r.id+')">✕</button>');
     return '<div class="ti" style="'+(asistio?'opacity:.6':'')+'">'
       +'<div class="ti-h">'+r.h+'</div>'
       +'<div class="ti-i">'
@@ -2447,7 +2476,7 @@ function renderAdmRes(){
       +'</div>'
       +'<div style="display:flex;gap:4px">'
       +btnAsistio
-      +'<button class="ti-x" onclick="cancelarR('+r.id+')">✕</button>'
+      +btnBorrar
       +'</div></div>';
   }).join(''):'<div class="empty">Sin turnos hoy.</div>';
   
@@ -2470,15 +2499,28 @@ function renderAdmRes(){
 Te esperamos en Olavarría 529, Azul. Cualquier consulta escribinos 💚`);
     const waUrl=tel?`https://wa.me/549${tel.replace(/\D/g,'')}?text=${msg}`:`https://wa.me/?text=${msg}`;
     const waBtn=tel?('<a href="'+waUrl+'" target="_blank" style="background:#25D366;color:#fff;font-size:10px;font-weight:500;padding:4px 8px;border-radius:2px;text-decoration:none;white-space:nowrap">📲 Recordar</a>'):'<span style="font-size:10px;color:var(--gc)">Sin tel</span>';
+    const btnBorrarManana=r.esManual?('<button class="ti-x" onclick="cancelarTurnoManualResumen(\''+r.id+'\')">✕</button>'):('<button class="ti-x" onclick="cancelarR('+r.id+')">✕</button>');
     return '<div class="ti">'
       +'<div class="ti-h">'+r.h+'</div>'
       +'<div class="ti-i"><div class="ti-n">'+r.cl+' → '+prof+'</div><div class="ti-s">'+r.srv+'</div></div>'
-      +'<div style="display:flex;gap:4px">'+waBtn+'<button class="ti-x" onclick="cancelarR('+r.id+')">✕</button></div>'
+      +'<div style="display:flex;gap:4px">'+waBtn+btnBorrarManana+'</div>'
       +'</div>';
   }).join(''):'<div class="empty">Sin turnos mañana.</div>';
 
-  const px=D.reservas.filter(r=>r.f>mananaStr).sort((a,b)=>a.f.localeCompare(b.f)||a.h.localeCompare(b.h)).slice(0,5);
-  document.getElementById('a-prox').innerHTML=px.length?px.map(r=>`<div class="ti"><div class="ti-h">${r.h}</div><div class="ti-i"><div class="ti-n">${r.cl} · ${ff(pk(r.f))}</div><div class="ti-s">${D.profesionales.find(p=>p.id===r.prof)?.n||''} · ${r.srv}</div></div><button class="ti-x" onclick="cancelarR(${r.id})">✕</button></div>`).join(''):'<div class="empty">Sin próximos.</div>';
+  const pxReservas=D.reservas.filter(r=>r.f>mananaStr);
+  const pxManuales=turnosManuales.filter(t=>t.fecha>mananaStr).map(normTurnoManual);
+  const px=pxReservas.concat(pxManuales).sort((a,b)=>a.f.localeCompare(b.f)||a.h.localeCompare(b.h)).slice(0,5);
+  document.getElementById('a-prox').innerHTML=px.length?px.map(r=>`<div class="ti"><div class="ti-h">${r.h}</div><div class="ti-i"><div class="ti-n">${r.cl} · ${ff(pk(r.f))}</div><div class="ti-s">${D.profesionales.find(p=>p.id===r.prof)?.n||''} · ${r.srv}</div></div>${r.esManual?('<button class="ti-x" onclick="cancelarTurnoManualResumen(\''+r.id+'\')">✕</button>'):('<button class="ti-x" onclick="cancelarR('+r.id+')">✕</button>')}</div>`).join(''):'<div class="empty">Sin próximos.</div>';
+}
+function cancelarTurnoManualResumen(id){
+  if(!confirm('¿Cancelar este turno?'))return;
+  var t=agD.turnos.find(function(x){return String(x.id)===String(id);});
+  if(t){
+    agD.cancelados=agD.cancelados||[];
+    agD.cancelados.push({...t,canceladoEn:hoy(),canceladoPor:curPUser||'admin'});
+  }
+  agD.turnos=agD.turnos.filter(function(x){return String(x.id)!==String(id);});
+  agSv();renderAdmRes();
 }
 function cancelarR(id){if(!confirm('¿Cancelar?'))return;D.reservas=D.reservas.filter(r=>r.id!==id);sv();renderAdmRes()}
 
@@ -2486,7 +2528,7 @@ function renderAdmProfs(){
   const lista=document.getElementById('a-profs-l');
   lista.innerHTML='';
   D.profesionales.forEach(function(p){
-    const horario=Object.entries(p.h||{}).map(function(e){return DS[e[0]]+' '+e[1][0]+'-'+e[1][1]+'h';}).join(' · ');
+    const horario=Object.entries(p.h||{}).map(function(e){return DS[e[0]]+' '+horaFracToStr(e[1][0])+'-'+horaFracToStr(e[1][1]);}).join(' · ');
     const div=document.createElement('div');
     div.className='irow';
     div.innerHTML='<div class="iav" style="'+(p.foto?'background:transparent;overflow:hidden;padding:0':'')+'">'+(p.foto?'<img src="'+p.foto+'" style="width:100%;height:100%;object-fit:cover;object-position:center top;border-radius:50%" onerror="this.style.display=none">':p.n[0])+'</div>'
@@ -2523,6 +2565,9 @@ function abrirMP(id){
   mpTitulosTemp=[...(p?.titulos||[])];
   mpRenderTitulos();
   document.getElementById('mp-comision').value=p?.comision||50;
+  document.getElementById('mp-comision-tipo').value=p?.comisionTipo||'porcentaje';
+  document.getElementById('mp-comision-monto-fijo').value=p?.comisionMontoFijo||'';
+  mpComisionTipoChange();
   mpRenderComisionesCat(p?.comisionesCat||{});
   mpRenderServicios(p?.cats||[]);
   mpRenderHorarios(p?.h||{});
@@ -2561,6 +2606,20 @@ function mpToggleServicio(btn){
 
 var MP_DIAS_NOMBRES=['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
 var mpHorariosTemp={};
+function horaFracToStr(hf){
+  hf=hf||0;
+  var hh=Math.floor(hf);
+  var mm=Math.round((hf-hh)*60);
+  if(mm===60){mm=0;hh+=1;}
+  return String(hh).padStart(2,'0')+':'+String(mm).padStart(2,'0');
+}
+function horaStrToFrac(s){
+  var parts=(s||'').split(':');
+  var hh=parseInt(parts[0]);
+  var mm=parseInt(parts[1]);
+  if(isNaN(hh))return null;
+  return hh+(isNaN(mm)?0:mm/60);
+}
 
 function mpRenderHorarios(hActual){
   mpHorariosTemp=JSON.parse(JSON.stringify(hActual||{}));
@@ -2569,8 +2628,8 @@ function mpRenderHorarios(hActual){
   el.innerHTML=[1,2,3,4,5,6,0].map(function(d){
     var rango=mpHorariosTemp[d];
     var on=!!rango;
-    var desde=on?String(rango[0]).padStart(2,'0')+':00':'09:00';
-    var hasta=on?String(rango[1]).padStart(2,'0')+':00':'17:00';
+    var desde=on?horaFracToStr(rango[0]):'09:00';
+    var hasta=on?horaFracToStr(rango[1]):'17:00';
     return '<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--cd)" data-dia-row="'+d+'">'+
       '<div onclick="mpToggleDia('+d+')" data-dia-tog="'+d+'" style="width:34px;height:20px;border-radius:11px;background:'+(on?'var(--oliva)':'var(--cd)')+';position:relative;cursor:pointer;flex-shrink:0">'+
         '<div style="position:absolute;top:1px;left:'+(on?'15px':'1px')+';width:18px;height:18px;border-radius:50%;background:#fff;transition:.15s"></div>'+
@@ -2597,8 +2656,8 @@ function mpToggleDia(d){
     desdeInp.style.opacity='.35';desdeInp.style.pointerEvents='none';
     hastaInp.style.opacity='.35';hastaInp.style.pointerEvents='none';
   }else{
-    var desde=parseInt(desdeInp.value.split(':')[0])||9;
-    var hasta=parseInt(hastaInp.value.split(':')[0])||17;
+    var desde=horaStrToFrac(desdeInp.value);if(desde===null)desde=9;
+    var hasta=horaStrToFrac(hastaInp.value);if(hasta===null)hasta=17;
     mpHorariosTemp[d]=[desde,hasta];
     tog.style.background='var(--oliva)';
     tog.firstElementChild.style.left='15px';
@@ -2611,11 +2670,16 @@ function mpToggleDia(d){
 function mpHorarioChange(d){
   if(!mpHorariosTemp[d])return;
   var row=document.querySelector('[data-dia-row="'+d+'"]');
-  var desde=parseInt(row.querySelector('[data-dia-desde]').value.split(':')[0])||9;
-  var hasta=parseInt(row.querySelector('[data-dia-hasta]').value.split(':')[0])||17;
+  var desde=horaStrToFrac(row.querySelector('[data-dia-desde]').value);if(desde===null)desde=9;
+  var hasta=horaStrToFrac(row.querySelector('[data-dia-hasta]').value);if(hasta===null)hasta=17;
   mpHorariosTemp[d]=[desde,hasta];
 }
 
+function mpComisionTipoChange(){
+  var tipo=document.getElementById('mp-comision-tipo').value;
+  document.getElementById('mp-comision-pct-campo').style.display=tipo==='fijo'?'none':'block';
+  document.getElementById('mp-comision-fijo-campo').style.display=tipo==='fijo'?'block':'none';
+}
 function guardarP(){
   const n=document.getElementById('mp-n').value.trim(),e=document.getElementById('mp-e').value.trim(),p=document.getElementById('mp-p').value.trim();
   const ok=document.getElementById('ok-mp'),er=document.getElementById('er-mp');ok.classList.remove('on');er.classList.remove('on');
@@ -2627,10 +2691,12 @@ function guardarP(){
   const bio=document.getElementById('mp-bio').value.trim();
   const titulos=[...mpTitulosTemp];
   const comision=parseFloat(document.getElementById('mp-comision').value)||50;
+  const comisionTipo=document.getElementById('mp-comision-tipo').value;
+  const comisionMontoFijo=parseFloat(document.getElementById('mp-comision-monto-fijo').value)||0;
   const comisionesCat={};
   Object.entries(mpComisionesCatTemp).forEach(([k,v])=>{if(v!==undefined&&v!=='')comisionesCat[k]=parseFloat(v)});
-  if(eIds.p){const idx=D.profesionales.findIndex(x=>x.id===eIds.p);if(idx>=0)D.profesionales[idx]={...D.profesionales[idx],n,esp:e,pass:p||D.profesionales[idx].pass,h,cats,foto:foto||D.profesionales[idx].foto,frase,bio,titulos,comision,comisionesCat}}
-  else D.profesionales.push({id:'p_'+Date.now(),n,esp:e,pass:p||n.toLowerCase()+'123',cats,h,foto,frase,bio,titulos,comision,comisionesCat});
+  if(eIds.p){const idx=D.profesionales.findIndex(x=>x.id===eIds.p);if(idx>=0)D.profesionales[idx]={...D.profesionales[idx],n,esp:e,pass:p||D.profesionales[idx].pass,h,cats,foto:foto||D.profesionales[idx].foto,frase,bio,titulos,comision,comisionTipo,comisionMontoFijo,comisionesCat}}
+  else D.profesionales.push({id:'p_'+Date.now(),n,esp:e,pass:p||n.toLowerCase()+'123',cats,h,foto,frase,bio,titulos,comision,comisionTipo,comisionMontoFijo,comisionesCat});
   sv();renderAdmProfs();ok.textContent=eIds.p?'Actualizada ✓':'Agregada ✓';ok.classList.add('on');setTimeout(()=>cerrarM('m-prof'),1500);
 }
 function borrarP(id){const p=D.profesionales.find(x=>x.id===id);if(!confirm(`¿Eliminar a ${p?.n}?`))return;D.profesionales=D.profesionales.filter(x=>x.id!==id);sv();renderAdmProfs()}
@@ -4386,8 +4452,7 @@ function renderCaja(){
   let totalComis=0;
   D.profesionales.forEach(function(p){
     const mis=cobros.filter(function(c){return c.prof===p.id;});
-    const comPct=(p.comision||50)/100;
-    const ganado=mis.reduce(function(s,c){return s+(c.monto||0);},0)*comPct;
+    const ganado=p.comisionTipo==='fijo'?(mis.length*(p.comisionMontoFijo||0)):(mis.reduce(function(s,c){return s+(c.monto||0);},0)*((p.comision||50)/100));
     const ade=adelantos.filter(function(a){return a.prof===p.id;}).reduce(function(s,a){return s+(a.monto||0);},0);
     const ret=retiros.filter(function(r){return r.prof===p.id;}).reduce(function(s,r){return s+(r.precio||0)*(r.cant||1);},0);
     totalComis+=Math.max(0,ganado-ade-ret);
@@ -4463,8 +4528,8 @@ function renderCaja(){
       const mis=cobros.filter(function(c){return c.prof===p.id;});
       if(!mis.length) return;
       const total=mis.reduce(function(s,c){return s+(c.monto||0);},0);
-      const comPct=(p.comision||50)/100;
-      const comision=total*comPct;
+      const esFijo=p.comisionTipo==='fijo';
+      const comision=esFijo?(mis.length*(p.comisionMontoFijo||0)):(total*((p.comision||50)/100));
       const ade=adelantos.filter(function(a){return a.prof===p.id;}).reduce(function(s,a){return s+(a.monto||0);},0);
       const ret=retiros.filter(function(r){return r.prof===p.id;}).reduce(function(s,r){return s+(r.precio||0)*(r.cant||1);},0);
       const neto=Math.max(0,comision-ade-ret);
@@ -4472,7 +4537,7 @@ function renderCaja(){
       d.className='irow';
       d.innerHTML='<div class="iinfo">'
         +'<div class="inombre">'+p.n+'</div>'
-        +'<div class="isub">'+mis.length+' servicio'+(mis.length!==1?'s':'')+' · Comisión '+p.comision+'%</div>'
+        +'<div class="isub">'+mis.length+' servicio'+(mis.length!==1?'s':'')+' · Comisión '+(esFijo?(fmtPeso(p.comisionMontoFijo||0)+' x servicio'):(p.comision+'%'))+'</div>'
         +(ade?'<div class="isub" style="color:var(--rojo)">Adelantos: '+fmtPeso(ade)+'</div>':'')
         +(ret?'<div class="isub" style="color:var(--rojo)">Retiros: '+fmtPeso(ret)+'</div>':'')
         +'</div>'
@@ -4581,13 +4646,7 @@ function renderCjComisiones(cobros,adelantos,retiros){
     const total=mis.reduce(function(s,c){return s+(c.monto||0);},0);
     if(!total) return;
     hayComis=true;
-    const comPct=(p.comision||50)/100;
-    // Base comision: usa montoServicio si baseComision==='servicio', sino monto cobrado
-    const baseTotal=mis.reduce(function(s,c){
-      if(c.baseComision==='cobrado')return s+(c.monto||0);
-      return s+(c.montoServicio||c.monto||0);
-    },0);
-    const comision=baseTotal*comPct;
+    const comision=calcComisionProf(p,mis);
     const ade=adelantos.filter(function(a){return a.prof===p.id;}).reduce(function(s,a){return s+(a.monto||0);},0);
     const ret=retiros.filter(function(r){return r.prof===p.id;}).reduce(function(s,r){return s+(r.precio||0)*(r.cant||1);},0);
     const neto=Math.max(0,comision-ade-ret);
@@ -4599,7 +4658,7 @@ function renderCjComisiones(cobros,adelantos,retiros){
       +'<div style="font-family:Raleway,sans-serif;font-size:15px;font-weight:600;color:var(--oliva)">'+fmtPeso(neto)+'</div>'
       +'</div>'
       +'<div style="font-size:11px;color:var(--gc);line-height:1.8">'
-      +'Servicios: '+fmtPeso(total)+' · Comisión '+p.comision+'%: '+fmtPeso(comision)
+      +'Servicios: '+fmtPeso(total)+' · Comisión '+(p.comisionTipo==='fijo'?(fmtPeso(p.comisionMontoFijo||0)+' x servicio'):(p.comision+'%'))+': '+fmtPeso(comision)
       +(ade?'<br>Adelantos: -'+fmtPeso(ade):'')
       +(ret?'<br>Retiros: -'+fmtPeso(ret):'')
       +'</div>'
@@ -4743,7 +4802,7 @@ function renderCjReportes(cobros,retiros){
       const mis=cobros.filter(function(c){return c.prof===p.id;});
       if(!mis.length) return;
       const total=mis.reduce(function(s,c){return s+(c.monto||0);},0);
-      const comPct=(p.comision||50)/100;
+      const comisionRep=calcComisionProf(p,mis);
       // By service type
       const bySrv={};
       mis.forEach(function(c){const k=c.srv||'?';if(!bySrv[k])bySrv[k]=0;bySrv[k]+=c.monto||0;});
@@ -4753,7 +4812,7 @@ function renderCjReportes(cobros,retiros){
       d.innerHTML='<div style="font-family:Raleway,sans-serif;font-size:13px;font-weight:600;margin-bottom:.3rem">'+p.n+'</div>'
         +'<div style="font-size:11px;color:var(--gc);line-height:1.8">'
         +mis.length+' servicio'+(mis.length!==1?'s':'')+' · Total: '+fmtPeso(total)
-        +'<br>Comisión '+p.comision+'%: '+fmtPeso(total*comPct)
+        +'<br>Comisión '+(p.comisionTipo==='fijo'?(fmtPeso(p.comisionMontoFijo||0)+' x servicio'):(p.comision+'%'))+': '+fmtPeso(comisionRep)
         +'<br><span style="color:var(--gc)">'+srvStr+'</span>'
         +'</div>';
       profEl.appendChild(d);
@@ -4866,8 +4925,7 @@ function exportarLiquidacion(cobros,adelantos,retiros){
     var mis=cobros.filter(function(c){return c.prof===p.id;});
     var tot=mis.reduce(function(s,c){return s+(c.monto||0);},0);
     if(!tot)return;
-    var comPct=(p.comision||50)/100;
-    var com=tot*comPct;
+    var com=calcComisionProf(p,mis);
     var ade=adelantos.filter(function(a){return a.prof===p.id;}).reduce(function(s,a){return s+(a.monto||0);},0);
     var ret=retiros.filter(function(r){return r.prof===p.id;}).reduce(function(s,r){return s+(r.precio||0)*(r.cant||1);},0);
     var neto=Math.max(0,com-ade-ret);
@@ -5607,7 +5665,7 @@ function exportarPDF(){
     const mis=cobros.filter(function(c){return c.prof===p.id;});
     if(!mis.length) return;
     const total=mis.reduce(function(s,c){return s+(c.monto||0);},0);
-    const com=total*(p.comision||50)/100;
+    const com=calcComisionProf(p,mis);
     const ade=adelantos.filter(function(a){return a.prof===p.id;}).reduce(function(s,a){return s+(a.monto||0);},0);
     const ret=retiros.filter(function(r){return r.prof===p.id;}).reduce(function(s,r){return s+(r.precio||0)*(r.cant||1);},0);
     html+='<tr><td>'+p.n+'</td><td>'+fmtPeso(total)+'</td><td>'+fmtPeso(com)+'</td><td>'+fmtPeso(ade)+'</td><td>'+fmtPeso(ret)+'</td><td class="pos">'+fmtPeso(Math.max(0,com-ade-ret))+'</td></tr>';
@@ -8043,7 +8101,7 @@ function rpRender(tab){
     var rows=profs.map(function(p){
       var cb=cobros.filter(function(c){return c.prof===p.id;});
       var ing=cb.reduce(function(s,c){return s+(c.monto||0);},0);
-      var com=Math.round(ing*(p.comision||50)/100);
+      var com=Math.round(calcComisionProf(p,cb));
       // Ver comisiones pagadas
       var comPagadas=egresos.filter(function(e){return e.cat==='sueldo'&&e.desc&&e.desc.toLowerCase().includes(p.n.toLowerCase());}).reduce(function(s,e){return s+(e.monto||0);},0);
       var comPend=Math.max(0,com-comPagadas);
@@ -8056,7 +8114,7 @@ function rpRender(tab){
           '<div style="display:flex;justify-content:space-between;align-items:center">'+
             '<div>'+
               '<div style="font-size:13px;font-weight:500;color:var(--texto)">'+r.p.n+'</div>'+
-              '<div style="font-size:11px;color:var(--gc)">'+r.turnos+' turnos · '+r.p.comision+'% comisión</div>'+
+              '<div style="font-size:11px;color:var(--gc)">'+r.turnos+' turnos · '+(r.p.comisionTipo==='fijo'?(fmtPeso(r.p.comisionMontoFijo||0)+' x servicio'):(r.p.comision+'% comisión'))+'</div>'+
             '</div>'+
             '<div style="text-align:right">'+
               '<div style="font-size:14px;font-weight:500;color:#3B6D11">$'+r.ing.toLocaleString('es-AR')+'</div>'+
