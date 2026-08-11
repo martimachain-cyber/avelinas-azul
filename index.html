@@ -2475,8 +2475,14 @@ function renderAdmRes(){
   const manana=new Date();manana.setDate(manana.getDate()+1);
   const mananaStr=fk(manana);
   const l=lun(new Date()),fin=new Date(l);fin.setDate(l.getDate()+6);
-  const hR=D.reservas.filter(r=>r.f===h);
-  const mR=D.reservas.filter(r=>r.f===mananaStr);
+  // Unificar reservas online (D.reservas) con turnos cargados a mano en la agenda (agD.turnos),
+  // que antes no aparecían acá aunque estuvieran bien guardados.
+  function _turnoManualComoReserva(t){
+    return {id:t.id,f:t.fecha,h:t.hora,cl:t.cliente,srv:t.servicio,prof:t.prof,tel:'',asistio:false,_manual:true};
+  }
+  const manualesTodos=(typeof agD!=='undefined'&&agD.turnos)?agD.turnos.filter(function(t){return !t.bloqueo;}):[];
+  const hR=[...D.reservas.filter(r=>r.f===h),...manualesTodos.filter(t=>t.fecha===h).map(_turnoManualComoReserva)];
+  const mR=[...D.reservas.filter(r=>r.f===mananaStr),...manualesTodos.filter(t=>t.fecha===mananaStr).map(_turnoManualComoReserva)];
   document.getElementById('a-sh').textContent=hR.length;
   document.getElementById('a-ss').textContent=D.reservas.filter(r=>r.f>=fk(l)&&r.f<=fk(fin)).length;
   document.getElementById('a-sc').textContent=D.clientas.length;
@@ -2486,7 +2492,8 @@ function renderAdmRes(){
     const asistio=r.asistio;
     const profN=(D.profesionales.find(function(p){return p.id===r.prof;})||{}).n||'';
     const asistioHtml=asistio?'<div style="font-size:10px;color:var(--oliva)">✓ Asistió · puntos sumados</div>':'';
-    const btnAsistio=!asistio?('<button onclick="confirmarAsistencia('+r.id+')" style="background:var(--oliva);color:#fff;border:none;padding:4px 8px;border-radius:2px;font-size:10px;cursor:pointer">✓ Asistió</button>'):'';
+    const btnAsistio=(!asistio&&!r._manual)?('<button onclick="confirmarAsistencia('+r.id+')" style="background:var(--oliva);color:#fff;border:none;padding:4px 8px;border-radius:2px;font-size:10px;cursor:pointer">✓ Asistió</button>'):'';
+    const btnCancelar=r._manual?('<button class="ti-x" onclick="cancelarTurnoManualDesdeResumen(\''+r.id+'\')">✕</button>'):('<button class="ti-x" onclick="cancelarR('+r.id+')">✕</button>');
     return '<div class="ti" style="'+(asistio?'opacity:.6':'')+'">'
       +'<div class="ti-h">'+r.h+'</div>'
       +'<div class="ti-i">'
@@ -2496,7 +2503,7 @@ function renderAdmRes(){
       +'</div>'
       +'<div style="display:flex;gap:4px">'
       +btnAsistio
-      +'<button class="ti-x" onclick="cancelarR('+r.id+')">✕</button>'
+      +btnCancelar
       +'</div></div>';
   }).join(''):'<div class="empty">Sin turnos hoy.</div>';
   
@@ -2519,15 +2526,28 @@ function renderAdmRes(){
 Te esperamos en Olavarría 529, Azul. Cualquier consulta escribinos 💚`);
     const waUrl=tel?`https://wa.me/549${tel.replace(/\D/g,'')}?text=${msg}`:`https://wa.me/?text=${msg}`;
     const waBtn=tel?('<a href="'+waUrl+'" target="_blank" style="background:#25D366;color:#fff;font-size:10px;font-weight:500;padding:4px 8px;border-radius:2px;text-decoration:none;white-space:nowrap">📲 Recordar</a>'):'<span style="font-size:10px;color:var(--gc)">Sin tel</span>';
+    const btnCancelar2=r._manual?('<button class="ti-x" onclick="cancelarTurnoManualDesdeResumen(\''+r.id+'\')">✕</button>'):('<button class="ti-x" onclick="cancelarR('+r.id+')">✕</button>');
     return '<div class="ti">'
       +'<div class="ti-h">'+r.h+'</div>'
       +'<div class="ti-i"><div class="ti-n">'+r.cl+' → '+prof+'</div><div class="ti-s">'+r.srv+'</div></div>'
-      +'<div style="display:flex;gap:4px">'+waBtn+'<button class="ti-x" onclick="cancelarR('+r.id+')">✕</button></div>'
+      +'<div style="display:flex;gap:4px">'+waBtn+btnCancelar2+'</div>'
       +'</div>';
   }).join(''):'<div class="empty">Sin turnos mañana.</div>';
 
-  const px=D.reservas.filter(r=>r.f>mananaStr).sort((a,b)=>a.f.localeCompare(b.f)||a.h.localeCompare(b.h)).slice(0,5);
-  document.getElementById('a-prox').innerHTML=px.length?px.map(r=>`<div class="ti"><div class="ti-h">${r.h}</div><div class="ti-i"><div class="ti-n">${r.cl} · ${ff(pk(r.f))}</div><div class="ti-s">${D.profesionales.find(p=>p.id===r.prof)?.n||''} · ${r.srv}</div></div><button class="ti-x" onclick="cancelarR(${r.id})">✕</button></div>`).join(''):'<div class="empty">Sin próximos.</div>';
+  const manualProx=manualesTodos.filter(t=>t.fecha>mananaStr).map(_turnoManualComoReserva);
+  const px=[...D.reservas.filter(r=>r.f>mananaStr),...manualProx].sort((a,b)=>a.f.localeCompare(b.f)||a.h.localeCompare(b.h)).slice(0,5);
+  document.getElementById('a-prox').innerHTML=px.length?px.map(r=>`<div class="ti"><div class="ti-h">${r.h}</div><div class="ti-i"><div class="ti-n">${r.cl} · ${ff(pk(r.f))}</div><div class="ti-s">${D.profesionales.find(p=>p.id===r.prof)?.n||''} · ${r.srv}</div></div><button class="ti-x" onclick="${r._manual?`cancelarTurnoManualDesdeResumen('${r.id}')`:`cancelarR(${r.id})`}">✕</button></div>`).join(''):'<div class="empty">Sin próximos.</div>';
+}
+function cancelarTurnoManualDesdeResumen(id){
+  if(!confirm('¿Cancelar este turno?'))return;
+  agD.turnos=agD.turnos.filter(function(t){return String(t.id)!==String(id);});
+  agSv();renderAdmRes();
+}
+function confirmarAsistencia(id){
+  const r=D.reservas.find(function(x){return x.id===id;});
+  if(!r)return;
+  r.asistio=true;
+  sv();renderAdmRes();
 }
 function cancelarR(id){if(!confirm('¿Cancelar?'))return;D.reservas=D.reservas.filter(r=>r.id!==id);sv();renderAdmRes()}
 
@@ -2996,7 +3016,11 @@ function agGetGrupo(profId){
 }
 
 function agLd(){try{const d=localStorage.getItem(AG_KEY);return d?JSON.parse(d):{turnos:[]}}catch(e){return{turnos:[]}}}
-function agSv(){try{localStorage.setItem(AG_KEY,JSON.stringify(agD))}catch(e){}if(typeof sbSaveKey==='function')sbSaveKey('agenda',agD);}
+async function agSv(){
+  agD=await _avFusionarConNube('agenda',agD,['turnos','bloqueos']);
+  try{localStorage.setItem(AG_KEY,JSON.stringify(agD))}catch(e){}
+  if(typeof sbSaveKey==='function')sbSaveKey('agenda',agD);
+}
 let agD=agLd();
 let agVista='dia',agFecha=new Date(),agFiltroProfs=AG_PROFS.map(p=>p.id),agVerTurnoId=null;
 
@@ -4171,7 +4195,11 @@ function cjLd(){
     if(!parsed.cierres)parsed.cierres=[];
     return parsed;
   }catch(e){return{cobros:[],egresos:[],adelantos:[],retiros:[],cierres:[]};}}
-function cjSv(){try{localStorage.setItem(CJ_KEY,JSON.stringify(cjD))}catch(e){}if(typeof sbSaveKey==='function')sbSaveKey('caja',cjD);}
+async function cjSv(){
+  cjD=await _avFusionarConNube('caja',cjD,['cobros','egresos','adelantos','retiros','cierres']);
+  try{localStorage.setItem(CJ_KEY,JSON.stringify(cjD))}catch(e){}
+  if(typeof sbSaveKey==='function')sbSaveKey('caja',cjD);
+}
 let cjD=cjLd();
 
 // ===== INSUMOS =====
@@ -4182,7 +4210,8 @@ function insLd(){
   try{var d=localStorage.getItem(INS_KEY);return d?JSON.parse(d):{insumos:[]};}
   catch(e){return{insumos:[]};}
 }
-function insSv(){
+async function insSv(){
+  insD=await _avFusionarConNube('insumos',insD,['insumos']);
   try{localStorage.setItem(INS_KEY,JSON.stringify(insD));}catch(e){}
   if(typeof sbSaveKey==='function')sbSaveKey('insumos',insD);
 }
@@ -5454,7 +5483,11 @@ function exportarExcel(){
 // ===== PRODUCTOS =====
 const PROD_KEY='av_prod_v1';
 function prodLd(){try{const d=localStorage.getItem(PROD_KEY);return d?JSON.parse(d):{productos:[],ventas:[],proveedores:[],cuentaCorriente:[],pedidoManuales:[]}}catch(e){return{productos:[],ventas:[],proveedores:[],cuentaCorriente:[],pedidoManuales:[]}}}
-function prodSv(){try{localStorage.setItem(PROD_KEY,JSON.stringify(prodD))}catch(e){}if(typeof sbSaveKey==='function')sbSaveKey('productos',prodD);}
+async function prodSv(){
+  prodD=await _avFusionarConNube('productos',prodD,['productos','ventas','proveedores','cuentaCorriente','pedidoManuales']);
+  try{localStorage.setItem(PROD_KEY,JSON.stringify(prodD))}catch(e){}
+  if(typeof sbSaveKey==='function')sbSaveKey('productos',prodD);
+}
 let prodD=prodLd();
 // Remove duplicate products by ID
 if(prodD.productos){
@@ -6604,6 +6637,32 @@ async function sbSaveKey(key, data){
     console.log('sbSaveKey error:', e);
     if(typeof _avToast==='function')_avToast('⚠️ No se pudo sincronizar con la nube. Revisá tu conexión — lo guardado quedó solo en este dispositivo.',true);
   }
+}
+
+// ===== FUSIÓN ANTES DE GUARDAR =====
+// Problema que resuelve: antes, guardar desde un dispositivo con una copia local desactualizada
+// (por ejemplo un turno cargado hace días desde otro celu, que este dispositivo nunca sincronizó)
+// SOBRESCRIBÍA por completo lo que había en la nube, borrando esos datos.
+// Ahora, antes de cada guardado se trae la versión actual de la nube y se fusiona por id,
+// así nunca se pierde algo que ya estaba guardado ahí, sea de este dispositivo o de otro.
+function _avUnirPorId(local,remoto){
+  var mapa={},sinId=[];
+  (local||[]).forEach(function(x){if(x&&x.id!==undefined&&x.id!==null)mapa[x.id]=x;else if(x)sinId.push(x);});
+  (remoto||[]).forEach(function(x){if(x&&x.id!==undefined&&x.id!==null&&!(x.id in mapa))mapa[x.id]=x;});
+  return Object.values(mapa).concat(sinId);
+}
+async function _avFusionarConNube(cloudKey,localObj,camposArray){
+  if(!sbSyncEnabled||!sbClient)return localObj;
+  try{
+    const {data,error}=await sbClient.from('avelinas_data').select('value').eq('key',cloudKey).maybeSingle();
+    if(error||!data||!data.value)return localObj;
+    const remoto=JSON.parse(data.value);
+    const fusion=Object.assign({},localObj);
+    camposArray.forEach(function(campo){
+      fusion[campo]=_avUnirPorId(localObj[campo],remoto[campo]);
+    });
+    return fusion;
+  }catch(e){return localObj;}
 }
 
 // ===== FICHA CLIENTA =====
