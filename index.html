@@ -4974,16 +4974,25 @@ function abrirModalCobro(id){
 // ===== ÍTEMS DEL COBRO (servicios + productos, cada uno con su propio % de descuento) =====
 let cobroItems=[];
 function cobroAgregarItem(tipo){
-  if(tipo==='producto'){
-    cobroItems.push({tipo:'producto',prodId:'',nombre:'',precio:0,cant:1,descPct:0});
+  const eraVacio=cobroItems.length===0;
+  const nuevo=tipo==='producto'?{tipo:'producto',prodId:'',nombre:'',precio:0,cant:1,descPct:0}:{tipo:'servicio',nombre:'',precio:0,descPct:0};
+  cobroItems.push(nuevo);
+  const idx=cobroItems.length-1;
+  const el=document.getElementById('cobro-items-list');
+  if(!el)return;
+  if(eraVacio){
+    // No había filas todavía (solo el mensaje "vacío"): acá sí hace falta reconstruir el contenedor.
+    cobroRenderItems();
   }else{
-    cobroItems.push({tipo:'servicio',nombre:'',precio:0,descPct:0});
+    // Ya había otras filas cargadas: agrego solo la nueva al final, sin tocar/recrear las existentes
+    // (recrear todo el HTML mientras alguien ya escribió en otra fila puede hacerle perder ese texto).
+    el.insertAdjacentHTML('beforeend',cobroFilaHTML(nuevo,idx));
   }
-  cobroRenderItems();
+  cobroRecalcularTotal();
 }
 function cobroQuitarItem(idx){
   cobroItems.splice(idx,1);
-  cobroRenderItems();
+  cobroRenderItems(); // acá sí reconstruyo todo: al sacar una fila del medio cambian los índices de las demás
 }
 function cobroActualizarItem(idx,campo,valor){
   if(!cobroItems[idx])return;
@@ -4991,7 +5000,10 @@ function cobroActualizarItem(idx,campo,valor){
     const p=prodD.productos.find(function(x){return x.id===valor;});
     cobroItems[idx].prodId=valor;
     if(p){cobroItems[idx].nombre=p.nombre;cobroItems[idx].precio=p.precio||0;}
-    cobroRenderItems(); // cambia precio/nombre visibles: acá sí conviene reconstruir la fila
+    // Solo reemplazo esta fila puntual (para mostrar el precio/nombre auto-completados), no las demás
+    const fila=document.getElementById('cobro-item-row-'+idx);
+    if(fila)fila.outerHTML=cobroFilaHTML(cobroItems[idx],idx);
+    cobroRecalcularTotal();
     return;
   }
   if(campo==='precio'||campo==='descPct'||campo==='cant'){
@@ -5009,35 +5021,34 @@ function cobroSubtotalItem(it){
   const base=(it.precio||0)*(it.cant||1);
   return base-(base*(it.descPct||0)/100);
 }
+function cobroFilaHTML(it,idx){
+  const subtotal=cobroSubtotalItem(it);
+  let campoNombre;
+  if(it.tipo==='producto'){
+    const opciones=prodD.productos.map(function(p){return'<option value="'+p.id+'"'+(p.id===it.prodId?' selected':'')+'>'+p.nombre+' (stock: '+(p.stock||0)+')</option>';}).join('');
+    campoNombre='<select class="fsel" style="margin-bottom:4px" onchange="cobroActualizarItem('+idx+',\'prodId\',this.value)"><option value="">Elegí un producto</option>'+opciones+'</select>';
+  }else{
+    campoNombre='<input class="finp" style="margin-bottom:4px" placeholder="Ej: Facial GLOW" value="'+(it.nombre||'').replace(/"/g,'&quot;')+'" oninput="cobroActualizarItem('+idx+',\'nombre\',this.value)">';
+  }
+  const campoCant=it.tipo==='producto'?'<div><label class="flbl" style="font-size:10px">Cant.</label><input class="finp" type="number" min="1" value="'+(it.cant||1)+'" oninput="cobroActualizarItem('+idx+',\'cant\',this.value)"></div>':'';
+  return '<div id="cobro-item-row-'+idx+'" style="border:1px solid var(--cd);border-radius:4px;padding:8px;margin-bottom:6px;background:#fff">'
+    +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2px">'
+    +'<span style="font-size:10px;color:var(--gc);text-transform:uppercase">'+(it.tipo==='producto'?'🛍 Producto':'✦ Servicio')+'</span>'
+    +'<button type="button" onclick="cobroQuitarItem('+idx+')" style="background:none;border:none;color:#c0392b;cursor:pointer;font-size:14px;line-height:1">✕</button>'
+    +'</div>'
+    +campoNombre
+    +'<div style="display:grid;grid-template-columns:'+(it.tipo==='producto'?'1fr 1fr 1fr':'1fr 1fr')+';gap:6px">'
+    +'<div><label class="flbl" style="font-size:10px">Precio</label><input class="finp" type="number" min="0" value="'+(it.precio||0)+'" oninput="cobroActualizarItem('+idx+',\'precio\',this.value)"></div>'
+    +campoCant
+    +'<div><label class="flbl" style="font-size:10px">Desc. %</label><input class="finp" type="number" min="0" max="100" value="'+(it.descPct||0)+'" oninput="cobroActualizarItem('+idx+',\'descPct\',this.value)"></div>'
+    +'</div>'
+    +'<div id="cobro-item-sub-'+idx+'" style="text-align:right;font-size:11px;color:var(--oliva-dark);font-weight:600;margin-top:2px">Subtotal: '+fmtPeso(subtotal)+'</div>'
+    +'</div>';
+}
 function cobroRenderItems(){
   const el=document.getElementById('cobro-items-list');
   if(!el)return;
-  const scrollY=window.scrollY;
-  el.innerHTML=cobroItems.length?cobroItems.map(function(it,idx){
-    const subtotal=cobroSubtotalItem(it);
-    let campoNombre;
-    if(it.tipo==='producto'){
-      const opciones=prodD.productos.map(function(p){return'<option value="'+p.id+'"'+(p.id===it.prodId?' selected':'')+'>'+p.nombre+' (stock: '+(p.stock||0)+')</option>';}).join('');
-      campoNombre='<select class="fsel" style="margin-bottom:4px" onchange="cobroActualizarItem('+idx+',\'prodId\',this.value)"><option value="">Elegí un producto</option>'+opciones+'</select>';
-    }else{
-      campoNombre='<input class="finp" style="margin-bottom:4px" placeholder="Ej: Facial GLOW" value="'+(it.nombre||'').replace(/"/g,'&quot;')+'" oninput="cobroActualizarItem('+idx+',\'nombre\',this.value)">';
-    }
-    const campoCant=it.tipo==='producto'?'<div><label class="flbl" style="font-size:10px">Cant.</label><input class="finp" type="number" min="1" value="'+(it.cant||1)+'" oninput="cobroActualizarItem('+idx+',\'cant\',this.value)"></div>':'';
-    return '<div style="border:1px solid var(--cd);border-radius:4px;padding:8px;margin-bottom:6px;background:#fff">'
-      +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2px">'
-      +'<span style="font-size:10px;color:var(--gc);text-transform:uppercase">'+(it.tipo==='producto'?'🛍 Producto':'✦ Servicio')+'</span>'
-      +'<button type="button" onclick="cobroQuitarItem('+idx+')" style="background:none;border:none;color:#c0392b;cursor:pointer;font-size:14px;line-height:1">✕</button>'
-      +'</div>'
-      +campoNombre
-      +'<div style="display:grid;grid-template-columns:'+(it.tipo==='producto'?'1fr 1fr 1fr':'1fr 1fr')+';gap:6px">'
-      +'<div><label class="flbl" style="font-size:10px">Precio</label><input class="finp" type="number" min="0" value="'+(it.precio||0)+'" oninput="cobroActualizarItem('+idx+',\'precio\',this.value)"></div>'
-      +campoCant
-      +'<div><label class="flbl" style="font-size:10px">Desc. %</label><input class="finp" type="number" min="0" max="100" value="'+(it.descPct||0)+'" oninput="cobroActualizarItem('+idx+',\'descPct\',this.value)"></div>'
-      +'</div>'
-      +'<div id="cobro-item-sub-'+idx+'" style="text-align:right;font-size:11px;color:var(--oliva-dark);font-weight:600;margin-top:2px">Subtotal: '+fmtPeso(subtotal)+'</div>'
-      +'</div>';
-  }).join(''):'<div class="empty" style="font-size:12px">Todavía no agregaste ningún servicio o producto.</div>';
-  window.scrollTo(0,scrollY);
+  el.innerHTML=cobroItems.length?cobroItems.map(function(it,idx){return cobroFilaHTML(it,idx);}).join(''):'<div class="empty" style="font-size:12px">Todavía no agregaste ningún servicio o producto.</div>';
   cobroRecalcularTotal();
 }
 function cobroRecalcularTotal(){
