@@ -2540,6 +2540,9 @@ Te esperamos en Olavarría 529, Azul. Cualquier consulta escribinos 💚`);
 }
 function cancelarTurnoManualDesdeResumen(id){
   if(!confirm('¿Cancelar este turno?'))return;
+  const t=agD.turnos.find(function(x){return String(x.id)===String(id);});
+  agD.cancelados=agD.cancelados||[];
+  if(t)agD.cancelados.push(Object.assign({},t,{canceladoEn:hoy(),canceladoPor:curPUser||'admin'}));
   agD.turnos=agD.turnos.filter(function(t){return String(t.id)!==String(id);});
   agSv();renderAdmRes();
 }
@@ -3017,8 +3020,10 @@ function agGetGrupo(profId){
 
 function agLd(){try{const d=localStorage.getItem(AG_KEY);return d?JSON.parse(d):{turnos:[]}}catch(e){return{turnos:[]}}}
 async function agSv(){
-  agD=await _avFusionarConNube('agenda',agD,['turnos','bloqueos']);
+  const r=await _avFusionarConNube('agenda',agD,['turnos','bloqueos'],'cancelados');
+  agD=r.data;
   try{localStorage.setItem(AG_KEY,JSON.stringify(agD))}catch(e){}
+  if(!r.ok){if(typeof _avToast==='function')_avToast('⚠️ No se pudo verificar la nube antes de guardar. Se guardó solo en este dispositivo — se reintentará solo.',true);return;}
   if(typeof sbSaveKey==='function')sbSaveKey('agenda',agD);
 }
 let agD=agLd();
@@ -3548,9 +3553,9 @@ function agCobrarDesdeVer(){
   setTimeout(function(){
     var profSel=document.getElementById('cobro-prof');if(profSel&&t.prof)profSel.value=t.prof;
     var clEl=document.getElementById('cobro-cliente');if(clEl)clEl.value=t.cliente||'';
-    var srvEl=document.getElementById('cobro-srv');if(srvEl)srvEl.value=t.servicio||'';
-    var mEl=document.getElementById('cobro-monto');
-    if(mEl)mEl.value=(t.precio&&t.senia)?(t.precio-t.senia):(t.precio||'');
+    var montoOriginal=(t.precio&&t.senia)?(t.precio-t.senia):(t.precio||0);
+    cobroItems=[{tipo:'servicio',nombre:t.servicio||'',precio:montoOriginal,descPct:0}];
+    cobroRenderItems();
     var fEl=document.getElementById('cobro-fecha');if(fEl)fEl.value=fecha||hoy();
     var nEl=document.getElementById('cobro-notas');
     if(nEl&&t.senia>0)nEl.value='Saldo restante (seña de '+fmtPeso(t.senia)+' ya cobrada)';
@@ -4196,8 +4201,10 @@ function cjLd(){
     return parsed;
   }catch(e){return{cobros:[],egresos:[],adelantos:[],retiros:[],cierres:[]};}}
 async function cjSv(){
-  cjD=await _avFusionarConNube('caja',cjD,['cobros','egresos','adelantos','retiros','cierres']);
+  const r=await _avFusionarConNube('caja',cjD,['cobros','egresos','adelantos','retiros','cierres']);
+  cjD=r.data;
   try{localStorage.setItem(CJ_KEY,JSON.stringify(cjD))}catch(e){}
+  if(!r.ok){if(typeof _avToast==='function')_avToast('⚠️ No se pudo verificar la nube antes de guardar. Se guardó solo en este dispositivo — se reintentará solo.',true);return;}
   if(typeof sbSaveKey==='function')sbSaveKey('caja',cjD);
 }
 let cjD=cjLd();
@@ -4211,8 +4218,10 @@ function insLd(){
   catch(e){return{insumos:[]};}
 }
 async function insSv(){
-  insD=await _avFusionarConNube('insumos',insD,['insumos']);
+  const r=await _avFusionarConNube('insumos',insD,['insumos']);
+  insD=r.data;
   try{localStorage.setItem(INS_KEY,JSON.stringify(insD));}catch(e){}
+  if(!r.ok){if(typeof _avToast==='function')_avToast('⚠️ No se pudo verificar la nube antes de guardar. Se guardó solo en este dispositivo — se reintentará solo.',true);return;}
   if(typeof sbSaveKey==='function')sbSaveKey('insumos',insD);
 }
 var insD=insLd();
@@ -5595,8 +5604,10 @@ function exportarExcel(){
 const PROD_KEY='av_prod_v1';
 function prodLd(){try{const d=localStorage.getItem(PROD_KEY);return d?JSON.parse(d):{productos:[],ventas:[],proveedores:[],cuentaCorriente:[],pedidoManuales:[]}}catch(e){return{productos:[],ventas:[],proveedores:[],cuentaCorriente:[],pedidoManuales:[]}}}
 async function prodSv(){
-  prodD=await _avFusionarConNube('productos',prodD,['productos','ventas','proveedores','cuentaCorriente','pedidoManuales']);
+  const r=await _avFusionarConNube('productos',prodD,['productos','ventas','proveedores','cuentaCorriente','pedidoManuales'],'eliminados');
+  prodD=r.data;
   try{localStorage.setItem(PROD_KEY,JSON.stringify(prodD))}catch(e){}
+  if(!r.ok){if(typeof _avToast==='function')_avToast('⚠️ No se pudo verificar la nube antes de guardar. Se guardó solo en este dispositivo — se reintentará solo.',true);return;}
   if(typeof sbSaveKey==='function')sbSaveKey('productos',prodD);
 }
 let prodD=prodLd();
@@ -5809,6 +5820,8 @@ function guardarProd(){
 
 function borrarProd(id){
   if(!confirm('¿Eliminar este producto?'))return;
+  prodD.eliminados=prodD.eliminados||[];
+  prodD.eliminados.push({id:id,tipo:'producto',fecha:hoy()});
   prodD.productos=prodD.productos.filter(x=>x.id!==id);
   prodSv();renderProdStock();
 }
@@ -5911,6 +5924,8 @@ function guardarVentaProd(){
 
 function borrarVentaProd(id){
   if(!confirm('¿Eliminar esta venta?'))return;
+  prodD.eliminados=prodD.eliminados||[];
+  prodD.eliminados.push({id:id,tipo:'venta',fecha:hoy()});
   prodD.ventas=prodD.ventas.filter(x=>x.id!==id);prodSv();renderProdVentas();
 }
 
@@ -6246,7 +6261,7 @@ function _registrarEgresoCaja(desc, monto, fecha, cat){
   if(!monto||monto<=0)return;
   cjD.egresos=cjD.egresos||[];
   cjD.egresos.push({id:'eg_'+Date.now(),cat:cat||'compras',desc:desc,monto:monto,fecha:fecha||hoy(),autor:curPUser||'admin'});
-  try{sbSaveKey('caja',cjD);}catch(e){}
+  cjSv();
 }
 
 function guardarCompra(){
@@ -6591,11 +6606,14 @@ function initSupabase(){
 }
 
 // Periodic sync every 5 minutes to keep cloud updated
+// IMPORTANTE: antes esto llamaba a sbSaveKey directo, pisando la nube con la copia local
+// sin pasar por la fusión (el mismo problema de siempre, pero cada 5 minutos, en todas las
+// pantallas abiertas). Ahora pasa por agSv/cjSv/prodSv, que sí fusionan antes de guardar.
 setInterval(function(){
   if(!sbSyncEnabled||!sbClient)return;
-  if(typeof sbSaveKey==='function')sbSaveKey('caja', cjD);
-  if(typeof sbSaveKey==='function')sbSaveKey('agenda', agD);
-  if(typeof sbSaveKey==='function')sbSaveKey('productos', prodD);
+  if(typeof cjSv==='function')cjSv();
+  if(typeof agSv==='function')agSv();
+  if(typeof prodSv==='function')prodSv();
 }, 300000);
 
 async function sbSync(){
@@ -6756,24 +6774,44 @@ async function sbSaveKey(key, data){
 // SOBRESCRIBÍA por completo lo que había en la nube, borrando esos datos.
 // Ahora, antes de cada guardado se trae la versión actual de la nube y se fusiona por id,
 // así nunca se pierde algo que ya estaba guardado ahí, sea de este dispositivo o de otro.
+//
+// Dos correcciones importantes sobre la primera versión de esto:
+// 1) Si por algún motivo no se puede traer la versión de la nube (sin señal, error momentáneo),
+//    ANTES se guardaba igual la copia local completa, pisando la nube a ciegas — el mismo problema
+//    que se quería resolver. Ahora, si la fusión falla, NO se sube nada: se guarda solo local y
+//    se avisa, para no arriesgarse a borrar algo que otro dispositivo haya cargado.
+// 2) Al fusionar por unión (juntar todo lo de ambos lados), un turno cancelado en este dispositivo
+//    podía "resucitar" al fusionarse con la nube (que todavía tenía la versión vieja, sin cancelar).
+//    Ahora se respetan las cancelaciones: lo que figura en 'cancelados' se excluye siempre del
+//    resultado final, venga de donde venga.
 function _avUnirPorId(local,remoto){
   var mapa={},sinId=[];
   (local||[]).forEach(function(x){if(x&&x.id!==undefined&&x.id!==null)mapa[x.id]=x;else if(x)sinId.push(x);});
   (remoto||[]).forEach(function(x){if(x&&x.id!==undefined&&x.id!==null&&!(x.id in mapa))mapa[x.id]=x;});
   return Object.values(mapa).concat(sinId);
 }
-async function _avFusionarConNube(cloudKey,localObj,camposArray){
-  if(!sbSyncEnabled||!sbClient)return localObj;
+async function _avFusionarConNube(cloudKey,localObj,camposArray,campoCancelados){
+  if(!sbSyncEnabled||!sbClient)return{ok:true,data:localObj};
   try{
     const {data,error}=await sbClient.from('avelinas_data').select('value').eq('key',cloudKey).maybeSingle();
-    if(error||!data||!data.value)return localObj;
+    if(error)return{ok:false,data:localObj};
+    if(!data||!data.value)return{ok:true,data:localObj}; // todavía no hay nada guardado en la nube: no es un error
     const remoto=JSON.parse(data.value);
     const fusion=Object.assign({},localObj);
     camposArray.forEach(function(campo){
       fusion[campo]=_avUnirPorId(localObj[campo],remoto[campo]);
     });
-    return fusion;
-  }catch(e){return localObj;}
+    // Respetar cancelaciones/eliminaciones: nunca resucitar algo que ya se canceló en algún lado
+    if(campoCancelados){
+      fusion[campoCancelados]=_avUnirPorId(localObj[campoCancelados],remoto[campoCancelados]);
+      const idsCancelados={};
+      (fusion[campoCancelados]||[]).forEach(function(c){if(c&&c.id!==undefined)idsCancelados[c.id]=true;});
+      camposArray.forEach(function(campo){
+        fusion[campo]=(fusion[campo]||[]).filter(function(x){return !(x&&idsCancelados[x.id]);});
+      });
+    }
+    return{ok:true,data:fusion};
+  }catch(e){return{ok:false,data:localObj};}
 }
 
 // ===== FICHA CLIENTA =====
@@ -6942,12 +6980,12 @@ function fichaGuardarCC(){
   if(tipo==='pago'){
     // Pago recibido → cobro en caja
     cjD.cobros.push({id:'cob_cc_'+Date.now(),prof:curPUser||'lucia',cliente:cl.n,srv:concepto||'Pago cuenta corriente',monto:monto,metodo:'efectivo',fecha:hoy(),notas:'Pago desde cuenta corriente',baseComision:'cobrado',montoServicio:monto});
-    try{sbSaveKey('caja',cjD);}catch(e){}
+    cjSv();
   } else if(tipo==='ajuste'&&monto<0){
     // Ajuste negativo = devolucion → egreso en caja
     cjD.egresos=cjD.egresos||[];
     cjD.egresos.push({id:'eg_cc_'+Date.now(),cat:'devolución',desc:concepto||'Ajuste cuenta corriente: '+cl.n,monto:Math.abs(monto),fecha:hoy(),autor:curPUser||'admin'});
-    try{sbSaveKey('caja',cjD);}catch(e){}
+    cjSv();
   }
   sv();
   document.getElementById('ficha-cc-monto').value='';
@@ -7187,9 +7225,9 @@ function laserCobrarTurno(id, fecha){
   setTimeout(function(){
     var profSel=document.getElementById('cobro-prof');if(profSel)profSel.value='camila';
     var clEl=document.getElementById('cobro-cliente');if(clEl)clEl.value=t.cliente||'';
-    var srvEl=document.getElementById('cobro-srv');if(srvEl)srvEl.value=t.servicio||'';
-    var mEl=document.getElementById('cobro-monto');
-    if(mEl)mEl.value=(t.precio&&t.senia)?(t.precio-t.senia):(t.precio||'');
+    var montoOriginal=(t.precio&&t.senia)?(t.precio-t.senia):(t.precio||0);
+    cobroItems=[{tipo:'servicio',nombre:t.servicio||'',precio:montoOriginal,descPct:0}];
+    cobroRenderItems();
     var fEl=document.getElementById('cobro-fecha');if(fEl)fEl.value=fecha||hoy();
   },80);
 }
