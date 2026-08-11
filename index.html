@@ -4948,21 +4948,103 @@ function abrirModalCobro(id){
   sel.innerHTML=allProfs.map(function(p){return'<option value="'+p.id+'">'+p.n+'</option>';}).join('');
   sel.value=c?c.prof:D.profesionales[0]?.id||'';
   document.getElementById('cobro-cliente').value=c?c.cliente:'';
-  document.getElementById('cobro-srv').value=c?c.srv:'';
-  document.getElementById('cobro-monto').value=c?c.monto:'';
+  // Cargar ítems: si el cobro ya tiene items (nuevo formato) los uso; si es un cobro viejo
+  // (un solo servicio en texto) armo un ítem equivalente para no perder la info al editarlo.
+  if(c&&c.items&&c.items.length){
+    cobroItems=c.items.map(function(it){return Object.assign({},it);});
+  }else if(c){
+    cobroItems=[{tipo:'servicio',nombre:c.srv||'',precio:c.montoServicio||c.monto||0,descPct:0}];
+  }else{
+    cobroItems=[];
+  }
+  cobroRenderItems();
   document.getElementById('cobro-metodo').value=c?c.metodo:'efectivo';
   document.getElementById('cobro-fecha').value=c?c.fecha:hoy();
   document.getElementById('cobro-notas').value=c?c.notas||'':'';
-  var descEl=document.getElementById('cobro-desc-pct');if(descEl)descEl.value='';
   var bcEl=document.getElementById('cobro-base-comision');if(bcEl)bcEl.value=c&&c.baseComision?c.baseComision:'servicio';
   var paEl=document.getElementById('cobro-paga-ahora');if(paEl)paEl.value='';
   var dfEl=document.getElementById('cobro-cc-diff');if(dfEl)dfEl.style.display='none';
-  var totalEl=document.getElementById('cobro-total-final');if(totalEl)totalEl.value='';
   document.getElementById('ok-cobro').classList.remove('on');
   document.getElementById('er-cobro').classList.remove('on');
   document.getElementById('modal-cobro').classList.add('on');
   setTimeout(cjActualizarInfoCC,100);
   _draftRecuperar('av_draft_cobro',COBRO_FIELDS,'cobro-id');
+}
+
+// ===== ÍTEMS DEL COBRO (servicios + productos, cada uno con su propio % de descuento) =====
+let cobroItems=[];
+function cobroAgregarItem(tipo){
+  if(tipo==='producto'){
+    cobroItems.push({tipo:'producto',prodId:'',nombre:'',precio:0,cant:1,descPct:0});
+  }else{
+    cobroItems.push({tipo:'servicio',nombre:'',precio:0,descPct:0});
+  }
+  cobroRenderItems();
+}
+function cobroQuitarItem(idx){
+  cobroItems.splice(idx,1);
+  cobroRenderItems();
+}
+function cobroActualizarItem(idx,campo,valor){
+  if(!cobroItems[idx])return;
+  if(campo==='prodId'){
+    const p=prodD.productos.find(function(x){return x.id===valor;});
+    cobroItems[idx].prodId=valor;
+    if(p){cobroItems[idx].nombre=p.nombre;cobroItems[idx].precio=p.precio||0;}
+    cobroRenderItems(); // cambia precio/nombre visibles: acá sí conviene reconstruir la fila
+    return;
+  }
+  if(campo==='precio'||campo==='descPct'||campo==='cant'){
+    cobroItems[idx][campo]=parseFloat(valor)||0;
+  }else{
+    cobroItems[idx][campo]=valor;
+  }
+  // Solo actualizo el subtotal de esta fila y el total general, sin reconstruir los inputs:
+  // si se reconstruye todo el HTML mientras la persona está tipeando, el campo pierde el foco en cada letra.
+  const subEl=document.getElementById('cobro-item-sub-'+idx);
+  if(subEl)subEl.textContent='Subtotal: '+fmtPeso(cobroSubtotalItem(cobroItems[idx]));
+  cobroRecalcularTotal();
+}
+function cobroSubtotalItem(it){
+  const base=(it.precio||0)*(it.cant||1);
+  return base-(base*(it.descPct||0)/100);
+}
+function cobroRenderItems(){
+  const el=document.getElementById('cobro-items-list');
+  if(!el)return;
+  const scrollY=window.scrollY;
+  el.innerHTML=cobroItems.length?cobroItems.map(function(it,idx){
+    const subtotal=cobroSubtotalItem(it);
+    let campoNombre;
+    if(it.tipo==='producto'){
+      const opciones=prodD.productos.map(function(p){return'<option value="'+p.id+'"'+(p.id===it.prodId?' selected':'')+'>'+p.nombre+' (stock: '+(p.stock||0)+')</option>';}).join('');
+      campoNombre='<select class="fsel" style="margin-bottom:4px" onchange="cobroActualizarItem('+idx+',\'prodId\',this.value)"><option value="">Elegí un producto</option>'+opciones+'</select>';
+    }else{
+      campoNombre='<input class="finp" style="margin-bottom:4px" placeholder="Ej: Facial GLOW" value="'+(it.nombre||'').replace(/"/g,'&quot;')+'" oninput="cobroActualizarItem('+idx+',\'nombre\',this.value)">';
+    }
+    const campoCant=it.tipo==='producto'?'<div><label class="flbl" style="font-size:10px">Cant.</label><input class="finp" type="number" min="1" value="'+(it.cant||1)+'" oninput="cobroActualizarItem('+idx+',\'cant\',this.value)"></div>':'';
+    return '<div style="border:1px solid var(--cd);border-radius:4px;padding:8px;margin-bottom:6px;background:#fff">'
+      +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2px">'
+      +'<span style="font-size:10px;color:var(--gc);text-transform:uppercase">'+(it.tipo==='producto'?'🛍 Producto':'✦ Servicio')+'</span>'
+      +'<button type="button" onclick="cobroQuitarItem('+idx+')" style="background:none;border:none;color:#c0392b;cursor:pointer;font-size:14px;line-height:1">✕</button>'
+      +'</div>'
+      +campoNombre
+      +'<div style="display:grid;grid-template-columns:'+(it.tipo==='producto'?'1fr 1fr 1fr':'1fr 1fr')+';gap:6px">'
+      +'<div><label class="flbl" style="font-size:10px">Precio</label><input class="finp" type="number" min="0" value="'+(it.precio||0)+'" oninput="cobroActualizarItem('+idx+',\'precio\',this.value)"></div>'
+      +campoCant
+      +'<div><label class="flbl" style="font-size:10px">Desc. %</label><input class="finp" type="number" min="0" max="100" value="'+(it.descPct||0)+'" oninput="cobroActualizarItem('+idx+',\'descPct\',this.value)"></div>'
+      +'</div>'
+      +'<div id="cobro-item-sub-'+idx+'" style="text-align:right;font-size:11px;color:var(--oliva-dark);font-weight:600;margin-top:2px">Subtotal: '+fmtPeso(subtotal)+'</div>'
+      +'</div>';
+  }).join(''):'<div class="empty" style="font-size:12px">Todavía no agregaste ningún servicio o producto.</div>';
+  window.scrollTo(0,scrollY);
+  cobroRecalcularTotal();
+}
+function cobroRecalcularTotal(){
+  const total=cobroItems.reduce(function(s,it){return s+cobroSubtotalItem(it);},0);
+  const montoEl=document.getElementById('cobro-monto');
+  if(montoEl)montoEl.value=total?Math.round(total*100)/100:'';
+  cjActualizarDiferencia();
 }
 
 function cjActualizarDiferencia(){
@@ -5044,22 +5126,40 @@ function cjCalcularDescuento(){
 function cjGuardarCobro(){
   const prof=document.getElementById('cobro-prof').value;
   const cliente=document.getElementById('cobro-cliente').value.trim();
-  const srv=document.getElementById('cobro-srv').value.trim();
-  const montoBase=parseFloat(document.getElementById('cobro-monto').value)||0;
-  const descPct=parseFloat(document.getElementById('cobro-desc-pct')?document.getElementById('cobro-desc-pct').value:0)||0;
-  const monto=montoBase-(montoBase*descPct/100);
+  const ok=document.getElementById('ok-cobro'),er=document.getElementById('er-cobro');
+  ok.classList.remove('on');er.classList.remove('on');
+  const itemsValidos=cobroItems.filter(function(it){return it.nombre&&it.nombre.trim();});
+  if(!cliente||!itemsValidos.length){er.textContent='Completá la clienta y agregá al menos un servicio o producto.';er.classList.add('on');return;}
+  if(cobroItems.some(function(it){return it.tipo==='producto'&&!it.prodId;})){er.textContent='Elegí un producto en cada ítem de producto (o quitalo).';er.classList.add('on');return;}
+  const srv=itemsValidos.map(function(it){return it.nombre+(it.tipo==='producto'&&it.cant>1?' x'+it.cant:'')+(it.descPct?' (-'+it.descPct+'%)':'');}).join(', ');
+  const montoBase=itemsValidos.reduce(function(s,it){return s+(it.precio||0)*(it.cant||1);},0);
+  const monto=itemsValidos.reduce(function(s,it){return s+cobroSubtotalItem(it);},0);
   const metodo=document.getElementById('cobro-metodo').value;
   const fecha=document.getElementById('cobro-fecha').value;
   const notas=document.getElementById('cobro-notas').value.trim();
-  const ok=document.getElementById('ok-cobro'),er=document.getElementById('er-cobro');
-  ok.classList.remove('on');er.classList.remove('on');
-  if(!cliente||!srv||!monto||!fecha){er.textContent='Completá todos los campos.';er.classList.add('on');return;}
+  if(!monto||!fecha){er.textContent='Completá todos los campos.';er.classList.add('on');return;}
   const id=document.getElementById('cobro-id').value;
+  const itemsGuardar=itemsValidos.map(function(it){return Object.assign({},it);});
   const baseComision=document.getElementById('cobro-base-comision')?document.getElementById('cobro-base-comision').value:'servicio';
   if(id){
     const idx=cjD.cobros.findIndex(function(x){return x.id===id;});
-    if(idx>=0)cjD.cobros[idx]=Object.assign(cjD.cobros[idx],{prof,cliente,srv,monto,metodo,fecha,notas,baseComision});
+    if(idx>=0)cjD.cobros[idx]=Object.assign(cjD.cobros[idx],{prof,cliente,srv,monto,metodo,fecha,notas,baseComision,items:itemsGuardar,montoServicio:montoBase});
   }else{
+    // Descontar stock de los productos incluidos en este cobro (solo al crear, no al editar)
+    var huboProductos=false;
+    itemsValidos.filter(function(it){return it.tipo==='producto'&&it.prodId;}).forEach(function(it){
+      const p=prodD.productos.find(function(x){return x.id===it.prodId;});
+      if(p){
+        huboProductos=true;
+        p.stock=Math.max(0,(p.stock||0)-(it.cant||1));
+        if(p.tipo==='consignacion'&&p.proveedor){
+          prodD.cuentaCorriente=prodD.cuentaCorriente||[];
+          prodD.cuentaCorriente.push({id:'cc_'+Date.now()+'_'+Math.random().toString(36).slice(2,6),prov:p.proveedor,tipo:'compra',monto:(p.costo||0)*(it.cant||1),desc:'Consignación vendida (cobro): '+p.nombre+' × '+(it.cant||1),fecha:fecha});
+          p.consigPendiente=Math.max(0,(p.consigPendiente||0)-(it.cant||1));
+        }
+      }
+    });
+    if(huboProductos)prodSv();
     // Verificar si hay saldo de cuenta corriente a aplicar
     const aplicarCC=document.getElementById('cobro-aplicar-cc')&&document.getElementById('cobro-aplicar-cc').checked;
     const cl=D.clientas.find(function(c){return c.n.toLowerCase()===cliente.toLowerCase();});
@@ -5082,7 +5182,7 @@ function cjGuardarCobro(){
     const pagaAhoraEl=document.getElementById('cobro-paga-ahora');
     const pagaAhora=pagaAhoraEl&&pagaAhoraEl.value!==''?parseFloat(pagaAhoraEl.value):(montoFinal||monto);
     const montoRegistrar=pagaAhora;
-    cjD.cobros.push({id:'cb_'+Date.now(),prof,cliente,srv,monto:montoRegistrar,metodo,fecha,notas,baseComision,montoServicio:montoBase});
+    cjD.cobros.push({id:'cb_'+Date.now(),prof,cliente,srv,monto:montoRegistrar,metodo,fecha,notas,baseComision,montoServicio:montoBase,items:itemsGuardar});
     // Registrar diferencia en cuenta corriente
     if(pagaAhora!==null){
       const totalServicio=montoFinal||monto;
@@ -7756,17 +7856,22 @@ function rpPagarCom(profId,profNombre,monto){
   <input type="hidden" id="cobro-id">
   <label class="flbl">Profesional</label><select class="fsel" id="cobro-prof"></select>
   <label class="flbl">Clienta</label><input class="finp" id="cobro-cliente" placeholder="Nombre de la clienta" oninput="cjActualizarInfoCC()">
-  <label class="flbl">Servicio</label><input class="finp" id="cobro-srv" placeholder="Ej: Facial GLOW">
-  <label class="flbl">Monto ($)</label><input class="finp" id="cobro-monto" type="number" min="0" placeholder="0" oninput="cjCalcularDescuento()">
+  <input type="hidden" id="cobro-srv">
+  <label class="flbl">Ítems (servicios y/o productos)</label>
+  <div id="cobro-items-list" style="margin-bottom:.5rem"></div>
+  <div style="display:flex;gap:.5rem;margin-bottom:.8rem">
+    <button type="button" class="btn-cancel" style="flex:1;font-size:12px" onclick="cobroAgregarItem('servicio')">+ Servicio</button>
+    <button type="button" class="btn-cancel" style="flex:1;font-size:12px" onclick="cobroAgregarItem('producto')">+ Producto</button>
+  </div>
+  <label class="flbl">Monto total</label>
+  <input class="finp" id="cobro-monto" type="number" min="0" placeholder="0" readonly style="background:var(--crema);color:var(--texto);font-weight:600" oninput="cjCalcularDescuento()">
+  <input type="hidden" id="cobro-desc-pct" value="0">
+  <input type="hidden" id="cobro-total-final">
   <label class="flbl">Calcular comisión sobre</label>
   <select class="fsel" id="cobro-base-comision">
     <option value="servicio">Precio del servicio (monto ingresado)</option>
     <option value="cobrado">Monto cobrado (después del descuento)</option>
   </select>
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:.6rem">
-    <div><label class="flbl">Descuento (%)</label><input class="finp" id="cobro-desc-pct" type="number" min="0" max="100" placeholder="0" oninput="cjCalcularDescuento()"></div>
-    <div><label class="flbl">Total con descuento</label><input class="finp" id="cobro-total-final" type="text" disabled style="background:var(--crema);color:var(--gris)"></div>
-  </div>
   <label class="flbl">Paga ahora ($)</label>
   <input class="finp" id="cobro-paga-ahora" type="number" min="0" placeholder="Dejar vacío si no paga nada (queda en CC)" oninput="cjActualizarDiferencia()">
   <div id="cobro-cc-diff" style="display:none;padding:8px 10px;border-radius:4px;margin-bottom:4px;font-size:12px;font-weight:500"></div>
