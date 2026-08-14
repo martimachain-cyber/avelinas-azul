@@ -2149,8 +2149,17 @@ function renderAdmRes(){
   const l=lun(new Date()),fin=new Date(l);fin.setDate(l.getDate()+6);
   // Unificar reservas online (D.reservas) con turnos cargados a mano en la agenda (agD.turnos),
   // que antes no aparecían acá aunque estuvieran bien guardados.
+  // Los turnos manuales no guardan teléfono propio, así que lo buscamos en Clientas
+  // comparando el nombre sin importar mayúsculas/espacios (antes era comparación exacta
+  // y por eso el botón "Recordar" desaparecía apenas el nombre no coincidía letra por letra).
+  function _telPorNombre(nombre){
+    if(!nombre)return '';
+    const norm=nombre.trim().toLowerCase().replace(/\s+/g,' ');
+    const match=D.clientas.find(function(c){return (c.n||'').trim().toLowerCase().replace(/\s+/g,' ')===norm;});
+    return match?(match.tel||''):'';
+  }
   function _turnoManualComoReserva(t){
-    return {id:t.id,f:t.fecha,h:t.hora,cl:t.cliente,srv:t.servicio,prof:t.prof,tel:'',asistio:false,_manual:true};
+    return {id:t.id,f:t.fecha,h:t.hora,cl:t.cliente,srv:t.servicio,prof:t.prof,tel:_telPorNombre(t.cliente),asistio:false,_manual:true};
   }
   const manualesTodos=(typeof agD!=='undefined'&&agD.turnos)?agD.turnos.filter(function(t){return !t.bloqueo;}):[];
   const hR=[...D.reservas.filter(r=>r.f===h),...manualesTodos.filter(t=>t.fecha===h).map(_turnoManualComoReserva)];
@@ -3111,7 +3120,7 @@ function agVerTurno(id){
     if(typeof id==='string'&&id.startsWith('r_'))rId=parseInt(id.replace('r_',''));
     const r=(D.reservas||[]).find(x=>x.id===rId||x.id===id);
     if(r){
-      t={id,prof:r.prof,fecha:r.f,hora:r.h,duracion:r.dur||60,cliente:r.cl||r.cliente||'Clienta',servicio:r.srv,manual:false,online:true,_esReserva:true,_reservaId:r.id};
+      t={id,prof:r.prof,fecha:r.f,hora:r.h,duracion:r.dur||60,cliente:r.cl||r.cliente||'Clienta',servicio:r.srv,manual:false,online:true,_esReserva:true,_reservaId:r.id,cobrado:r.cobrado||false};
     }
   }
   if(!t)return;
@@ -3167,7 +3176,7 @@ function agVerTurno(id){
   const waMsg=encodeURIComponent('Hola '+t.cliente+'! Te recordamos tu turno en Avelinas Azul 🌿\n\n✦ '+t.servicio+'\n👩 '+(profN2?profN2.n:t.prof)+'\n📅 '+agFf(agPk(t.fecha))+' a las '+t.hora+'hs\n📍 Olavarría 529, Azul\n\n¿Confirmás tu turno?\n✅ Confirmo\n❌ No puedo asistir');
   const waTel=clTel.replace(/[^0-9]/g,'');
   const waBtn=clTel?"<button class=\"btn-v\" style=\"background:#25d366\" onclick=\"window.open('https://wa.me/549"+waTel+"?text="+waMsg+"','_blank')\">📱 WhatsApp</button>":"";
-  const agMvCobrarBtn="<button class=\"btn-v\" style=\"background:#3B6D11\" onclick=\"agCobrarDesdeVer()\">💰 Cobrar</button>";
+  const agMvCobrarBtn=t.cobrado?"<span style=\"font-size:11px;color:var(--gc);padding:.35rem .3rem\">✓ Cobrado</span>":"<button class=\"btn-v\" style=\"background:#3B6D11\" onclick=\"agCobrarDesdeVer()\">💰 Cobrar</button>";
   document.getElementById("ag-mv-acts").innerHTML=agMvFichaBtn+agMvCobrarBtn+waBtn+agMvEditBtn+agMvCancelBtn+agMvDelBtn;
   document.getElementById('modal-ag-ver').classList.add('on');
 }
@@ -3207,30 +3216,50 @@ function agVerCancelados(){
   document.getElementById('modal-cancelados').classList.add('on');
 }
 
+var _cobroTurnosIncluidos=[];
 function agCobrarDesdeVer(){
   var id=agVerTurnoId;
-  var t=null,fecha=null;
+  var t=null,fecha=null,tipoActual=null;
   var tManual=agD.turnos.find(function(x){return String(x.id)===String(id);});
   if(tManual){
-    t=tManual;fecha=t.fecha;
+    t=tManual;fecha=t.fecha;tipoActual='manual';
   }else{
     var rId=id;
     if(typeof id==='string'&&id.startsWith('r_'))rId=parseInt(id.replace('r_',''));
     var r=(D.reservas||[]).find(function(x){return x.id===rId||x.id===id;});
-    if(r){t={cliente:r.cl||r.cliente||'',servicio:r.srv,prof:r.prof,precio:0,senia:0,duracion:r.dur||60};fecha=r.f;}
+    if(r){t={cliente:r.cl||r.cliente||'',servicio:r.srv,prof:r.prof,precio:0,senia:0,duracion:r.dur||60};fecha=r.f;tipoActual='online';}
   }
   if(!t)return;
   cerrarM('modal-ag-ver');
   abrirModalCobro(null);
+  // Buscar otros turnos de la misma clienta el mismo día (cualquier profesional) que todavía
+  // no se hayan cobrado, para sumarlos automáticamente al mismo ticket en vez de cobrar cada
+  // servicio por separado. Se excluyen los ya marcados como cobrados para no cobrarlos dos veces.
+  var nombreNorm=(t.cliente||'').trim().toLowerCase();
+  var otrosManuales=nombreNorm?agD.turnos.filter(function(x){
+    return String(x.id)!==String(id)&&!x.bloqueo&&!x.cobrado
+      &&x.fecha===fecha&&(x.cliente||'').trim().toLowerCase()===nombreNorm;
+  }).map(function(x){return{id:x.id,tipo:'manual',servicio:x.servicio,precio:(x.precio&&x.senia)?(x.precio-x.senia):(x.precio||0)};}):[];
+  var otrasReservas=nombreNorm?(D.reservas||[]).filter(function(x){
+    return String(x.id)!==String(id)&&!x.cobrado
+      &&x.f===fecha&&(x.cl||x.cliente||'').trim().toLowerCase()===nombreNorm;
+  }).map(function(x){return{id:x.id,tipo:'online',servicio:x.srv,precio:0};}):[];
+  var otrosTurnos=otrosManuales.concat(otrasReservas);
+  _cobroTurnosIncluidos=[{id:id,tipo:tipoActual}].concat(otrosTurnos);
   setTimeout(function(){
     var profSel=document.getElementById('cobro-prof');if(profSel&&t.prof)profSel.value=t.prof;
     var clEl=document.getElementById('cobro-cliente');if(clEl)clEl.value=t.cliente||'';
     var montoOriginal=(t.precio&&t.senia)?(t.precio-t.senia):(t.precio||0);
-    cobroItems=[{tipo:'servicio',nombre:t.servicio||'',precio:montoOriginal,descPct:0}];
+    cobroItems=[{tipo:'servicio',nombre:t.servicio||'',precio:montoOriginal,descPct:0}]
+      .concat(otrosTurnos.map(function(o){return{tipo:'servicio',nombre:o.servicio||'',precio:o.precio||0,descPct:0};}));
     cobroRenderItems();
     var fEl=document.getElementById('cobro-fecha');if(fEl)fEl.value=fecha||hoy();
     var nEl=document.getElementById('cobro-notas');
-    if(nEl&&t.senia>0)nEl.value='Saldo restante (seña de '+fmtPeso(t.senia)+' ya cobrada)';
+    if(nEl){
+      var notaSenia=t.senia>0?'Saldo restante (seña de '+fmtPeso(t.senia)+' ya cobrada). ':'';
+      var notaJuntos=otrosTurnos.length?('Incluye '+otrosTurnos.length+' turno'+(otrosTurnos.length>1?'s':'')+' más de '+t.cliente+' el mismo día — revisá los precios de cada ítem.'):'';
+      nEl.value=(notaSenia+notaJuntos).trim();
+    }
   },80);
 }
 
@@ -4622,6 +4651,9 @@ function cjBorrar(coleccion,id){
 // === COBRO ===
 function abrirModalCobro(id){
   const c=id?cjD.cobros.find(function(x){return x.id===id;}):null;
+  // Se resetea acá; si este cobro viene de agCobrarDesdeVer(), esa función lo vuelve a
+  // completar justo después con los turnos detectados del mismo día.
+  _cobroTurnosIncluidos=[];
   document.getElementById('cobro-title').textContent=c?'Editar cobro':'Registrar cobro';
   document.getElementById('cobro-id').value=id||'';
   const sel=document.getElementById('cobro-prof');
@@ -4875,6 +4907,24 @@ function cjGuardarCobro(){
     const pagaAhora=pagaAhoraEl&&pagaAhoraEl.value!==''?parseFloat(pagaAhoraEl.value):(montoFinal||monto);
     const montoRegistrar=pagaAhora;
     cjD.cobros.push({id:'cb_'+Date.now(),prof,cliente,srv,monto:montoRegistrar,metodo,fecha,notas,baseComision,montoServicio:montoBase,items:itemsGuardar});
+    // Marcar como cobrados los turnos que se hayan sumado a este ticket (el propio turno
+    // desde el que se abrió "Cobrar" y los que se agregaron automáticamente por ser de la
+    // misma clienta el mismo día), para que no se vuelvan a ofrecer en otro cobro.
+    if(typeof _cobroTurnosIncluidos!=='undefined'&&_cobroTurnosIncluidos.length){
+      var _huboManual=false,_huboOnline=false;
+      _cobroTurnosIncluidos.forEach(function(ti){
+        if(ti.tipo==='manual'){
+          const tm=agD.turnos.find(function(x){return String(x.id)===String(ti.id);});
+          if(tm){tm.cobrado=true;_huboManual=true;}
+        }else if(ti.tipo==='online'){
+          const rr=(D.reservas||[]).find(function(x){return String(x.id)===String(ti.id);});
+          if(rr){rr.cobrado=true;_huboOnline=true;}
+        }
+      });
+      if(_huboManual)agSv();
+      if(_huboOnline)sv();
+      _cobroTurnosIncluidos=[];
+    }
     // Registrar diferencia en cuenta corriente
     if(pagaAhora!==null){
       const totalServicio=montoFinal||monto;
@@ -6253,7 +6303,14 @@ function initSupabase(){
     sbClient = supabase.createClient(SB_URL, SB_KEY);
     sbSyncEnabled = true;
     console.log('Supabase conectado ✓');
-    sbSync();
+    // Antes, al terminar esta primera sincronización no se volvía a dibujar el panel Resumen:
+    // si el navegador ya lo había mostrado con la copia local (antes de que llegaran los datos
+    // frescos de la nube), se quedaba así hasta que la clienta cambiara de pestaña o llegara un
+    // cambio en tiempo real desde otro dispositivo. Ahora, apenas termina de sincronizar por
+    // primera vez, se vuelve a dibujar con los datos ya actualizados.
+    sbSync().then(function(){
+      if(typeof renderAdmRes==='function')renderAdmRes();
+    });
     // Realtime: escuchar cambios en avelinas_data
     sbClient
       .channel('avelinas-realtime')
