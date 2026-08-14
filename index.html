@@ -6310,6 +6310,7 @@ function initSupabase(){
     // primera vez, se vuelve a dibujar con los datos ya actualizados.
     sbSync().then(function(){
       if(typeof renderAdmRes==='function')renderAdmRes();
+      if(typeof agRender==='function')agRender();
     });
     // Realtime: escuchar cambios en avelinas_data
     sbClient
@@ -6321,6 +6322,7 @@ function initSupabase(){
         console.log('Cambio remoto detectado, sincronizando...');
         sbSync().then(function(){
           if(typeof renderAdmRes==='function')renderAdmRes();
+          if(typeof agRender==='function')agRender();
           if(typeof renderLaserAgenda==='function'&&document.getElementById('pg-laser-agenda')&&document.getElementById('pg-laser-agenda').classList.contains('on'))renderLaserAgenda();
           var notif=document.getElementById('sb-realtime-notif');
           if(!notif){notif=document.createElement('div');notif.id='sb-realtime-notif';notif.style.cssText='position:fixed;bottom:1rem;left:50%;transform:translateX(-50%);background:var(--oliva);color:#fff;font-family:Raleway,sans-serif;font-size:12px;padding:6px 16px;border-radius:20px;z-index:9999;transition:opacity .5s';document.body.appendChild(notif);}
@@ -7872,7 +7874,7 @@ function rpPagarCom(profId,profNombre,monto){
     <button class="ag-btn" onclick="agNavSem(-1)">◀</button>
     <div id="ag-titulo" style="font-family:Raleway,sans-serif;font-size:13px;color:var(--crema);flex:1;text-align:center">Mar 19 Mayo 2026</div>
   <div id="ag-pf" style="display: flex; gap: 0.3rem; flex-wrap: wrap; padding: 0.3rem 1rem; background: var(--texto);"><button class="ag-pf-btn" onclick="agToggleAll(this)" id="ag-pf-all" style="background:var(--oliva);border-color:var(--oliva);color:#fff">Todas</button><button class="ag-pf-btn" onclick="agToggleProf(this.dataset.id,this)" data-id="emilia" id="ag-pf-emilia" style="background:#a8c5a0;border-color:#a8c5a0;color:#2d4a28">Emilia</button><button class="ag-pf-btn" onclick="agToggleProf(this.dataset.id,this)" data-id="camila" id="ag-pf-camila" style="background:#a8b8c5;border-color:#a8b8c5;color:#1e3040">Camila</button><button class="ag-pf-btn" onclick="agToggleProf(this.dataset.id,this)" data-id="ludovica" id="ag-pf-ludovica" style="background:#c5b8a8;border-color:#c5b8a8;color:#40301e">Ludovica</button><button class="ag-pf-btn" onclick="agToggleProf(this.dataset.id,this)" data-id="rosario" id="ag-pf-rosario" style="background:#c5a8b8;border-color:#c5a8b8;color:#40202e">Rosario</button></div>
-  <div id="ag-legend" style="display: flex; gap: 0.8rem; flex-wrap: wrap; padding: 0.3rem 1rem; background: var(--texto);"><div class="ag-leg-item"><div class="ag-leg-dot" style="background:#a8c5a0"></div>Emilia</div><div class="ag-leg-item"><div class="ag-leg-dot" style="background:#a8b8c5"></div>Camila</div><div class="ag-leg-item"><div class="ag-leg-dot" style="background:#c5b8a8"></div>Ludovica</div><div class="ag-leg-item"><div class="ag-leg-dot" style="background:#c5a8b8"></div>Rosario</div>lass="ag-leg-item"><div class="ag-leg-dot" style="background:#d4c4a8"></div>Manual</div><div class="ag-leg-item"><div class="ag-leg-dot" style="background:#b8d4c8"></div>Online</div><div class="ag-leg-item"><div class="ag-leg-dot" style="background:#b0a8a0"></div>🔒 Bloqueado</div></div>
+  <div id="ag-legend" style="display: flex; gap: 0.8rem; flex-wrap: wrap; padding: 0.3rem 1rem;"></div>
     <button class="ag-btn" onclick="agNavSem(1)">▶</button>
     <button class="ag-btn on" id="ag-v-dia" onclick="agSetVista(&#39;dia&#39;,this)">Día</button>
     <button class="ag-btn" id="ag-v-sem" onclick="agSetVista(&#39;semana&#39;,this)">Semana</button>
