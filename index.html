@@ -2835,9 +2835,15 @@ function agRenderMobile(){
     for(var m=hIni*60;m<hFin*60;m+=30){
       var hStr=String(Math.floor(m/60)).padStart(2,'0')+':'+String(m%60).padStart(2,'0');
       _horasEnGrilla[hStr]=true;
-      var turno=getSlotTurno(agMobProf,fStr,hStr);
+      // Usar el plural: si hay dos turnos a la misma hora exacta (ej. dos servicios
+      // "comandados" juntos para la misma clienta), hay que mostrar los dos, no solo el primero.
+      var turnosDelSlot=getSlotTurnos(agMobProf,fStr,hStr);
       var blq=(agD.bloqueos||[]).find(function(b){return b.prof===agMobProf&&b.fecha===fStr&&b.h===hStr;});
-      turnosDelDia.push({h:hStr,turno:turno,blq:blq});
+      if(turnosDelSlot.length){
+        turnosDelSlot.forEach(function(tn){turnosDelDia.push({h:hStr,turno:tn,blq:blq});});
+      }else{
+        turnosDelDia.push({h:hStr,turno:null,blq:blq});
+      }
     }
     // Sumar turnos que no caen justo en :00 o :30 (ej. 08:45, 17:15 — pasa cuando un turno
     // anterior de duración no redonda corre el siguiente fuera de la grilla). Antes quedaban
@@ -3043,6 +3049,16 @@ function getSlotTurno(profId,fecha,hora){
   const online=(D.reservas||[]).find(function(r){return r.prof===profId&&r.f===fecha&&r.h===hora;});
   const manual=(agD.turnos||[]).find(function(t){return t.prof===profId&&t.fecha===fecha&&t.hora===hora;});
   return online||manual;
+}
+
+// Como getSlotTurno() de arriba, pero devuelve TODOS los turnos de ese slot exacto, no solo
+// el primero. Hace falta cuando una clienta tiene dos servicios cargados a la misma hora con
+// la misma profesional (ej. "comandar" dos turnos juntos): antes, el segundo quedaba invisible
+// en la agenda porque .find() se quedaba con uno solo y descartaba el resto en silencio.
+function getSlotTurnos(profId,fecha,hora){
+  const online=(D.reservas||[]).filter(function(r){return r.prof===profId&&r.f===fecha&&r.h===hora;});
+  const manual=(agD.turnos||[]).filter(function(t){return t.prof===profId&&t.fecha===fecha&&t.hora===hora&&!t.bloqueo;});
+  return online.concat(manual);
 }
 
 function renderSlotCellSpan(profId,fecha,hora,inWork,turno,blq,isHour,small,span){
