@@ -918,9 +918,9 @@
 <script>// Sesión restaurada en DOMContentLoaded (ver abajo)
 
 // ===== DATA =====
-const CLAVES_PANEL={martina:'avelinas743',lucia:'lucia123',emilia:'emilia123',camila:'camila123',ludovica:'ludo123',rosario:'rosario123',celeste:'celeste123',angeles:'angeles123',luciana:'luciana123',marina:'marina123'};
-const ROL_PANEL={martina:'admin',lucia:'admin',emilia:'prof',camila:'prof',ludovica:'prof',rosario:'prof',celeste:'prof',angeles:'prof',luciana:'prof',marina:'prof'};
-const NOMBRES_P={martina:'Martina',lucia:'Lucía',emilia:'Emilia',camila:'Camila',ludovica:'Ludovica',rosario:'Rosario'};
+const CLAVES_PANEL={martina:'avelinas743',lucia:'lucia123',emilia:'emilia123',camila:'camila123',ludovica:'ludo123',rosario:'rosario123',celeste:'celeste123',angeles:'angeles123',luciana:'luciana123',marina:'marina123',p_1784139098860:'sandra123'};
+const ROL_PANEL={martina:'admin',lucia:'admin',emilia:'prof',camila:'prof',ludovica:'prof',rosario:'prof',celeste:'prof',angeles:'prof',luciana:'prof',marina:'prof',p_1784139098860:'prof'};
+const NOMBRES_P={martina:'Martina',lucia:'Lucía',emilia:'Emilia',camila:'Camila',ludovica:'Ludovica',rosario:'Rosario',celeste:'Celeste',angeles:'Ángeles',luciana:'Luciana',marina:'Marina',p_1784139098860:'Sandra Britos'};
 const CATS_LABELS={facial:'Faciales',mani:'Manicura',pedi:'Pedicura',masajes:'Masajes','pestañas':'Pestañas & Cejas',maquillaje:'Maquillaje',laser:'Depilación definitiva'};
 const PREMIOS_CLUB=[{id:'p1',n:'$5.000 de descuento en servicio o producto a elección'},{id:'p2',n:'Belleza de manos express gratis'},{id:'p3',n:'20% off en productos pagando en efectivo'}];
 const DS=['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
@@ -1993,8 +1993,8 @@ function mcSelTipo(tipo){
       document.getElementById('eq-clave').value='';
       // Build prof buttons
       const grid=document.getElementById('eq-pb-grid');
-      const users=['martina','lucia','emilia','camila','ludovica','rosario','celeste','angeles','luciana','marina'];
-      const roles={martina:'Admin',lucia:'Secretaria',emilia:'Profesional',camila:'Profesional',ludovica:'Profesional',rosario:'Profesional',celeste:'Profesional',angeles:'Profesional',luciana:'Profesional',marina:'Profesional'};
+      const users=['martina','lucia','emilia','camila','ludovica','rosario','celeste','angeles','luciana','marina','p_1784139098860'];
+      const roles={martina:'Admin',lucia:'Secretaria',emilia:'Profesional',camila:'Profesional',ludovica:'Profesional',rosario:'Profesional',celeste:'Profesional',angeles:'Profesional',luciana:'Profesional',marina:'Profesional',p_1784139098860:'Profesional'};
       grid.innerHTML=users.map(u=>`
         <div onclick="eqSelUser('${u}',this)" style="padding:8px 5px;background:var(--crema);border:1.5px solid var(--cd);border-radius:3px;cursor:pointer;text-align:center;-webkit-tap-highlight-color:transparent;transition:all .15s" class="eq-pb">
           <span style="font-family:Raleway,sans-serif;font-size:12px;font-weight:500;color:var(--texto);display:block">${NOMBRES_P[u]||u}</span>
@@ -2695,10 +2695,11 @@ const AG_PROFS=[
   {id:'celeste',n:'Celeste',esp:'Masajes'},
   {id:'angeles',n:'Ángeles',esp:'Masajes'},
   {id:'luciana',n:'Luciana',esp:'Manicura · Pies'},
-  {id:'marina',n:'Marina',esp:'Reflexología Podal'}
+  {id:'marina',n:'Marina',esp:'Reflexología Podal'},
+  {id:'p_1784139098860',n:'Sandra Britos',esp:'Pedicuría'}
 ];
-const AG_COLORS={emilia:'#7daa74',camila:'#7496aa',ludovica:'#aa8f6e',rosario:'#aa7490',celeste:'#8aaa8a',angeles:'#aa9a74',luciana:'#7a9aaa',marina:'#74aa9a'};
-const AG_FONTS={emilia:'#1a3a17',camila:'#0e2a3a',ludovica:'#3a2010',rosario:'#3a1025',celeste:'#1a3a1a',angeles:'#3a2a10',luciana:'#0e2a3a',marina:'#0e3a2a'};
+const AG_COLORS={emilia:'#7daa74',camila:'#7496aa',ludovica:'#aa8f6e',rosario:'#aa7490',celeste:'#8aaa8a',angeles:'#aa9a74',luciana:'#7a9aaa',marina:'#74aa9a',p_1784139098860:'#c48a6e'};
+const AG_FONTS={emilia:'#1a3a17',camila:'#0e2a3a',ludovica:'#3a2010',rosario:'#3a1025',celeste:'#1a3a1a',angeles:'#3a2a10',luciana:'#0e2a3a',marina:'#0e3a2a',p_1784139098860:'#3a2213'};
 const AG_H_INI=8,AG_H_FIN=21,AG_SLOT=40,AG_SLOT_MIN=30;
 const AG_GRUPOS_RECURSO={
   masajes:['emilia','celeste','angeles','marina'],
@@ -3761,7 +3762,7 @@ function mkFotoHtml(foto, inicial){
 
 function renderNosotras(){
   // Use D.profesionales, but ensure we have the base 5 professionals
-  const baseIds=['lucia','emilia','camila','ludovica','rosario','celeste','angeles','luciana','marina'];
+  const baseIds=['lucia','emilia','camila','ludovica','rosario','celeste','angeles','luciana','marina','p_1784139098860'];
   let profs=D.profesionales.filter(function(p){return baseIds.includes(p.id);});
   // If any base prof is missing, add from defD
   const def=defD();
